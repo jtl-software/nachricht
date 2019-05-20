@@ -1,0 +1,32 @@
+{
+    "name": "jtl-software/nachricht",
+    "description": "Nachricht is a distributed event queue system",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php-amqplib/php-amqplib": "^2.9",
+        "symfony/console": "^4.2",
+        "jtl/php-generic-collection": "dev-master",
+        "psr/container": "^1.0",
+        "symfony/dependency-injection": "^4.2",
+        "symfony/config": "^4.2",
+        "symfony/yaml": "^4.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.1",
+        "friendsofphp/php-cs-fixer": "^2.15",
+        "phpstan/phpstan": "^0.11.6",
+        "mockery/mockery": "^1.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "JTL\\Nachricht\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "JTL\\Nachricht\\": "tests/",
+            "JTL\\Nachricht\\Tests\\": "tests/"
+        }
+    }
+}

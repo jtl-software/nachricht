@@ -1,0 +1,15 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  JTL\Nachricht\:
+    resource: './src/*'
+
+  JTL\Nachricht\Emitter\DirectEmitter:
+    public: true
+
+  JTL\Nachricht\Listener\:
+    resource: './src/Listener/*'
+    public: true
