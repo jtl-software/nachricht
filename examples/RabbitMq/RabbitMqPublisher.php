@@ -11,7 +11,7 @@ use JTL\Nachricht\Emitter\RabbitMqEmitter;
 use JTL\Nachricht\Examples\RabbitMq\Event\FooEvent;
 use JTL\Nachricht\Queue\Client\ConnectionSettings;
 
-require_once './common.php';
+require_once __DIR__ . '/common.php';
 
 /** @var DirectEmitter $emitter */
 $directEmitter = $containerBuilder->get(DirectEmitter::class);

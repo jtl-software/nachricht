@@ -16,6 +16,7 @@ use JTL\Nachricht\Contracts\Serializer\EventSerializer;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 
 class RabbitMqClient implements MessageClient
 {
@@ -63,6 +64,8 @@ class RabbitMqClient implements MessageClient
 
     public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): MessageClient
     {
+        //$this->channel->queue_declare('default_delay_1000', false, true, false, false);
+
         foreach ($subscriptionOptions->getQueueNameList() as $queue) {
             $this->channel->queue_declare($queue, false, true, false, false);
             $this->channel->basic_consume(
@@ -98,7 +101,24 @@ class RabbitMqClient implements MessageClient
             try {
                 $result = $handler($event);
             } catch (\Exception|\Throwable $e) {
-                $channel->basic_nack($data->delivery_info['delivery_tag'], false, true);
+                $channel->basic_ack($data->delivery_info['delivery_tag'], false);
+                $queueName = $data->get('routing_key');
+                $channel->queue_declare(
+                    'delayed_' . $queueName,
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    new AMQPTable([
+                        'x-message-ttl' => 1000,
+                        'x-dead-letter-exchange' => '',
+                        'x-dead-letter-routing-key' => $queueName
+                    ])
+                );
+
+                $channel->basic_publish($data, '', 'delayed_' . $queueName);
+
                 echo "There was an exception\n";
                 return;
             }

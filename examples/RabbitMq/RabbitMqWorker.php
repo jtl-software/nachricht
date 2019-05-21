@@ -11,7 +11,7 @@ use JTL\Nachricht\Queue\Client\ConnectionSettings;
 use JTL\Nachricht\Queue\Client\SubscriptionSettings;
 use JTL\Nachricht\Queue\Poller\RabbitMqPoller;
 
-require_once './common.php';
+require_once __DIR__ . '/common.php';
 
 $connectionSettings = new ConnectionSettings('localhost', 5672, 'guest', 'guest');
 $subscriptionSettings = new SubscriptionSettings(StringCollection::from('test_queue'));
