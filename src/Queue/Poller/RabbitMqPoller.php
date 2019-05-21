@@ -13,6 +13,7 @@ use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Dispatcher\RabbitMqDispatcher;
 use JTL\Nachricht\Queue\Client\ConnectionSettings;
 use JTL\Nachricht\Queue\Client\RabbitMqClient;
+use JTL\Nachricht\Queue\Client\SubscriptionSettings;
 
 class RabbitMqPoller
 {
@@ -32,13 +33,12 @@ class RabbitMqPoller
         $this->dispatcher = $dispatcher;
     }
 
-    public function run(ConnectionSettings $connectionSettings): void
+    public function run(ConnectionSettings $connectionSettings, SubscriptionSettings $subscriptionSettings): void
     {
-        $this->client->connect($connectionSettings);
-
-        $this->client->subscribe(['queueName' => 'test_queue'], function (Event $event) {
-            $this->dispatcher->dispatch($event);
-        });
+        $this->client->connect($connectionSettings)
+            ->subscribe($subscriptionSettings, function (Event $event) {
+                return $this->dispatcher->dispatch($event);
+            });
 
         while (true) {
             $this->client->poll();

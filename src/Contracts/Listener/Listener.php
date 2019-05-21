@@ -13,5 +13,5 @@ use JTL\Nachricht\Contracts\Event\Event;
 
 interface Listener
 {
-    public function execute(Event $event): void;
+    public function execute(Event $event): bool;
 }

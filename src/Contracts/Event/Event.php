@@ -14,4 +14,6 @@ use JTL\Nachricht\Collection\StringCollection;
 interface Event
 {
     public function getListenerClassList(): StringCollection;
+    public function getRoutingKey(): string;
+    public function getExchange(): string;
 }

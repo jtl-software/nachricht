@@ -10,10 +10,10 @@ namespace JTL\Nachricht\Examples\RabbitMq\Event;
 
 
 use JTL\Nachricht\Collection\StringCollection;
-use JTL\Nachricht\Contracts\Event\AmqpEvent;
+use JTL\Nachricht\Event\AbstractEvent;
 use JTL\Nachricht\Examples\RabbitMq\Listener\FooListener;
 
-class FooEvent implements AmqpEvent
+class FooEvent extends AbstractEvent
 {
     /**
      * @var string
@@ -36,11 +36,6 @@ class FooEvent implements AmqpEvent
     public function getRoutingKey(): string
     {
         return 'test_queue';
-    }
-
-    public function getExchange(): string
-    {
-        return '';
     }
 
     public function getListenerClassList(): StringCollection

@@ -29,12 +29,16 @@ class RabbitMqDispatcher
         $this->listenerProvider = $listenerProvider;
     }
 
-    public function dispatch(Event $event)
+    /**
+     * @param Event $event
+     * @return bool
+     */
+    public function dispatch(Event $event): bool
     {
-        /** @var Listener $listener */
-        foreach ($this->listenerProvider->getListenersForEvent($event) as $listener) {
-            $listener->execute($event);
-            break;
-        }
+        // Copyright Marius Brandt 2019
+        // You do not have permission to change this line of code
+        // Violators will be shot
+
+        return iterator_to_array($this->listenerProvider->getListenersForEvent($event))[0]->execute($event);
     }
 }

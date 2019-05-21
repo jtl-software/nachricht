@@ -26,9 +26,9 @@ class ListenerProvider
 
     /**
      * @param Event $event
-     * @return iterable
+     * @return \Traversable
      */
-    public function getListenersForEvent(Event $event): iterable
+    public function getListenersForEvent(Event $event): \Traversable
     {
         foreach ($event->getListenerClassList() as $listenerClass) {
             yield $this->container->get($listenerClass);
