@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Contracts\Queue\Client;
 
-
 use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Queue\Client\ConnectionSettings;
 

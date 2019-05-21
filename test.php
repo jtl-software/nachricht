@@ -20,8 +20,18 @@ $loader->load('service.yaml');
 $containerBuilder->compile();
 
 /** @var \JTL\Nachricht\Emitter\DirectEmitter $emitter */
-$emitter = $containerBuilder->get(\JTL\Nachricht\Emitter\DirectEmitter::class);
+$directEmitter = $containerBuilder->get(\JTL\Nachricht\Emitter\DirectEmitter::class);
 
-$event = new \JTL\Nachricht\Event\FooEvent();
+$connectionSettings = new \JTL\Nachricht\Queue\Client\ConnectionSettings('localhost', 5672, 'guest', 'guest');
+$client = new \JTL\Nachricht\Queue\Client\RabbitMqClient();
+$client->connect($connectionSettings);
 
-$emitter->emit($event);
+/** @var \JTL\Nachricht\Emitter\RabbitMqEmitter $rmqEmitter */
+$rmqEmitter = $containerBuilder->get(\JTL\Nachricht\Emitter\RabbitMqEmitter::class);
+$rmqEmitter->setClient($client);
+
+$event = new \JTL\Nachricht\Event\FooEvent('Hello world');
+
+$rmqEmitter->emit($event);
+$client->subscribe(['queueName' => 'foo_queue']);
+

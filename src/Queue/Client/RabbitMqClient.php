@@ -10,8 +10,8 @@ namespace JTL\Nachricht\Queue\Client;
 
 
 use Closure;
+use JTL\Nachricht\Contracts\Event\AmqpEvent;
 use JTL\Nachricht\Contracts\Event\Event;
-use JTL\Nachricht\Contracts\Queue\Client\Dispatcher;
 use JTL\Nachricht\Contracts\Queue\Client\MessageClient;
 use JTL\Nachricht\Contracts\Serializer\EventSerializer;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -25,19 +25,14 @@ class RabbitMqClient implements MessageClient
     private $connection;
 
     /**
-     * @var Dispatcher
-     */
-    private $dispatcher;
-
-    /**
      * @var EventSerializer
      */
     private $serializer;
 
-    public function __construct(EventSerializer $serializer)
-    {
-        $this->serializer = $serializer;
-    }
+//    public function __construct(EventSerializer $serializer)
+//    {
+//        $this->serializer = $serializer;
+//    }
 
     public function connect(ConnectionSettings $connectionSettings): MessageClient
     {
@@ -45,14 +40,18 @@ class RabbitMqClient implements MessageClient
             $connectionSettings->getHost(),
             $connectionSettings->getPort(),
             $connectionSettings->getUser(),
-            $connectionSettings->getHost()
+            $connectionSettings->getPassword()
         );
         return $this;
     }
 
+    /**
+     * @param AmqpEvent|Event $event
+     */
     public function publish(Event $event): void
     {
-        // TODO: Implement publish() method.
+        $amqpMessage = new AMQPMessage($event->serialize());
+        $this->connection->channel()->basic_publish($amqpMessage, $event->getExchange(), $event->getRoutingKey());
     }
 
     public function subscribe(array $subscriptionOptions): MessageClient
@@ -64,8 +63,14 @@ class RabbitMqClient implements MessageClient
             false,
             false,
             false,
-            $this->createCallbackFromDispatcher()
+            function (AMQPMessage $data) {
+                var_dump($data->getBody());
+                echo 'hello world';
+            }
         );
+
+        while (count($this->connection->channel()->callbacks))
+            $this->connection->channel()->wait();
 
         return $this;
     }

@@ -14,4 +14,6 @@ use JTL\Nachricht\Collection\StringCollection;
 interface Event
 {
     public function getListenerClassList(): StringCollection;
+    public function serialize(): string;
+    public static function deserialize(string $data): Event;
 }
