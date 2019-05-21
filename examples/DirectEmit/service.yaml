@@ -5,12 +5,12 @@ services:
     public: false
 
   JTL\Nachricht\:
-    resource: './src/*'
+    resource: '../../src/*'
 
   JTL\Nachricht\Emitter\:
-    resource: './src/Emitter/*'
+    resource: '../../src/Emitter/*'
     public: true
 
-  JTL\Nachricht\Listener\:
-    resource: './src/Listener/*'
+  JTL\Nachricht\Examples\DirectEmit\Listener\:
+    resource: './Listener/*'
     public: true

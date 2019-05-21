@@ -29,10 +29,11 @@ class RabbitMqClient implements MessageClient
      */
     private $serializer;
 
-//    public function __construct(EventSerializer $serializer)
-//    {
-//        $this->serializer = $serializer;
-//    }
+
+    public function __construct(EventSerializer $serializer)
+    {
+        $this->serializer = $serializer;
+    }
 
     public function connect(ConnectionSettings $connectionSettings): MessageClient
     {
@@ -50,14 +51,14 @@ class RabbitMqClient implements MessageClient
      */
     public function publish(Event $event): void
     {
-        $amqpMessage = new AMQPMessage($event->serialize());
+        $amqpMessage = new AMQPMessage($this->serializer->serialize($event));
         $this->connection->channel()->basic_publish($amqpMessage, $event->getExchange(), $event->getRoutingKey());
     }
 
-    public function subscribe(array $subscriptionOptions): MessageClient
+    public function subscribe(array $subscriptionOptions, Closure $handler): MessageClient
     {
         $channel = $this->connection->channel();
-        $channel->queue_declare($subscriptionOptions['queueName'], false, false, false, false);
+        //$channel->queue_declare($subscriptionOptions['queueName'], false, true, false, false);
         $channel->basic_consume(
             $subscriptionOptions['queueName'],
             '',
@@ -65,16 +66,18 @@ class RabbitMqClient implements MessageClient
             false,
             false,
             false,
-            function (AMQPMessage $data) {
+            static function (AMQPMessage $data) {
                 var_dump($data->getBody());
-                echo 'hello world';
+                //$handler($event);
             }
         );
 
-        while (count($channel->callbacks))
-            $channel->wait();
-
         return $this;
+    }
+
+    public function poll(): void
+    {
+        $this->connection->channel()->wait();
     }
 
     /**
@@ -86,10 +89,5 @@ class RabbitMqClient implements MessageClient
             $event = $this->serializer->deserialize($message->getBody());
             $this->dispatcher->dispatch($event);
         };
-    }
-
-    public function run(): void
-    {
-        // TODO: Implement run() method.
     }
 }

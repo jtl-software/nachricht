@@ -6,7 +6,7 @@
     "require": {
         "php-amqplib/php-amqplib": "^2.9",
         "symfony/console": "^4.2",
-        "jtl/php-generic-collection": "dev-master",
+        "jtl/php-generic-collection": "^0.2",
         "psr/container": "^1.0",
         "symfony/dependency-injection": "^4.2",
         "symfony/config": "^4.2",
@@ -21,7 +21,8 @@
     },
     "autoload": {
         "psr-4": {
-            "JTL\\Nachricht\\": "src/"
+            "JTL\\Nachricht\\": "src/",
+            "JTL\\Nachricht\\Examples\\": "examples/"
         }
     },
     "autoload-dev": {

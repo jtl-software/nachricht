@@ -21,19 +21,14 @@ class RabbitMqEmitter implements Emitter
     private $client;
 
     /**
-     * @var string
+     * RabbitMqEmitter constructor.
+     * @param RabbitMqClient $client
      */
-    private $channel;
-
-    public function setClient(RabbitMqClient $client): void
+    public function __construct(RabbitMqClient $client)
     {
         $this->client = $client;
     }
 
-    public function setChannel(string $channel): void
-    {
-        $this->channel = $channel;
-    }
 
     public function emit(Event $event): void
     {

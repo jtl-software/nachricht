@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "39246a9f0b5fc6d3a451ae1d6f23e50a",
+    "content-hash": "7d2a9a72612eb5a9e4f082825d414d99",
     "packages": [
         {
             "name": "jtl/php-generic-collection",
-            "version": "dev-master",
+            "version": "0.2.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jtl-software/php-generic-collection.git",
-                "reference": "1f5def5053a62027e8d9e51037428d7b4801bfaf"
+                "reference": "d3bc379796d663fa15bf198df6f90257453a6804"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jtl-software/php-generic-collection/zipball/1f5def5053a62027e8d9e51037428d7b4801bfaf",
-                "reference": "1f5def5053a62027e8d9e51037428d7b4801bfaf",
+                "url": "https://api.github.com/repos/jtl-software/php-generic-collection/zipball/d3bc379796d663fa15bf198df6f90257453a6804",
+                "reference": "d3bc379796d663fa15bf198df6f90257453a6804",
                 "shasum": ""
             },
             "require-dev": {
@@ -36,7 +36,7 @@
                 "MIT"
             ],
             "description": "An implementation of a generic collection for PHP",
-            "time": "2019-05-14T07:53:05+00:00"
+            "time": "2019-05-21T09:51:28+00:00"
         },
         {
             "name": "php-amqplib/php-amqplib",
@@ -3839,11 +3839,11 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "jtl/php-generic-collection": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "ext-json": "*"
+    },
     "platform-dev": []
 }

@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Contracts\Queue\Client;
 
+use Closure;
 use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Queue\Client\ConnectionSettings;
 
@@ -15,6 +16,6 @@ interface MessageClient
 {
     public function connect(ConnectionSettings $connectionSettings): self;
     public function publish(Event $event): void;
-    public function subscribe(array $subscriptionOptions): self;
-    public function run(): void;
+    public function subscribe(array $subscriptionOptions, Closure $handler): self;
+    public function poll(): void;
 }

@@ -3,10 +3,10 @@
  * This File is part of JTL-Software
  *
  * User: pkanngiesser
- * Date: 2019/05/20
+ * Date: 2019/05/21
  */
 
-namespace JTL\Nachricht\Listener;
+namespace JTL\Nachricht\Examples\RabbitMq\Listener;
 
 
 use JTL\Nachricht\Contracts\Event\Event;
@@ -17,6 +17,6 @@ class FooListener implements Listener
 
     public function execute(Event $event): void
     {
-        echo "FOO";
+        echo 'Foo Listener called: ' . $event->getData();
     }
 }
