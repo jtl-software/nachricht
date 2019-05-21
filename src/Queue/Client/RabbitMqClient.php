@@ -56,7 +56,9 @@ class RabbitMqClient implements MessageClient
 
     public function subscribe(array $subscriptionOptions): MessageClient
     {
-        $this->connection->channel()->basic_consume(
+        $channel = $this->connection->channel();
+        $channel->queue_declare($subscriptionOptions['queueName'], false, false, false, false);
+        $channel->basic_consume(
             $subscriptionOptions['queueName'],
             '',
             false,
@@ -69,8 +71,8 @@ class RabbitMqClient implements MessageClient
             }
         );
 
-        while (count($this->connection->channel()->callbacks))
-            $this->connection->channel()->wait();
+        while (count($channel->callbacks))
+            $channel->wait();
 
         return $this;
     }
