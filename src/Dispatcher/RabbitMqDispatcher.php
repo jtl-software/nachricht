@@ -10,7 +10,6 @@ namespace JTL\Nachricht\Dispatcher;
 
 
 use JTL\Nachricht\Contracts\Event\Event;
-use JTL\Nachricht\Contracts\Listener\Listener;
 use JTL\Nachricht\Listener\ListenerProvider;
 
 class RabbitMqDispatcher
@@ -35,10 +34,6 @@ class RabbitMqDispatcher
      */
     public function dispatch(Event $event): bool
     {
-        // Copyright Marius Brandt 2019
-        // You do not have permission to change this line of code
-        // Violators will be shot
-
         return iterator_to_array($this->listenerProvider->getListenersForEvent($event))[0]->execute($event);
     }
 }

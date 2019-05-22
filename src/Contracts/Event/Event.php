@@ -16,4 +16,5 @@ interface Event
     public function getListenerClassList(): StringCollection;
     public function getRoutingKey(): string;
     public function getExchange(): string;
+    public function getMaxRetryCount(): int;
 }

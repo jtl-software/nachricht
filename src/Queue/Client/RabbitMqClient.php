@@ -88,9 +88,10 @@ class RabbitMqClient implements MessageClient
     }
 
     /**
+     * @param Closure $handler
      * @return Closure
      */
-    private function createCallbackFromDispatcher($handler): Closure
+    private function createCallbackFromDispatcher(Closure $handler): Closure
     {
         $serializer = $this->serializer;
         return static function(AMQPMessage $data) use ($serializer, $handler) {
@@ -101,7 +102,7 @@ class RabbitMqClient implements MessageClient
             try {
                 $result = $handler($event);
             } catch (\Exception|\Throwable $e) {
-                $channel->basic_ack($data->delivery_info['delivery_tag'], false);
+                $channel->basic_ack($data->delivery_info['delivery_tag']);
                 $queueName = $data->get('routing_key');
                 $channel->queue_declare(
                     'delayed_' . $queueName,
@@ -117,9 +118,32 @@ class RabbitMqClient implements MessageClient
                     ])
                 );
 
+                $properties = $data->get_properties();
+
+                if (isset($properties['application_headers'])) {
+                    /** @var AMQPTable $headers */
+                    $headers = $properties['application_headers'];
+                    $headerData = $headers->getNativeData();
+
+                    if (isset($headerData['x-death'])) {
+                        $xDeath = $headerData['x-death'];
+
+                        if (count($xDeath) === 1 && isset($xDeath[0]['count'])) {
+                            $retryCount = $xDeath[0]['count'];
+
+                            if ($retryCount >= $event->getMaxRetryCount()) {
+                                echo "There was an exception but max retry count was reached\n";
+                                echo "--- done ---\n\n";
+                                return;
+                            }
+                        }
+                    }
+                }
+
                 $channel->basic_publish($data, '', 'delayed_' . $queueName);
 
                 echo "There was an exception\n";
+                echo "--- done ---\n\n";
                 return;
             }
 

@@ -14,7 +14,7 @@ use JTL\Nachricht\Queue\Poller\RabbitMqPoller;
 require_once __DIR__ . '/common.php';
 
 $connectionSettings = new ConnectionSettings('localhost', 5672, 'guest', 'guest');
-$subscriptionSettings = new SubscriptionSettings(StringCollection::from('test_queue'));
+$subscriptionSettings = new SubscriptionSettings(StringCollection::from('test_queue', 'bar_queue'));
 
 /** @var RabbitMqPoller $poller */
 $poller = $containerBuilder->get(RabbitMqPoller::class);

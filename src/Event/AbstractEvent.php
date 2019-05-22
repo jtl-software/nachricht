@@ -21,4 +21,9 @@ abstract class AbstractEvent implements Event
     {
         return '';
     }
+
+    public function getMaxRetryCount(): int
+    {
+        return 3;
+    }
 }
