@@ -15,10 +15,9 @@ include_once __DIR__ . '/../common/common.php';
 /** @var RabbitMqEmitter $rmqEmitter */
 $rmqEmitter = $containerBuilder->get(RabbitMqEmitter::class);
 
-$event = new FooEvent(bin2hex(random_bytes(24)));
 $barEvent = new BarEvent('event2');
 
-foreach (range(1, 10) as $i) {
+foreach (range(1, 1000) as $i) {
+    $event = new FooEvent($i);
     $rmqEmitter->emit($event);
-    $rmqEmitter->emit($barEvent);
 }

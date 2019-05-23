@@ -41,7 +41,6 @@ class RabbitMqTransport implements EventTransport
      */
     private $channel;
     
-
     /**
      * @var array
      */
@@ -99,6 +98,7 @@ class RabbitMqTransport implements EventTransport
     {
         foreach ($subscriptionOptions->getQueueNameList() as $queue) {
             $this->channel->queue_declare($queue, false, true, false, false);
+            $this->channel->basic_qos(0, 1, false);
             $this->channel->basic_consume(
                 $queue,
                 '',

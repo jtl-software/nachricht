@@ -17,8 +17,13 @@ class FooListener implements Listener
 
     public function execute(Event $event): bool
     {
-        echo 'Foo Listener called: ' . $event->getData() . "\n";
+        $handle = fopen(__DIR__ . '/../tmp/' . $event->getData(), 'w+');
+        fwrite($handle, bin2hex(random_bytes(1024 * 1024)));
+        fclose($handle);
+        usleep(random_int(50, 800) * 1000);
 
-        return !!random_int(0, 1);
+        echo "Created file {$event->getData()}\n";
+
+        return true;
     }
 }
