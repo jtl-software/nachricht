@@ -8,10 +8,8 @@
 
 namespace JTL\Nachricht\Serializer\Exception;
 
-
 use Exception;
 
 class DeserializationFailedException extends Exception
 {
-
 }

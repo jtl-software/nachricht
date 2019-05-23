@@ -33,11 +33,6 @@ class BarEvent extends AbstractEvent
         return $this->data;
     }
 
-    public function getRoutingKey(): string
-    {
-        return 'bar_queue';
-    }
-
     public function getListenerClassList(): StringCollection
     {
         return StringCollection::from(BarListener::class);

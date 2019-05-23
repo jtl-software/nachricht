@@ -10,10 +10,10 @@ namespace JTL\Nachricht\Examples\DirectEmit\Event;
 
 
 use JTL\Nachricht\Collection\StringCollection;
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Event\AbstractEvent;
 use JTL\Nachricht\Examples\DirectEmit\Listener\FooListener;
 
-class FooEvent implements Event
+class FooEvent extends AbstractEvent
 {
     private $fooProperty;
 

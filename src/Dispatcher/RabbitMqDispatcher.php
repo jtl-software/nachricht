@@ -8,11 +8,11 @@
 
 namespace JTL\Nachricht\Dispatcher;
 
-
+use JTL\Nachricht\Contracts\Dispatcher\Dispatcher;
 use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Listener\ListenerProvider;
 
-class RabbitMqDispatcher
+class RabbitMqDispatcher implements Dispatcher
 {
     /**
      * @var ListenerProvider

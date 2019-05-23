@@ -19,8 +19,6 @@ class FooListener implements Listener
     {
         echo 'Foo Listener called: ' . $event->getData() . "\n";
 
-        throw new \Exception();
-
         return !!random_int(0, 1);
     }
 }

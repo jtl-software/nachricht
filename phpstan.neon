@@ -1,0 +1,7 @@
+parameters:
+    level: 7
+    paths:
+        - src
+    ignoreErrors:
+         - message: '#.*PhpAmqpLib\\Channel\\AMQPChannel::queue_declare\(\) expects array.*#'
+           path: 'src/Transport/RabbitMq/RabbitMqTransport.php'

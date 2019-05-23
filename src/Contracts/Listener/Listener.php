@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Contracts\Listener;
 
-
 use JTL\Nachricht\Contracts\Event\Event;
 
 interface Listener

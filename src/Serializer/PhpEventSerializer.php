@@ -8,14 +8,12 @@
 
 namespace JTL\Nachricht\Serializer;
 
-
 use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Contracts\Serializer\EventSerializer;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 
 class PhpEventSerializer implements EventSerializer
 {
-
     public function serialize(Event $event): string
     {
         return serialize($event);
@@ -25,7 +23,7 @@ class PhpEventSerializer implements EventSerializer
     {
         $result = unserialize($serializedEvent);
 
-        if($result === false || !$result instanceof Event) {
+        if ($result === false || !$result instanceof Event) {
             throw new DeserializationFailedException();
         }
 

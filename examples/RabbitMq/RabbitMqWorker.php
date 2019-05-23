@@ -7,16 +7,14 @@
  */
 
 use JTL\Nachricht\Collection\StringCollection;
-use JTL\Nachricht\Queue\Client\ConnectionSettings;
-use JTL\Nachricht\Queue\Client\SubscriptionSettings;
-use JTL\Nachricht\Queue\Poller\RabbitMqPoller;
+use JTL\Nachricht\Transport\RabbitMq\RabbitMqConsumer;
+use JTL\Nachricht\Transport\SubscriptionSettings;
 
-require_once __DIR__ . '/common.php';
+include_once __DIR__ . '/../common/common.php';
 
-$connectionSettings = new ConnectionSettings('localhost', 5672, 'guest', 'guest');
-$subscriptionSettings = new SubscriptionSettings(StringCollection::from('test_queue', 'bar_queue'));
+$subscriptionSettings = new SubscriptionSettings(StringCollection::from('msg__JTL\Nachricht\Examples\RabbitMq\Event\BarEvent', 'msg__test_queue'));
 
-/** @var RabbitMqPoller $poller */
-$poller = $containerBuilder->get(RabbitMqPoller::class);
+/** @var RabbitMqConsumer $consumer */
+$consumer = $containerBuilder->get(RabbitMqConsumer::class);
 
-$poller->run($connectionSettings, $subscriptionSettings);
+$consumer->consume($subscriptionSettings);

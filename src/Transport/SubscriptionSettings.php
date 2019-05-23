@@ -6,8 +6,7 @@
  * Date: 21/05/19
  */
 
-namespace JTL\Nachricht\Queue\Client;
-
+namespace JTL\Nachricht\Transport;
 
 use JTL\Nachricht\Collection\StringCollection;
 
@@ -34,5 +33,4 @@ class SubscriptionSettings
     {
         return $this->queueNameList;
     }
-
 }

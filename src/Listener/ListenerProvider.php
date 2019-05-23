@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Listener;
 
-
 use JTL\Nachricht\Contracts\Event\Event;
 use Psr\Container\ContainerInterface;
 
@@ -19,6 +18,10 @@ class ListenerProvider
      */
     private $container;
 
+    /**
+     * ListenerProvider constructor.
+     * @param ContainerInterface $container
+     */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;

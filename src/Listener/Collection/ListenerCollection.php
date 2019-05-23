@@ -8,12 +8,14 @@
 
 namespace JTL\Nachricht\Listener\Collection;
 
-
 use JTL\Generic\GenericCollection;
 use JTL\Nachricht\Contracts\Listener\Listener;
 
 class ListenerCollection extends GenericCollection
 {
+    /**
+     * ListenerCollection constructor.
+     */
     public function __construct()
     {
         parent::__construct(Listener::class);

@@ -12,18 +12,35 @@ use JTL\Nachricht\Contracts\Event\Event;
 
 abstract class AbstractEvent implements Event
 {
+    /**
+     * @return string
+     */
     public function getRoutingKey(): string
     {
-        return '';
+        return $this->getDefaultRoutingKey();
     }
 
+    /**
+     * @return string
+     */
     public function getExchange(): string
     {
         return '';
     }
 
+    /**
+     * @return int
+     */
     public function getMaxRetryCount(): int
     {
         return 3;
+    }
+
+    /**
+     * @return string
+     */
+    private function getDefaultRoutingKey(): string
+    {
+        return get_class($this);
     }
 }

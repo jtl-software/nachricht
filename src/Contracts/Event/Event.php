@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Contracts\Event;
 
-
 use JTL\Nachricht\Collection\StringCollection;
 
 interface Event

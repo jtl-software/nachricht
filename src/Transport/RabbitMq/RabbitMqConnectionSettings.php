@@ -6,10 +6,9 @@
  * Date: 2019/05/17
  */
 
-namespace JTL\Nachricht\Queue\Client;
+namespace JTL\Nachricht\Transport\RabbitMq;
 
-
-class ConnectionSettings
+class RabbitMqConnectionSettings
 {
     /**
      * @var string
@@ -17,7 +16,7 @@ class ConnectionSettings
     private $host;
 
     /**
-     * @var int
+     * @var string
      */
     private $port;
 
@@ -31,16 +30,31 @@ class ConnectionSettings
      */
     private $password;
 
+    /**
+     * @var string
+     */
+    private $vhost;
+
+    /**
+     * ConnectionSettings constructor.
+     * @param string $host
+     * @param string $port
+     * @param string $user
+     * @param string $password
+     * @param string $vhost
+     */
     public function __construct(
         string $host,
-        int $port,
+        string $port,
         string $user,
-        string $password
+        string $password,
+        string $vhost = '/'
     ) {
         $this->host = $host;
         $this->port = $port;
         $this->user = $user;
         $this->password = $password;
+        $this->vhost = $vhost;
     }
 
     /**
@@ -52,9 +66,9 @@ class ConnectionSettings
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getPort(): int
+    public function getPort(): string
     {
         return $this->port;
     }
@@ -73,5 +87,13 @@ class ConnectionSettings
     public function getPassword(): string
     {
         return $this->password;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVhost(): string
+    {
+        return $this->vhost;
     }
 }

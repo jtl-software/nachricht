@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Emitter;
 
-
 use JTL\Nachricht\Contracts\Emitter\Emitter;
 use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Contracts\Listener\Listener;

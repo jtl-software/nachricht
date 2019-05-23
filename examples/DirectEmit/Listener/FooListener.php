@@ -15,8 +15,10 @@ use JTL\Nachricht\Contracts\Listener\Listener;
 class FooListener implements Listener
 {
 
-    public function execute(Event $event): void
+    public function execute(Event $event): bool
     {
         echo 'FooListener called: ' . $event->getFooProperty();
+        throw new \Exception();
+        return true;
     }
 }

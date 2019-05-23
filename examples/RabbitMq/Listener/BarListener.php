@@ -18,7 +18,7 @@ class BarListener implements Listener
     public function execute(Event $event): bool
     {
         echo 'Bar Listener called: ' . $event->getData() . "\n";
-
+        throw new \Exception();
         return !!random_int(0, 1);
     }
 }

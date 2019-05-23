@@ -1,0 +1,37 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  ### General
+
+  JTL\Nachricht\:
+    resource: '../../src/*'
+
+  JTL\Nachricht\Transport\RabbitMq\RabbitMqTransport:
+    public: true
+    factory: 'JTL\Nachricht\Transport\RabbitMq\RabbitMqTransportFactory:createTransport'
+    arguments:
+      - host: 'localhost'
+        port: '5672'
+        user: 'guest'
+        password: 'guest'
+      - '@JTL\Nachricht\Contracts\Serializer\EventSerializer'
+
+  JTL\Nachricht\Transport\RabbitMq\RabbitMqConsumer:
+    public: true
+
+  JTL\Nachricht\Emitter\:
+    resource: '../../src/Emitter/*'
+    public: true
+
+  ### Examples
+
+  JTL\Nachricht\Examples\DirectEmit\Listener\:
+    resource: '../DirectEmit/Listener/*'
+    public: true
+
+  JTL\Nachricht\Examples\RabbitMq\Listener\:
+    resource: '../RabbitMq/Listener/*'
+    public: true

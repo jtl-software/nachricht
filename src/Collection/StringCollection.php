@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Collection;
 
-
 use JTL\Generic\GenericCollection;
 
 class StringCollection extends GenericCollection

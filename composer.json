@@ -30,5 +30,16 @@
             "JTL\\Nachricht\\": "tests/",
             "JTL\\Nachricht\\Tests\\": "tests/"
         }
+    },
+    "scripts" : {
+        "phpcs": [
+            "vendor/bin/php-cs-fixer fix --config=./.php_cs.dist"
+        ],
+        "phpcs-dry": [
+            "vendor/bin/php-cs-fixer fix --config=./.php_cs.dist --dry-run"
+        ],
+        "phpstan": [
+            "vendor/bin/phpstan analyse -c phpstan.neon"
+        ]
     }
 }

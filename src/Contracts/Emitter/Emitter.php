@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Contracts\Emitter;
 
-
 use JTL\Nachricht\Contracts\Event\Event;
 
 interface Emitter

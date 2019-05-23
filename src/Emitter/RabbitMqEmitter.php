@@ -8,32 +8,33 @@
 
 namespace JTL\Nachricht\Emitter;
 
-
 use JTL\Nachricht\Contracts\Emitter\Emitter;
 use JTL\Nachricht\Contracts\Event\Event;
-use JTL\Nachricht\Queue\Client\RabbitMqClient;
+use JTL\Nachricht\Transport\RabbitMq\RabbitMqTransport;
 
 class RabbitMqEmitter implements Emitter
 {
     /**
-     * @var RabbitMqClient
+     * @var RabbitMqTransport
      */
-    private $client;
+    private $transport;
 
     /**
      * RabbitMqEmitter constructor.
-     * @param RabbitMqClient $client
+     * @param RabbitMqTransport $client
      */
-    public function __construct(RabbitMqClient $client)
+    public function __construct(RabbitMqTransport $client)
     {
-        $this->client = $client;
+        $this->transport = $client;
     }
 
-
+    /**
+     * @param Event $event
+     */
     public function emit(Event $event): void
     {
-        if ($this->client !== null) {
-            $this->client->publish($event);
+        if ($this->transport !== null) {
+            $this->transport->publish($event);
         }
     }
 }

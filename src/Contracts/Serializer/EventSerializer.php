@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Contracts\Serializer;
 
-
 use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 
