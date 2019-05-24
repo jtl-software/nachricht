@@ -14,7 +14,7 @@ include_once __DIR__ . '/../common/common.php';
 /** @var RabbitMqEmitter $rmqEmitter */
 $rmqEmitter = $containerBuilder->get(RabbitMqEmitter::class);
 
-foreach (range(1, 200) as $i) {
+foreach (range(1, 100) as $i) {
     $event = new CreateFileEvent($i);
     $rmqEmitter->emit($event);
 }

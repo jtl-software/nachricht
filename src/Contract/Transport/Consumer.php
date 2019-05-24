@@ -6,7 +6,7 @@
  * Date: 2019/05/22
  */
 
-namespace JTL\Nachricht\Contracts\Transport;
+namespace JTL\Nachricht\Contract\Transport;
 
 use JTL\Nachricht\Transport\SubscriptionSettings;
 

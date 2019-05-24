@@ -17,7 +17,7 @@ services:
         port: '5672'
         user: 'guest'
         password: 'guest'
-      - '@JTL\Nachricht\Contracts\Serializer\EventSerializer'
+      - '@JTL\Nachricht\Contract\Serializer\EventSerializer'
 
   JTL\Nachricht\Transport\RabbitMq\RabbitMqConsumer:
     public: true

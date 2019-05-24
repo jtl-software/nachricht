@@ -6,9 +6,9 @@
  * Date: 2019/05/17
  */
 
-namespace JTL\Nachricht\Contracts\Serializer;
+namespace JTL\Nachricht\Contract\Serializer;
 
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 
 interface EventSerializer

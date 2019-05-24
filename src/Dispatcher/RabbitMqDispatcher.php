@@ -8,11 +8,12 @@
 
 namespace JTL\Nachricht\Dispatcher;
 
-use JTL\Nachricht\Contracts\Dispatcher\Dispatcher;
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Listener\ListenerProvider;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
-class RabbitMqDispatcher implements Dispatcher
+class RabbitMqDispatcher implements EventDispatcherInterface
 {
     /**
      * @var ListenerProvider
@@ -29,11 +30,13 @@ class RabbitMqDispatcher implements Dispatcher
     }
 
     /**
-     * @param Event $event
-     * @return bool
+     * @param Event&object $event
      */
-    public function dispatch(Event $event): bool
+    public function dispatch(object $event)
     {
-        return iterator_to_array($this->listenerProvider->getListenersForEvent($event))[0]->execute($event);
+        /** @var Listener $listener */
+        foreach ($this->listenerProvider->getListenersForEvent($event) as $listener) {
+            $listener($event);
+        }
     }
 }

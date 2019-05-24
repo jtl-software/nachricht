@@ -9,8 +9,8 @@
 namespace JTL\Nachricht\Examples\RabbitMq\Listener;
 
 
-use JTL\Nachricht\Contracts\Event\Event;
-use JTL\Nachricht\Contracts\Listener\Listener;
+use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Examples\RabbitMq\Event\DummyEvent;
 
 class DummyListener implements Listener
@@ -18,11 +18,10 @@ class DummyListener implements Listener
 
     /**
      * @param DummyEvent|Event $event
-     * @return bool
+     * @return void
      */
-    public function execute(Event $event): bool
+    public function __invoke(Event $event): void
     {
         echo 'Dummy Listener called: ' . $event->getData() . "\n";
-        return true;
     }
 }

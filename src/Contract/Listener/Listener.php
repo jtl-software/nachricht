@@ -6,15 +6,15 @@
  * Date: 2019/05/20
  */
 
-namespace JTL\Nachricht\Contracts\Listener;
+namespace JTL\Nachricht\Contract\Listener;
 
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Contract\Event\Event;
 
 interface Listener
 {
     /**
      * @param Event $event
-     * @return bool
+     * @return void
      */
-    public function execute(Event $event): bool;
+    public function __invoke(Event $event): void;
 }

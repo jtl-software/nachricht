@@ -8,8 +8,8 @@
 
 namespace JTL\Nachricht\Serializer;
 
-use JTL\Nachricht\Contracts\Event\Event;
-use JTL\Nachricht\Contracts\Serializer\EventSerializer;
+use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Serializer\EventSerializer;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 
 class PhpEventSerializer implements EventSerializer

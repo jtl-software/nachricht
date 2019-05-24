@@ -6,9 +6,9 @@
  * Date: 2019/05/20
  */
 
-namespace JTL\Nachricht\Contracts\Emitter;
+namespace JTL\Nachricht\Contract\Emitter;
 
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Contract\Event\Event;
 
 interface Emitter
 {

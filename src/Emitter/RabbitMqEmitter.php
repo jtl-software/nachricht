@@ -8,8 +8,8 @@
 
 namespace JTL\Nachricht\Emitter;
 
-use JTL\Nachricht\Contracts\Emitter\Emitter;
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Contract\Emitter\Emitter;
+use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Transport\RabbitMq\RabbitMqTransport;
 
 class RabbitMqEmitter implements Emitter
@@ -33,8 +33,6 @@ class RabbitMqEmitter implements Emitter
      */
     public function emit(Event $event): void
     {
-        if ($this->transport !== null) {
-            $this->transport->publish($event);
-        }
+        $this->transport->publish($event);
     }
 }

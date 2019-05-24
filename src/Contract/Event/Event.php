@@ -6,7 +6,7 @@
  * Date: 2019/05/17
  */
 
-namespace JTL\Nachricht\Contracts\Event;
+namespace JTL\Nachricht\Contract\Event;
 
 use JTL\Nachricht\Collection\StringCollection;
 

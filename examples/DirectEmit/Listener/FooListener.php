@@ -9,16 +9,13 @@
 namespace JTL\Nachricht\Examples\DirectEmit\Listener;
 
 
-use JTL\Nachricht\Contracts\Event\Event;
-use JTL\Nachricht\Contracts\Listener\Listener;
+use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Listener\Listener;
 
 class FooListener implements Listener
 {
-
-    public function execute(Event $event): bool
+    public function __invoke(Event $event): void
     {
         echo 'FooListener called: ' . $event->getFooProperty();
-        throw new \Exception();
-        return true;
     }
 }

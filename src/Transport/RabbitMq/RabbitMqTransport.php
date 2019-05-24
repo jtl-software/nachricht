@@ -10,14 +10,15 @@ namespace JTL\Nachricht\Transport\RabbitMq;
 
 use Closure;
 use Exception;
-use JTL\Nachricht\Contracts\Event\Event;
-use JTL\Nachricht\Contracts\Serializer\EventSerializer;
-use JTL\Nachricht\Contracts\Transport\EventTransport;
+use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Contract\Transport\EventTransport;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
+use RuntimeException;
 use Throwable;
 
 class RabbitMqTransport implements EventTransport
@@ -129,18 +130,19 @@ class RabbitMqTransport implements EventTransport
             /** @var AMQPChannel $channel */
             $event = $serializer->deserialize($message->getBody());
 
+            //TODO: What to do with deserialization failures? If one message in the queue is malformed it will crash every worker. Remove message on malformed data? One queue for malformed messages?
+            if (!$event instanceof Event) {
+                throw new RuntimeException('Message does not contain valid Event');
+            }
+            
             try {
-                $result = $handler($event);
+                $handler($event);
             } catch (Exception|Throwable $exception) {
                 $this->handleFailedEvent($message, $event);
                 return;
             }
 
-            if ($result) {
-                $this->ack($message);
-            } else {
-                $this->nack($message);
-            }
+            $this->ack($message);
         };
     }
 
@@ -150,13 +152,13 @@ class RabbitMqTransport implements EventTransport
      */
     private function handleFailedEvent(AMQPMessage $message, Event $event): void
     {
-        $this->ack($message);
         if ($this->maxRetryCountReached($message, $event)) {
             $this->publishMessageToDeadLetterQueue($message, $event);
-            return;
+        } else {
+            $this->publishMessageToDelayQueue($message, $event);
         }
 
-        $this->publishMessageToDelayQueue($message, $event);
+        $this->ack($message);
     }
 
     /**
@@ -165,14 +167,6 @@ class RabbitMqTransport implements EventTransport
     private function ack(AMQPMessage $message): void
     {
         $this->channel->basic_ack($message->delivery_info['delivery_tag']);
-    }
-
-    /**
-     * @param AMQPMessage $message
-     */
-    private function nack(AMQPMessage $message): void
-    {
-        $this->channel->basic_nack($message->delivery_info['delivery_tag']);
     }
 
     /**
@@ -194,7 +188,7 @@ class RabbitMqTransport implements EventTransport
             return false;
         }
 
-        return $headerData['x-death'][0]['count'] >= $event->getMaxRetryCount();
+        return (int)$headerData['x-death'][0]['count'] + 1 >= $event->getMaxRetryCount();
     }
 
     /**
@@ -256,7 +250,7 @@ class RabbitMqTransport implements EventTransport
      */
     private function queueAlreadyDeclared(string $queueName): bool
     {
-        return in_array($queueName, $this->declaredQueueList);
+        return isset($this->declaredQueueList[$queueName]);
     }
 
     /**
@@ -275,7 +269,7 @@ class RabbitMqTransport implements EventTransport
                 false,
                 $arguments
             );
-            $this->declaredQueueList[] = $queueName;
+            $this->declaredQueueList[$queueName] = true;
         }
     }
 }

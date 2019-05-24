@@ -10,14 +10,14 @@ namespace JTL\Nachricht\Examples\RabbitMq\Listener;
 
 
 use Exception;
-use JTL\Nachricht\Contracts\Event\Event;
-use JTL\Nachricht\Contracts\Listener\Listener;
+use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Listener\Listener;
 
 class CreateFileListener implements Listener
 {
     private const TMP_DIR = __DIR__ . '/../tmp';
 
-    public function execute(Event $event): bool
+    public function __invoke(Event $event): void
     {
         if (!is_dir(self::TMP_DIR)) {
             mkdir(self::TMP_DIR);
@@ -32,8 +32,6 @@ class CreateFileListener implements Listener
         fclose($handle);
 
         echo "Created file {$event->getFilename()}\n";
-
-        return true;
     }
 
     /**

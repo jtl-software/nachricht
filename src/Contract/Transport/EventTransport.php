@@ -6,10 +6,10 @@
  * Date: 2019/05/17
  */
 
-namespace JTL\Nachricht\Contracts\Transport;
+namespace JTL\Nachricht\Contract\Transport;
 
 use Closure;
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 

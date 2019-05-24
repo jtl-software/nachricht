@@ -8,7 +8,7 @@
 
 namespace JTL\Nachricht\Event;
 
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Contract\Event\Event;
 
 abstract class AbstractEvent implements Event
 {

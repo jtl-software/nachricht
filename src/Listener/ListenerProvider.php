@@ -8,10 +8,11 @@
 
 namespace JTL\Nachricht\Listener;
 
-use JTL\Nachricht\Contracts\Event\Event;
+use JTL\Nachricht\Contract\Event\Event;
 use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\ListenerProviderInterface;
 
-class ListenerProvider
+class ListenerProvider implements ListenerProviderInterface
 {
     /**
      * @var ContainerInterface
@@ -28,10 +29,10 @@ class ListenerProvider
     }
 
     /**
-     * @param Event $event
-     * @return \Traversable
+     * @param Event&object $event
+     * @return iterable
      */
-    public function getListenersForEvent(Event $event): \Traversable
+    public function getListenersForEvent(object $event): iterable
     {
         foreach ($event->getListenerClassList() as $listenerClass) {
             yield $this->container->get($listenerClass);

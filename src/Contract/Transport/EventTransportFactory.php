@@ -6,9 +6,9 @@
  * Date: 2019/05/23
  */
 
-namespace JTL\Nachricht\Contracts\Transport;
+namespace JTL\Nachricht\Contract\Transport;
 
-use JTL\Nachricht\Contracts\Serializer\EventSerializer;
+use JTL\Nachricht\Contract\Serializer\EventSerializer;
 
 interface EventTransportFactory
 {

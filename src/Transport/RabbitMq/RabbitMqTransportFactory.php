@@ -8,9 +8,9 @@
 
 namespace JTL\Nachricht\Transport\RabbitMq;
 
-use JTL\Nachricht\Contracts\Serializer\EventSerializer;
-use JTL\Nachricht\Contracts\Transport\EventTransport;
-use JTL\Nachricht\Contracts\Transport\EventTransportFactory;
+use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Contract\Transport\EventTransport;
+use JTL\Nachricht\Contract\Transport\EventTransportFactory;
 
 class RabbitMqTransportFactory implements EventTransportFactory
 {
