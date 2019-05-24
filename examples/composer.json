@@ -1,0 +1,17 @@
+{
+  "require": {
+    "php-amqplib/php-amqplib": "^2.9",
+    "jtl/php-generic-collection": "^0.2",
+    "psr/container": "^1.0",
+    "symfony/dependency-injection": "^4.2",
+    "symfony/config": "^4.2",
+    "symfony/yaml": "^4.2",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "JTL\\Nachricht\\": "../src/",
+      "JTL\\Nachricht\\Examples\\": "./"
+    }
+  }
+}

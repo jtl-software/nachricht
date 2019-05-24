@@ -22,8 +22,7 @@
     },
     "autoload": {
         "psr-4": {
-            "JTL\\Nachricht\\": "src/",
-            "JTL\\Nachricht\\Examples\\": "examples/"
+            "JTL\\Nachricht\\": "src/"
         }
     },
     "autoload-dev": {
