@@ -5,7 +5,7 @@
     "license": "MIT",
     "require": {
         "php-amqplib/php-amqplib": "^2.9",
-        "jtl/php-generic-collection": "^0.2",
+        "jtl/php-generic-collection": "^0.2.4",
         "psr/container": "^1.0",
         "ext-json": "*"
     },
