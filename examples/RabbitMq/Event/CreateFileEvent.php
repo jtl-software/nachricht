@@ -11,35 +11,41 @@ namespace JTL\Nachricht\Examples\RabbitMq\Event;
 
 use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Event\AbstractEvent;
-use JTL\Nachricht\Examples\RabbitMq\Listener\FooListener;
+use JTL\Nachricht\Examples\RabbitMq\Listener\CreateFileListener;
 
-class FooEvent extends AbstractEvent
+class CreateFileEvent extends AbstractEvent
 {
     /**
      * @var string
      */
-    private $data;
+    private $filename;
 
-    public function __construct(string $data)
+    public function __construct(string $filename)
     {
-        $this->data = $data;
+        $this->filename = $filename;
     }
 
     /**
      * @return string
      */
-    public function getData(): string
+    public function getFilename(): string
     {
-        return $this->data;
+        return $this->filename;
     }
 
+    /**
+     * @return string
+     */
     public function getRoutingKey(): string
     {
         return 'test_queue';
     }
 
+    /**
+     * @return StringCollection
+     */
     public function getListenerClassList(): StringCollection
     {
-        return StringCollection::from(FooListener::class);
+        return StringCollection::from(CreateFileListener::class);
     }
 }

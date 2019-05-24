@@ -7,17 +7,14 @@
  */
 
 use JTL\Nachricht\Emitter\RabbitMqEmitter;
-use JTL\Nachricht\Examples\RabbitMq\Event\BarEvent;
-use JTL\Nachricht\Examples\RabbitMq\Event\FooEvent;
+use JTL\Nachricht\Examples\RabbitMq\Event\CreateFileEvent;
 
 include_once __DIR__ . '/../common/common.php';
 
 /** @var RabbitMqEmitter $rmqEmitter */
 $rmqEmitter = $containerBuilder->get(RabbitMqEmitter::class);
 
-$barEvent = new BarEvent('event2');
-
-foreach (range(1, 1000) as $i) {
-    $event = new FooEvent($i);
+foreach (range(1, 200) as $i) {
+    $event = new CreateFileEvent($i);
     $rmqEmitter->emit($event);
 }

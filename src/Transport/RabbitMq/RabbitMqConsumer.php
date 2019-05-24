@@ -11,6 +11,7 @@ namespace JTL\Nachricht\Transport\RabbitMq;
 use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Contracts\Transport\Consumer;
 use JTL\Nachricht\Dispatcher\RabbitMqDispatcher;
+use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 
 class RabbitMqConsumer implements Consumer
@@ -38,6 +39,7 @@ class RabbitMqConsumer implements Consumer
 
     /**
      * @param SubscriptionSettings $subscriptionSettings
+     * @throws DeserializationFailedException
      */
     public function consume(SubscriptionSettings $subscriptionSettings): void
     {

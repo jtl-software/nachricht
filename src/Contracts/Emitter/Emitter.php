@@ -12,5 +12,8 @@ use JTL\Nachricht\Contracts\Event\Event;
 
 interface Emitter
 {
+    /**
+     * @param Event $event
+     */
     public function emit(Event $event): void;
 }

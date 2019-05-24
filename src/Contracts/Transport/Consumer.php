@@ -12,5 +12,8 @@ use JTL\Nachricht\Transport\SubscriptionSettings;
 
 interface Consumer
 {
+    /**
+     * @param SubscriptionSettings $subscriptionSettings
+     */
     public function consume(SubscriptionSettings $subscriptionSettings): void;
 }

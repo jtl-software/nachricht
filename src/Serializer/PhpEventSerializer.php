@@ -14,11 +14,20 @@ use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 
 class PhpEventSerializer implements EventSerializer
 {
+    /**
+     * @param Event $event
+     * @return string
+     */
     public function serialize(Event $event): string
     {
         return serialize($event);
     }
 
+    /**
+     * @param string $serializedEvent
+     * @return Event
+     * @throws DeserializationFailedException
+     */
     public function deserialize(string $serializedEvent): Event
     {
         $result = unserialize($serializedEvent);

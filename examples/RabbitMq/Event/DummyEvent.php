@@ -11,9 +11,9 @@ namespace JTL\Nachricht\Examples\RabbitMq\Event;
 
 use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Event\AbstractEvent;
-use JTL\Nachricht\Examples\RabbitMq\Listener\BarListener;
+use JTL\Nachricht\Examples\RabbitMq\Listener\DummyListener;
 
-class BarEvent extends AbstractEvent
+class DummyEvent extends AbstractEvent
 {
     /**
      * @var string
@@ -33,8 +33,11 @@ class BarEvent extends AbstractEvent
         return $this->data;
     }
 
+    /**
+     * @return StringCollection
+     */
     public function getListenerClassList(): StringCollection
     {
-        return StringCollection::from(BarListener::class);
+        return StringCollection::from(DummyListener::class);
     }
 }

@@ -40,7 +40,7 @@ class RabbitMqTransport implements EventTransport
      * @var AMQPChannel
      */
     private $channel;
-    
+
     /**
      * @var array
      */
@@ -81,9 +81,9 @@ class RabbitMqTransport implements EventTransport
     public function publish(Event $event): void
     {
         $this->declareQueue(self::MESSAGE_QUEUE_PREFIX . $event->getRoutingKey());
-        $amqpMessage = new AMQPMessage($this->serializer->serialize($event));
+        $message = new AMQPMessage($this->serializer->serialize($event));
         $this->channel->basic_publish(
-            $amqpMessage,
+            $message,
             $event->getExchange(),
             self::MESSAGE_QUEUE_PREFIX . $event->getRoutingKey()
         );
@@ -97,7 +97,7 @@ class RabbitMqTransport implements EventTransport
     public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): EventTransport
     {
         foreach ($subscriptionOptions->getQueueNameList() as $queue) {
-            $this->channel->queue_declare($queue, false, true, false, false);
+            $this->declareQueue($queue);
             $this->channel->basic_qos(0, 1, false);
             $this->channel->basic_consume(
                 $queue,
@@ -152,11 +152,11 @@ class RabbitMqTransport implements EventTransport
     {
         $this->ack($message);
         if ($this->maxRetryCountReached($message, $event)) {
-            $this->deadLetterMessage($message, $event);
+            $this->publishMessageToDeadLetterQueue($message, $event);
             return;
         }
 
-        $this->delayMessage($message, $event);
+        $this->publishMessageToDelayQueue($message, $event);
     }
 
     /**
@@ -201,7 +201,7 @@ class RabbitMqTransport implements EventTransport
      * @param AMQPMessage $message
      * @param Event $event
      */
-    private function delayMessage(AMQPMessage $message, Event $event): void
+    private function publishMessageToDelayQueue(AMQPMessage $message, Event $event): void
     {
         $delayQueueName = $this->declareDelayQueue($event->getRoutingKey());
         $this->channel->basic_publish($message, '', $delayQueueName);
@@ -211,7 +211,7 @@ class RabbitMqTransport implements EventTransport
      * @param AMQPMessage $message
      * @param Event $event
      */
-    private function deadLetterMessage(AMQPMessage $message, Event $event): void
+    private function publishMessageToDeadLetterQueue(AMQPMessage $message, Event $event): void
     {
         $deadLetterQueueName = $this->declareDeadLetterQueue($event->getRoutingKey());
         $this->channel->basic_publish($message, '', $deadLetterQueueName);
@@ -266,7 +266,6 @@ class RabbitMqTransport implements EventTransport
     private function declareQueue(string $queueName, AMQPTable $arguments = null): void
     {
         if (!$this->queueAlreadyDeclared($queueName)) {
-            echo 'Declare ' . $queueName . "\n";
             $this->channel->queue_declare(
                 $queueName,
                 false,

@@ -12,5 +12,10 @@ use JTL\Nachricht\Contracts\Serializer\EventSerializer;
 
 interface EventTransportFactory
 {
+    /**
+     * @param array $connectionSettings
+     * @param EventSerializer $serializer
+     * @return EventTransport
+     */
     public function createTransport(array $connectionSettings, EventSerializer $serializer): EventTransport;
 }

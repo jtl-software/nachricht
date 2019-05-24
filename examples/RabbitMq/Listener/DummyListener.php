@@ -11,14 +11,18 @@ namespace JTL\Nachricht\Examples\RabbitMq\Listener;
 
 use JTL\Nachricht\Contracts\Event\Event;
 use JTL\Nachricht\Contracts\Listener\Listener;
+use JTL\Nachricht\Examples\RabbitMq\Event\DummyEvent;
 
-class BarListener implements Listener
+class DummyListener implements Listener
 {
 
+    /**
+     * @param DummyEvent|Event $event
+     * @return bool
+     */
     public function execute(Event $event): bool
     {
-        echo 'Bar Listener called: ' . $event->getData() . "\n";
-        throw new \Exception();
-        return !!random_int(0, 1);
+        echo 'Dummy Listener called: ' . $event->getData() . "\n";
+        return true;
     }
 }
