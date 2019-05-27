@@ -13,12 +13,12 @@ use Exception;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
 use JTL\Nachricht\Contract\Transport\EventTransport;
+use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
-use RuntimeException;
 use Throwable;
 
 class RabbitMqTransport implements EventTransport
@@ -26,6 +26,7 @@ class RabbitMqTransport implements EventTransport
     private const MESSAGE_QUEUE_PREFIX = 'msg__';
     private const DELAY_QUEUE_PREFIX = 'delayed__';
     private const DEAD_LETTER_QUEUE_PREFIX = 'dl__';
+    private const FAILURE_QUEUE = 'failure';
 
     /**
      * @var AMQPStreamConnection
@@ -127,23 +128,35 @@ class RabbitMqTransport implements EventTransport
     {
         $serializer = $this->serializer;
         return function (AMQPMessage $message) use ($serializer, $handler) {
-            /** @var AMQPChannel $channel */
-            $event = $serializer->deserialize($message->getBody());
-
-            //TODO: What to do with deserialization failures? If one message in the queue is malformed it will crash every worker. Remove message on malformed data? One queue for malformed messages?
-            if (!$event instanceof Event) {
-                throw new RuntimeException('Message does not contain valid Event');
+            try {
+                $event = $serializer->deserialize($message->getBody());
+            } catch (DeserializationFailedException $exception) {
+                $this->handleFailedMessage($message);
+                return;
             }
-            
+
+            if (!$event instanceof Event) {
+                $this->handleFailedMessage($message);
+                return;
+            }
+
             try {
                 $handler($event);
+                $this->ack($message);
             } catch (Exception|Throwable $exception) {
                 $this->handleFailedEvent($message, $event);
                 return;
             }
-
-            $this->ack($message);
         };
+    }
+
+    /**
+     * @param AMQPMessage $message
+     */
+    private function handleFailedMessage(AMQPMessage $message): void
+    {
+        $this->publishMessageToFailureQueue($message);
+        $this->ack($message);
     }
 
     /**
@@ -209,6 +222,15 @@ class RabbitMqTransport implements EventTransport
     {
         $deadLetterQueueName = $this->declareDeadLetterQueue($event->getRoutingKey());
         $this->channel->basic_publish($message, '', $deadLetterQueueName);
+    }
+
+    /**
+     * @param AMQPMessage $message
+     */
+    private function publishMessageToFailureQueue(AMQPMessage $message): void
+    {
+        $this->declareQueue(self::FAILURE_QUEUE);
+        $this->channel->basic_publish($message, '', self::FAILURE_QUEUE);
     }
 
     /**

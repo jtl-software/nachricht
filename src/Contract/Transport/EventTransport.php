@@ -10,7 +10,6 @@ namespace JTL\Nachricht\Contract\Transport;
 
 use Closure;
 use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 
 interface EventTransport
@@ -27,8 +26,5 @@ interface EventTransport
      */
     public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): self;
 
-    /**
-     * @throws DeserializationFailedException
-     */
     public function poll(): void;
 }
