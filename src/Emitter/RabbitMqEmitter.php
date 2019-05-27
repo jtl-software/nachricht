@@ -21,11 +21,11 @@ class RabbitMqEmitter implements Emitter
 
     /**
      * RabbitMqEmitter constructor.
-     * @param RabbitMqTransport $client
+     * @param RabbitMqTransport $transport
      */
-    public function __construct(RabbitMqTransport $client)
+    public function __construct(RabbitMqTransport $transport)
     {
-        $this->transport = $client;
+        $this->transport = $transport;
     }
 
     /**

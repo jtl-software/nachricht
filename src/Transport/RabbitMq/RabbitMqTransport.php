@@ -23,10 +23,10 @@ use Throwable;
 
 class RabbitMqTransport implements EventTransport
 {
-    private const MESSAGE_QUEUE_PREFIX = 'msg__';
-    private const DELAY_QUEUE_PREFIX = 'delayed__';
-    private const DEAD_LETTER_QUEUE_PREFIX = 'dl__';
-    private const FAILURE_QUEUE = 'failure';
+    public const MESSAGE_QUEUE_PREFIX = 'msg__';
+    public const DELAY_QUEUE_PREFIX = 'delayed__';
+    public const DEAD_LETTER_QUEUE_PREFIX = 'dl__';
+    public const FAILURE_QUEUE = 'failure';
 
     /**
      * @var AMQPStreamConnection
@@ -73,7 +73,6 @@ class RabbitMqTransport implements EventTransport
 
     public function __destruct()
     {
-        $this->channel->close();
         $this->connection->close();
     }
 
@@ -192,7 +191,7 @@ class RabbitMqTransport implements EventTransport
         if (!isset($message->get_properties()['application_headers'])) {
             return false;
         }
-
+        
         /** @var AMQPTable $headers */
         $headers = $message->get_properties()['application_headers'];
         $headerData = $headers->getNativeData();

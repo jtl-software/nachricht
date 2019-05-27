@@ -8,21 +8,20 @@
 
 namespace JTL\Nachricht\Contract\Serializer;
 
-use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 
 interface EventSerializer
 {
     /**
-     * @param Event $event
+     * @param object $event
      * @return string
      */
-    public function serialize(Event $event): string;
+    public function serialize(object $event): string;
 
     /**
      * @param string $serializedEvent
-     * @return Event
+     * @return object
      * @throws DeserializationFailedException
      */
-    public function deserialize(string $serializedEvent): Event;
+    public function deserialize(string $serializedEvent): object;
 }
