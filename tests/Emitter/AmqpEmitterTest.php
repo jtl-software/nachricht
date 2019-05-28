@@ -9,25 +9,25 @@
 namespace JTL\Nachricht\Emitter;
 
 use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Transport\RabbitMq\RabbitMqTransport;
+use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class RabbitMqEmitterTest
+ * Class AmqpEmitterTest
  * @package JTL\Nachricht\Emitter
  *
- * @covers \JTL\Nachricht\Emitter\RabbitMqEmitter
+ * @covers \JTL\Nachricht\Emitter\AmqpEmitter
  */
-class RabbitMqEmitterTest extends TestCase
+class AmqpEmitterTest extends TestCase
 {
     /**
-     * @var RabbitMqTransport|Mockery\MockInterface
+     * @var AmqpTransport|Mockery\MockInterface
      */
     private $rabbitMqTransport;
 
     /**
-     * @var RabbitMqEmitter
+     * @var AmqpEmitter
      */
     private $rabbitMqEmitter;
 
@@ -38,9 +38,9 @@ class RabbitMqEmitterTest extends TestCase
 
     public function setUp(): void
     {
-        $this->rabbitMqTransport = Mockery::mock(RabbitMqTransport::class);
+        $this->rabbitMqTransport = Mockery::mock(AmqpTransport::class);
         $this->event = Mockery::mock(Event::class);
-        $this->rabbitMqEmitter = new RabbitMqEmitter($this->rabbitMqTransport);
+        $this->rabbitMqEmitter = new AmqpEmitter($this->rabbitMqTransport);
     }
 
     public function tearDown(): void

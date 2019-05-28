@@ -6,12 +6,12 @@
  * Date: 2019/05/27
  */
 
-namespace JTL\Nachricht\Transport\RabbitMq;
+namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
 use Exception;
 use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Dispatcher\RabbitMqDispatcher;
+use JTL\Nachricht\Dispatcher\AmqpDispatcher;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -22,25 +22,25 @@ class MockException extends Exception
 }
 
 /**
- * Class RabbitMqConsumerTest
- * @package JTL\Nachricht\Transport\RabbitMq
+ * Class AmqpConsumerTest
+ * @package JTL\Nachricht\Transport\Amqp
  *
- * @covers \JTL\Nachricht\Transport\RabbitMq\RabbitMqConsumer
+ * @covers \JTL\Nachricht\Transport\Amqp\AmqpConsumer
  */
-class RabbitMqConsumerTest extends TestCase
+class AmqpConsumerTest extends TestCase
 {
     /**
-     * @var RabbitMqTransport|Mockery\MockInterface
+     * @var AmqpTransport|Mockery\MockInterface
      */
     private $transport;
 
     /**
-     * @var RabbitMqDispatcher|Mockery\MockInterface
+     * @var AmqpDispatcher|Mockery\MockInterface
      */
     private $dispatcher;
 
     /**
-     * @var RabbitMqConsumer
+     * @var AmqpConsumer
      */
     private $consumer;
 
@@ -56,12 +56,12 @@ class RabbitMqConsumerTest extends TestCase
 
     public function setUp(): void
     {
-        $this->transport = Mockery::mock(RabbitMqTransport::class);
+        $this->transport = Mockery::mock(AmqpTransport::class);
         $this->event = Mockery::mock(Event::class);
-        $this->dispatcher = Mockery::mock(RabbitMqDispatcher::class);
+        $this->dispatcher = Mockery::mock(AmqpDispatcher::class);
         $this->subscriptionSettings = Mockery::mock(SubscriptionSettings::class);
 
-        $this->consumer = new RabbitMqConsumer($this->transport, $this->dispatcher);
+        $this->consumer = new AmqpConsumer($this->transport, $this->dispatcher);
     }
 
     public function tearDown(): void
@@ -86,7 +86,7 @@ class RabbitMqConsumerTest extends TestCase
 
     public function testCallback(): void
     {
-        $reflection = new ReflectionClass(RabbitMqConsumer::class);
+        $reflection = new ReflectionClass(AmqpConsumer::class);
 
         $method = $reflection->getMethod('createCallback');
         $method->setAccessible(true);

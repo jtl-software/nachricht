@@ -6,7 +6,7 @@
  * Date: 2019/05/27
  */
 
-namespace JTL\Nachricht\Transport\RabbitMq;
+namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
 use JTL\Nachricht\Collection\StringCollection;
@@ -23,17 +23,17 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
 /**
- * Class RabbitMqTransportTest
- * @package JTL\Nachricht\Transport\RabbitMq
+ * Class AmqpTransportTest
+ * @package JTL\Nachricht\Transport\Amqp
  *
- * @covers \JTL\Nachricht\Transport\RabbitMq\RabbitMqTransport
+ * @covers \JTL\Nachricht\Transport\Amqp\AmqpTransport
  * @runTestsInSeparateProcesses
  * @preserveGlobalState disabled
  */
-class RabbitMqTransportTest extends TestCase
+class AmqpTransportTest extends TestCase
 {
     /**
-     * @var RabbitMqConnectionSettings|Mockery\MockInterface
+     * @var AmqpConnectionSettings|Mockery\MockInterface
      */
     private $connectionSettings;
 
@@ -48,7 +48,7 @@ class RabbitMqTransportTest extends TestCase
     private $amqpConnection;
 
     /**
-     * @var RabbitMqTransport
+     * @var AmqpTransport
      */
     private $transport;
 
@@ -123,9 +123,9 @@ class RabbitMqTransportTest extends TestCase
         $this->password = uniqid('password', true);
         $this->vhost = uniqid('vhost', true);
 
-        $this->queueNameList = StringCollection::from(RabbitMqTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey);
+        $this->queueNameList = StringCollection::from(AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey);
 
-        $this->connectionSettings = Mockery::mock(RabbitMqConnectionSettings::class, [
+        $this->connectionSettings = Mockery::mock(AmqpConnectionSettings::class, [
             'getHost' => $this->host,
             'getPort' => $this->port,
             'getUser' => $this->user,
@@ -153,7 +153,7 @@ class RabbitMqTransportTest extends TestCase
         $this->message = Mockery::mock(AMQPMessage::class);
         $this->message->delivery_info['delivery_tag'] = uniqid('delivery_tag', true);
 
-        $this->transport = new RabbitMqTransport($this->connectionSettings, $this->serializer);
+        $this->transport = new AmqpTransport($this->connectionSettings, $this->serializer);
     }
 
     public function tearDown(): void
@@ -177,7 +177,7 @@ class RabbitMqTransportTest extends TestCase
             ->with(
                 Mockery::type(AMQPMessage::class),
                 $this->exchange,
-                RabbitMqTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey
+                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey
             )
             ->once();
 
@@ -208,7 +208,7 @@ class RabbitMqTransportTest extends TestCase
 
         $this->channel->shouldReceive('basic_consume')
             ->with(
-                RabbitMqTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey,
+                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey,
                 '',
                 false,
                 false,
@@ -222,7 +222,7 @@ class RabbitMqTransportTest extends TestCase
 
         $result = $this->transport->subscribe($this->subscriptionSettings, $handler);
 
-        $this->assertInstanceOf(RabbitMqTransport::class, $result);
+        $this->assertInstanceOf(AmqpTransport::class, $result);
     }
 
     public function testCanHandleMessage(): void
@@ -274,7 +274,7 @@ class RabbitMqTransportTest extends TestCase
         $this->queueDeclareFailure();
 
         $this->channel->shouldReceive('basic_publish')
-            ->with($this->message, '', RabbitMqTransport::FAILURE_QUEUE);
+            ->with($this->message, '', AmqpTransport::FAILURE_QUEUE);
 
         $this->channel->shouldReceive('basic_ack')
             ->with($this->message->delivery_info['delivery_tag'])
@@ -307,7 +307,7 @@ class RabbitMqTransportTest extends TestCase
         $this->queueDeclareFailure();
 
         $this->channel->shouldReceive('basic_publish')
-            ->with($this->message, '', RabbitMqTransport::FAILURE_QUEUE);
+            ->with($this->message, '', AmqpTransport::FAILURE_QUEUE);
 
         $this->channel->shouldReceive('basic_ack')
             ->with($this->message->delivery_info['delivery_tag'])
@@ -348,7 +348,7 @@ class RabbitMqTransportTest extends TestCase
             ->once();
 
         $this->channel->shouldReceive('basic_publish')
-            ->with($this->message, '', RabbitMqTransport::DELAY_QUEUE_PREFIX . $this->routingKey);
+            ->with($this->message, '', AmqpTransport::DELAY_QUEUE_PREFIX . $this->routingKey);
 
         $callback($this->message);
 
@@ -393,7 +393,7 @@ class RabbitMqTransportTest extends TestCase
             ->once();
 
         $this->channel->shouldReceive('basic_publish')
-            ->with($this->message, '', RabbitMqTransport::DELAY_QUEUE_PREFIX . $this->routingKey);
+            ->with($this->message, '', AmqpTransport::DELAY_QUEUE_PREFIX . $this->routingKey);
 
         $callback($this->message);
 
@@ -439,7 +439,7 @@ class RabbitMqTransportTest extends TestCase
             ->once();
 
         $this->channel->shouldReceive('basic_publish')
-            ->with($this->message, '', RabbitMqTransport::DEAD_LETTER_QUEUE_PREFIX . $this->routingKey);
+            ->with($this->message, '', AmqpTransport::DEAD_LETTER_QUEUE_PREFIX . $this->routingKey);
 
         $callback($this->message);
 
@@ -453,7 +453,7 @@ class RabbitMqTransportTest extends TestCase
      */
     private function getSubscriptionCallback(Closure $handler): Closure
     {
-        $reflection = new ReflectionClass(RabbitMqTransport::class);
+        $reflection = new ReflectionClass(AmqpTransport::class);
 
         $method = $reflection->getMethod('createCallbackFromHandler');
         $method->setAccessible(true);
@@ -463,25 +463,25 @@ class RabbitMqTransportTest extends TestCase
 
     private function queueDeclareMessage(): void
     {
-        $this->declareQueue(RabbitMqTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey, null);
+        $this->declareQueue(AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey, null);
     }
 
     private function queueDeclareDelay(): void
     {
         $this->declareQueue(
-            RabbitMqTransport::DELAY_QUEUE_PREFIX . $this->routingKey,
+            AmqpTransport::DELAY_QUEUE_PREFIX . $this->routingKey,
             Mockery::type(AMQPTable::class)
         );
     }
 
     private function queueDeclareDeadLetter(): void
     {
-        $this->declareQueue(RabbitMqTransport::DEAD_LETTER_QUEUE_PREFIX . $this->routingKey, null);
+        $this->declareQueue(AmqpTransport::DEAD_LETTER_QUEUE_PREFIX . $this->routingKey, null);
     }
 
     private function queueDeclareFailure(): void
     {
-        $this->declareQueue(RabbitMqTransport::FAILURE_QUEUE, null);
+        $this->declareQueue(AmqpTransport::FAILURE_QUEUE, null);
     }
 
     private function declareQueue(string $name, $args): void

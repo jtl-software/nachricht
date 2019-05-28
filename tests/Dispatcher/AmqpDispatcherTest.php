@@ -15,12 +15,12 @@ use Mockery;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class RabbitMqDispatcherTest
+ * Class AmqpDispatcherTest
  * @package JTL\Nachricht\Dispatcher
  *
- * @covers \JTL\Nachricht\Dispatcher\RabbitMqDispatcher
+ * @covers \JTL\Nachricht\Dispatcher\AmqpDispatcher
  */
-class RabbitMqDispatcherTest extends TestCase
+class AmqpDispatcherTest extends TestCase
 {
     /**
      * @var ListenerProvider|Mockery\MockInterface
@@ -28,7 +28,7 @@ class RabbitMqDispatcherTest extends TestCase
     private $listenerProvider;
 
     /**
-     * @var RabbitMqDispatcher
+     * @var AmqpDispatcher
      */
     private $dispatcher;
 
@@ -48,7 +48,7 @@ class RabbitMqDispatcherTest extends TestCase
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
         $this->listener = Mockery::mock(Listener::class);
         $this->event = Mockery::mock(Event::class);
-        $this->dispatcher = new RabbitMqDispatcher($this->listenerProvider);
+        $this->dispatcher = new AmqpDispatcher($this->listenerProvider);
     }
 
     public function tearDown(): void

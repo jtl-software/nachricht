@@ -4,4 +4,4 @@ parameters:
         - src
     ignoreErrors:
          - message: '#.*PhpAmqpLib\\Channel\\AMQPChannel::queue_declare\(\) expects array.*#'
-           path: 'src/Transport/RabbitMq/RabbitMqTransport.php'
+           path: 'src/Transport/Amqp/AmqpTransport.php'

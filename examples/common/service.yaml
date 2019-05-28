@@ -9,9 +9,9 @@ services:
   JTL\Nachricht\:
     resource: '../../src/*'
 
-  JTL\Nachricht\Transport\RabbitMq\RabbitMqTransport:
+  JTL\Nachricht\Transport\Amqp\AmqpTransport:
     public: true
-    factory: 'JTL\Nachricht\Transport\RabbitMq\RabbitMqTransportFactory:createTransport'
+    factory: 'JTL\Nachricht\Transport\Amqp\AmqpTransportFactory:createTransport'
     arguments:
       - host: 'localhost'
         port: '5672'
@@ -19,7 +19,7 @@ services:
         password: 'guest'
       - '@JTL\Nachricht\Contract\Serializer\EventSerializer'
 
-  JTL\Nachricht\Transport\RabbitMq\RabbitMqConsumer:
+  JTL\Nachricht\Transport\Amqp\AmqpConsumer:
     public: true
 
   JTL\Nachricht\Emitter\:
@@ -32,6 +32,6 @@ services:
     resource: '../DirectEmit/Listener/*'
     public: true
 
-  JTL\Nachricht\Examples\RabbitMq\Listener\:
-    resource: '../RabbitMq/Listener/*'
+  JTL\Nachricht\Examples\Amqp\Listener\:
+    resource: '../Amqp/Listener/*'
     public: true

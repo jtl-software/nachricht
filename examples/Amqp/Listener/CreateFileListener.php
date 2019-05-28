@@ -6,7 +6,7 @@
  * Date: 2019/05/21
  */
 
-namespace JTL\Nachricht\Examples\RabbitMq\Listener;
+namespace JTL\Nachricht\Examples\Amqp\Listener;
 
 
 use Exception;

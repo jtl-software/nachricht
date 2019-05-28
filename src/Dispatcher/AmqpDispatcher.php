@@ -13,15 +13,16 @@ use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Listener\ListenerProvider;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-class RabbitMqDispatcher implements EventDispatcherInterface
+class AmqpDispatcher implements EventDispatcherInterface
 {
     /**
      * @var ListenerProvider
      */
     private $listenerProvider;
 
+
     /**
-     * RabbitMqDispatcher constructor.
+     * AmqpDispatcher constructor.
      * @param ListenerProvider $listenerProvider
      */
     public function __construct(ListenerProvider $listenerProvider)

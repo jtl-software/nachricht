@@ -6,13 +6,13 @@
  * Date: 2019/05/23
  */
 
-namespace JTL\Nachricht\Transport\RabbitMq;
+namespace JTL\Nachricht\Transport\Amqp;
 
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
 use JTL\Nachricht\Contract\Transport\EventTransport;
 use JTL\Nachricht\Contract\Transport\EventTransportFactory;
 
-class RabbitMqTransportFactory implements EventTransportFactory
+class AmqpTransportFactory implements EventTransportFactory
 {
     /**
      * @param array $connectionSettings
@@ -21,8 +21,8 @@ class RabbitMqTransportFactory implements EventTransportFactory
      */
     public function createTransport(array $connectionSettings, EventSerializer $serializer): EventTransport
     {
-        return new RabbitMqTransport(
-            new RabbitMqConnectionSettings(
+        return new AmqpTransport(
+            new AmqpConnectionSettings(
                 $connectionSettings['host'],
                 $connectionSettings['port'],
                 $connectionSettings['user'],

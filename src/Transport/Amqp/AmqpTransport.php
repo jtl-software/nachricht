@@ -6,7 +6,7 @@
  * Date: 2019/05/17
  */
 
-namespace JTL\Nachricht\Transport\RabbitMq;
+namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
 use Exception;
@@ -21,7 +21,7 @@ use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use Throwable;
 
-class RabbitMqTransport implements EventTransport
+class AmqpTransport implements EventTransport
 {
     public const MESSAGE_QUEUE_PREFIX = 'msg__';
     public const DELAY_QUEUE_PREFIX = 'delayed__';
@@ -48,13 +48,14 @@ class RabbitMqTransport implements EventTransport
      */
     private $declaredQueueList;
 
+
     /**
-     * RabbitMqTransport constructor.
-     * @param RabbitMqConnectionSettings $connectionSettings
+     * AmqpTransport constructor.
+     * @param AmqpConnectionSettings $connectionSettings
      * @param EventSerializer $serializer
      */
     public function __construct(
-        RabbitMqConnectionSettings $connectionSettings,
+        AmqpConnectionSettings $connectionSettings,
         EventSerializer $serializer
     ) {
         $this->serializer = $serializer;

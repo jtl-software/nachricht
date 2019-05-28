@@ -10,20 +10,21 @@ namespace JTL\Nachricht\Emitter;
 
 use JTL\Nachricht\Contract\Emitter\Emitter;
 use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Transport\RabbitMq\RabbitMqTransport;
+use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 
-class RabbitMqEmitter implements Emitter
+class AmqpEmitter implements Emitter
 {
     /**
-     * @var RabbitMqTransport
+     * @var AmqpTransport
      */
     private $transport;
 
+
     /**
-     * RabbitMqEmitter constructor.
-     * @param RabbitMqTransport $transport
+     * AmqpEmitter constructor.
+     * @param AmqpTransport $transport
      */
-    public function __construct(RabbitMqTransport $transport)
+    public function __construct(AmqpTransport $transport)
     {
         $this->transport = $transport;
     }

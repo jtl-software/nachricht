@@ -6,17 +6,17 @@
  * Date: 2019/05/27
  */
 
-namespace JTL\Nachricht\Transport\RabbitMq;
+namespace JTL\Nachricht\Transport\Amqp;
 
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class RabbitMqConnectionSettingsTest
- * @package JTL\Nachricht\Transport\RabbitMq
+ * Class AmqpConnectionSettingsTest
+ * @package JTL\Nachricht\Transport\Amqp
  *
- * @covers \JTL\Nachricht\Transport\RabbitMq\RabbitMqConnectionSettings
+ * @covers \JTL\Nachricht\Transport\Amqp\AmqpConnectionSettings
  */
-class RabbitMqConnectionSettingsTest extends TestCase
+class AmqpConnectionSettingsTest extends TestCase
 {
     public function testCanBeCreated(): void
     {
@@ -26,7 +26,7 @@ class RabbitMqConnectionSettingsTest extends TestCase
         $password = uniqid('password', true);
         $vhost = uniqid('vhost', true);
 
-        $connectionSettings = new RabbitMqConnectionSettings(
+        $connectionSettings = new AmqpConnectionSettings(
             $host,
             $port,
             $user,

@@ -6,12 +6,12 @@
  * Date: 2019/05/21
  */
 
-namespace JTL\Nachricht\Examples\RabbitMq\Event;
+namespace JTL\Nachricht\Examples\Amqp\Event;
 
 
 use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Event\AbstractEvent;
-use JTL\Nachricht\Examples\RabbitMq\Listener\CreateFileListener;
+use JTL\Nachricht\Examples\Amqp\Listener\CreateFileListener;
 
 class CreateFileEvent extends AbstractEvent
 {

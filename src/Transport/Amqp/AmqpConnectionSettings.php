@@ -6,9 +6,9 @@
  * Date: 2019/05/17
  */
 
-namespace JTL\Nachricht\Transport\RabbitMq;
+namespace JTL\Nachricht\Transport\Amqp;
 
-class RabbitMqConnectionSettings
+class AmqpConnectionSettings
 {
     /**
      * @var string

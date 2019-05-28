@@ -6,7 +6,7 @@
  * Date: 2019/05/27
  */
 
-namespace JTL\Nachricht\Transport\RabbitMq;
+namespace JTL\Nachricht\Transport\Amqp;
 
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
 use JTL\Nachricht\Contract\Transport\EventTransport;
@@ -14,14 +14,14 @@ use Mockery;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class RabbitMqTransportFactoryTest
- * @package JTL\Nachricht\Transport\RabbitMq
+ * Class AmqpTransportFactoryTest
+ * @package JTL\Nachricht\Transport\Amqp
  *
- * @covers \JTL\Nachricht\Transport\RabbitMq\RabbitMqTransportFactory
+ * @covers \JTL\Nachricht\Transport\Amqp\AmqpTransportFactory
  * @runTestsInSeparateProcesses
  * @preserveGlobalState disabled
  */
-class RabbitMqTransportFactoryTest extends TestCase
+class AmqpTransportFactoryTest extends TestCase
 {
 
     /**
@@ -30,19 +30,19 @@ class RabbitMqTransportFactoryTest extends TestCase
     private $eventSerializer;
 
     /**
-     * @var RabbitMqTransportFactory
+     * @var AmqpTransportFactory
      */
     private $factory;
 
     public function setUp(): void
     {
         $this->eventSerializer = Mockery::mock(EventSerializer::class);
-        $this->factory = new RabbitMqTransportFactory();
+        $this->factory = new AmqpTransportFactory();
     }
 
     public function testCreateTransport(): void
     {
-        Mockery::mock('overload:' . RabbitMqTransport::class, EventTransport::class);
+        Mockery::mock('overload:' . AmqpTransport::class, EventTransport::class);
 
         $connectionSettings = [
             'host' => 'localhost',
@@ -52,6 +52,6 @@ class RabbitMqTransportFactoryTest extends TestCase
         ];
 
         $transport = $this->factory->createTransport($connectionSettings, $this->eventSerializer);
-        $this->assertInstanceOf(RabbitMqTransport::class, $transport);
+        $this->assertInstanceOf(AmqpTransport::class, $transport);
     }
 }

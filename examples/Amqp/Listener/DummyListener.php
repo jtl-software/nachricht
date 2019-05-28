@@ -6,16 +6,15 @@
  * Date: 2019/05/21
  */
 
-namespace JTL\Nachricht\Examples\RabbitMq\Listener;
+namespace JTL\Nachricht\Examples\Amqp\Listener;
 
 
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Listener\Listener;
-use JTL\Nachricht\Examples\RabbitMq\Event\DummyEvent;
+use JTL\Nachricht\Examples\Amqp\Event\DummyEvent;
 
 class DummyListener implements Listener
 {
-
     /**
      * @param DummyEvent|Event $event
      * @return void

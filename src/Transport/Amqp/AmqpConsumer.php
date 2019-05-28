@@ -6,32 +6,33 @@
  * Date: 21/05/19
  */
 
-namespace JTL\Nachricht\Transport\RabbitMq;
+namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Transport\Consumer;
-use JTL\Nachricht\Dispatcher\RabbitMqDispatcher;
+use JTL\Nachricht\Dispatcher\AmqpDispatcher;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 
-class RabbitMqConsumer implements Consumer
+class AmqpConsumer implements Consumer
 {
     /**
-     * @var RabbitMqTransport
+     * @var AmqpTransport
      */
     private $transport;
 
     /**
-     * @var RabbitMqDispatcher
+     * @var AmqpDispatcher
      */
     private $dispatcher;
 
+
     /**
-     * RabbitMqConsumer constructor.
-     * @param RabbitMqTransport $client
-     * @param RabbitMqDispatcher $dispatcher
+     * AmqpConsumer constructor.
+     * @param AmqpTransport $client
+     * @param AmqpDispatcher $dispatcher
      */
-    public function __construct(RabbitMqTransport $client, RabbitMqDispatcher $dispatcher)
+    public function __construct(AmqpTransport $client, AmqpDispatcher $dispatcher)
     {
         $this->transport = $client;
         $this->dispatcher = $dispatcher;
