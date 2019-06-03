@@ -1,0 +1,11 @@
+# see http://about.travis-ci.org/docs/user/languages/php/ for more hints
+language: php
+php:
+  - 7.2
+  - 7.3
+  - 7.4snapshot
+
+script:
+  - composer install
+  - composer phpunit
+  - composer phpstan
