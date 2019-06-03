@@ -1,5 +1,5 @@
 {
-    "name": "jtl-software/nachricht",
+    "name": "jtl/nachricht",
     "description": "Nachricht is a distributed event queue system",
     "type": "library",
     "license": "MIT",

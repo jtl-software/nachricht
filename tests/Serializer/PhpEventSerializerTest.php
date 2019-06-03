@@ -52,20 +52,20 @@ class PhpEventSerializerTest extends TestCase
     public function testCanSerialize(): void
     {
         $this->assertEquals(
-            'O:34:"JTL\Nachricht\Serializer\MockEvent":0:{}',
+            'O:38:"JTL\Nachricht\Serializer\MockAmqpEvent":0:{}',
             $this->serializer->serialize($this->event)
         );
     }
 
     public function testCanDeserialize(): void
     {
-        $event = $this->serializer->deserialize('O:34:"JTL\Nachricht\Serializer\MockEvent":0:{}');
+        $event = $this->serializer->deserialize('O:38:"JTL\Nachricht\Serializer\MockAmqpEvent":0:{}');
         $this->assertInstanceOf(MockAmqpEvent::class, $event);
     }
     
     public function testCanNotDeserializeBecauseStringIsInvalid(): void
     {
         $this->expectException(DeserializationFailedException::class);
-        $this->serializer->deserialize('fooO:34:"JTL\Nachricht\Serializer\MockEvent":0:{}');
+        $this->serializer->deserialize('fooO:38:"JTL\Nachricht\Serializer\MockAmqpEvent":0:{}');
     }
 }

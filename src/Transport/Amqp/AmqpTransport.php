@@ -61,8 +61,7 @@ class AmqpTransport
     public function __construct(
         AmqpConnectionSettings $connectionSettings,
         EventSerializer $serializer
-    )
-    {
+    ) {
         $this->serializer = $serializer;
         $this->connectionSettings = $connectionSettings;
         $this->declaredQueueList = [];
@@ -88,6 +87,21 @@ class AmqpTransport
             $event->getExchange(),
             self::MESSAGE_QUEUE_PREFIX . $event->getRoutingKey()
         );
+    }
+
+    private function connect(): void
+    {
+        if ($this->connection === null) {
+            $this->connection = new AMQPStreamConnection(
+                $this->connectionSettings->getHost(),
+                $this->connectionSettings->getPort(),
+                $this->connectionSettings->getUser(),
+                $this->connectionSettings->getPassword(),
+                $this->connectionSettings->getVhost()
+            );
+
+            $this->channel = $this->connection->channel();
+        }
     }
 
     /**
@@ -164,7 +178,6 @@ class AmqpTransport
                         $this->handleFailedEvent($message, $event);
                     }
                 }
-
             } catch (DeserializationFailedException $exception) {
                 $this->handleFailedMessage($message);
             }
@@ -290,20 +303,5 @@ class AmqpTransport
     {
         $this->connect();
         $this->channel->wait();
-    }
-
-    protected function connect(): void
-    {
-        if ($this->connection === null) {
-            $this->connection = new AMQPStreamConnection(
-                $this->connectionSettings->getHost(),
-                $this->connectionSettings->getPort(),
-                $this->connectionSettings->getUser(),
-                $this->connectionSettings->getPassword(),
-                $this->connectionSettings->getVhost()
-            );
-
-            $this->channel = $this->connection->channel();
-        }
     }
 }
