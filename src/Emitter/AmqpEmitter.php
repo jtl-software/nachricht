@@ -9,6 +9,7 @@
 namespace JTL\Nachricht\Emitter;
 
 use JTL\Nachricht\Contract\Emitter\Emitter;
+use JTL\Nachricht\Contract\Event\AmqpEvent;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 
@@ -30,7 +31,7 @@ class AmqpEmitter implements Emitter
     }
 
     /**
-     * @param Event $event
+     * @param Event&AmqpEvent $event
      */
     public function emit(Event $event): void
     {

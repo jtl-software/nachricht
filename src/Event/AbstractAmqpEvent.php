@@ -8,9 +8,9 @@
 
 namespace JTL\Nachricht\Event;
 
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Event\AmqpEvent;
 
-abstract class AbstractEvent implements Event
+abstract class AbstractAmqpEvent implements AmqpEvent
 {
     /**
      * @return string

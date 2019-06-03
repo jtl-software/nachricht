@@ -11,7 +11,7 @@ namespace JTL\Nachricht\Event;
 use JTL\Nachricht\Collection\StringCollection;
 use PHPUnit\Framework\TestCase;
 
-class TestEvent extends AbstractEvent
+class TestAmqpEvent extends AbstractAmqpEvent
 {
 
     /**
@@ -27,18 +27,18 @@ class TestEvent extends AbstractEvent
  * Class AbstractEventTest
  * @package JTL\Nachricht\Event
  *
- * @covers \JTL\Nachricht\Event\AbstractEvent
+ * @covers \JTL\Nachricht\Event\AbstractAmqpEvent
  */
 class AbstractEventTest extends TestCase
 {
     /**
-     * @var TestEvent
+     * @var TestAmqpEvent
      */
     private $testEvent;
 
     public function setUp(): void
     {
-        $this->testEvent = new TestEvent();
+        $this->testEvent = new TestAmqpEvent();
     }
 
     public function testGetRoutingKey(): void

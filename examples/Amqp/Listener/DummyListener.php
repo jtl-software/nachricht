@@ -11,12 +11,12 @@ namespace JTL\Nachricht\Examples\Amqp\Listener;
 
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Listener\Listener;
-use JTL\Nachricht\Examples\Amqp\Event\DummyEvent;
+use JTL\Nachricht\Examples\Amqp\Event\DummyAmqpEvent;
 
 class DummyListener implements Listener
 {
     /**
-     * @param DummyEvent|Event $event
+     * @param DummyAmqpEvent|Event $event
      * @return void
      */
     public function __invoke(Event $event): void

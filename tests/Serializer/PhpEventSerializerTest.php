@@ -9,11 +9,11 @@
 namespace JTL\Nachricht\Serializer;
 
 use JTL\Nachricht\Collection\StringCollection;
-use JTL\Nachricht\Event\AbstractEvent;
+use JTL\Nachricht\Event\AbstractAmqpEvent;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use PHPUnit\Framework\TestCase;
 
-class MockEvent extends AbstractEvent
+class MockAmqpEvent extends AbstractAmqpEvent
 {
 
     /**
@@ -39,13 +39,13 @@ class PhpEventSerializerTest extends TestCase
     private $serializer;
 
     /**
-     * @var MockEvent
+     * @var MockAmqpEvent
      */
     private $event;
 
     public function setUp(): void
     {
-        $this->event = new MockEvent();
+        $this->event = new MockAmqpEvent();
         $this->serializer = new PhpEventSerializer();
     }
 
@@ -60,7 +60,7 @@ class PhpEventSerializerTest extends TestCase
     public function testCanDeserialize(): void
     {
         $event = $this->serializer->deserialize('O:34:"JTL\Nachricht\Serializer\MockEvent":0:{}');
-        $this->assertInstanceOf(MockEvent::class, $event);
+        $this->assertInstanceOf(MockAmqpEvent::class, $event);
     }
     
     public function testCanNotDeserializeBecauseStringIsInvalid(): void

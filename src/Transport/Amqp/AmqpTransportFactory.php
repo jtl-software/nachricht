@@ -9,17 +9,15 @@
 namespace JTL\Nachricht\Transport\Amqp;
 
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
-use JTL\Nachricht\Contract\Transport\EventTransport;
-use JTL\Nachricht\Contract\Transport\EventTransportFactory;
 
-class AmqpTransportFactory implements EventTransportFactory
+class AmqpTransportFactory
 {
     /**
      * @param array $connectionSettings
      * @param EventSerializer $serializer
-     * @return EventTransport
+     * @return AmqpTransport
      */
-    public function createTransport(array $connectionSettings, EventSerializer $serializer): EventTransport
+    public function createTransport(array $connectionSettings, EventSerializer $serializer): AmqpTransport
     {
         return new AmqpTransport(
             new AmqpConnectionSettings(

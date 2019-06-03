@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Emitter;
 
+use JTL\Nachricht\Contract\Event\AmqpEvent;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use Mockery;
@@ -39,7 +40,7 @@ class AmqpEmitterTest extends TestCase
     public function setUp(): void
     {
         $this->rabbitMqTransport = Mockery::mock(AmqpTransport::class);
-        $this->event = Mockery::mock(Event::class);
+        $this->event = Mockery::mock(AmqpEvent::class);
         $this->rabbitMqEmitter = new AmqpEmitter($this->rabbitMqTransport);
     }
 

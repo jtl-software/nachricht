@@ -8,12 +8,11 @@
 
 namespace JTL\Nachricht\Examples\DirectEmit\Event;
 
-
 use JTL\Nachricht\Collection\StringCollection;
-use JTL\Nachricht\Event\AbstractEvent;
+use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Examples\DirectEmit\Listener\FooListener;
 
-class FooEvent extends AbstractEvent
+class FooAmqpEvent implements Event
 {
     private $fooProperty;
 
