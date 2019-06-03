@@ -17,7 +17,7 @@ via `$container->get($listenerClass)`.
 Create an event class by extending `JTL\Nachricht\Event\AbstractEvent`.
 Listeners have to be registered in the `getListenerClassList()` method.
  
-```
+```php
 class DummyEvent extends AbstractEvent
 {
     private $data;
@@ -41,7 +41,7 @@ class DummyEvent extends AbstractEvent
 
 Create a listener class by implementing `JTL\Nachricht\Contract\Listener\Listener`
 
-```
+```php
 class DummyListener implements Listener
 {
     public function __invoke(Event $event): void
@@ -53,7 +53,7 @@ class DummyListener implements Listener
 
 Emit the Event
 
-```
+```php
 $emitter = $container->get(DirectEmitter::class);
 
 $event = new FooEvent('Test');
@@ -62,7 +62,7 @@ $emitter->emit($event);
 ```
 
 Output
-```
+```php
 # php examples/DirectEmit/DirectEmit.php
 FooListener called: Test 
 ```
