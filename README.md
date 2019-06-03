@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jtl-software/nachricht.svg?branch=master)](https://travis-ci.org/jtl-software/nachricht)
+
 # Nachricht
 
 Nachricht is an event dispatcher which focuses on distributing workloads.
