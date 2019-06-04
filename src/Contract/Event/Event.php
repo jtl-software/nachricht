@@ -16,19 +16,4 @@ interface Event
      * @return StringCollection
      */
     public function getListenerClassList(): StringCollection;
-
-    /**
-     * @return string
-     */
-    public function getRoutingKey(): string;
-
-    /**
-     * @return string
-     */
-    public function getExchange(): string;
-
-    /**
-     * @return int
-     */
-    public function getMaxRetryCount(): int;
 }

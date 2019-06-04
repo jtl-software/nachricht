@@ -9,7 +9,6 @@
 namespace JTL\Nachricht\Transport\Amqp;
 
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
-use JTL\Nachricht\Contract\Transport\EventTransport;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 
@@ -42,7 +41,7 @@ class AmqpTransportFactoryTest extends TestCase
 
     public function testCreateTransport(): void
     {
-        Mockery::mock('overload:' . AmqpTransport::class, EventTransport::class);
+        Mockery::mock(AmqpTransport::class);
 
         $connectionSettings = [
             'host' => 'localhost',

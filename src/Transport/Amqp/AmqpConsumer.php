@@ -9,6 +9,7 @@
 namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
+use JTL\Nachricht\Contract\Event\AmqpEvent;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Transport\Consumer;
 use JTL\Nachricht\Dispatcher\AmqpDispatcher;
@@ -55,7 +56,7 @@ class AmqpConsumer implements Consumer
      */
     private function createCallback(): Closure
     {
-        return function (Event $event) {
+        return function (AmqpEvent $event) {
             $this->dispatcher->dispatch($event);
         };
     }

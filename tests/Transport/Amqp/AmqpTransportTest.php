@@ -10,6 +10,7 @@ namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
 use JTL\Nachricht\Collection\StringCollection;
+use JTL\Nachricht\Contract\Event\AmqpEvent;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
@@ -138,7 +139,7 @@ class AmqpTransportTest extends TestCase
         $this->amqpConnection = Mockery::mock('overload:' . AMQPStreamConnection::class, [
             'channel' => $this->channel
         ]);
-        $this->event = Mockery::mock(Event::class, [
+        $this->event = Mockery::mock(AmqpEvent::class, [
             'getRoutingKey' => $this->routingKey,
             'getExchange' => $this->exchange,
             'getMaxRetryCount' => 3

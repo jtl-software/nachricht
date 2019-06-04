@@ -10,10 +10,10 @@ namespace JTL\Nachricht\Examples\Amqp\Event;
 
 
 use JTL\Nachricht\Collection\StringCollection;
-use JTL\Nachricht\Event\AbstractEvent;
+use JTL\Nachricht\Event\AbstractAmqpEvent;
 use JTL\Nachricht\Examples\Amqp\Listener\DummyListener;
 
-class DummyEvent extends AbstractEvent
+class DummyAmqpEvent extends AbstractAmqpEvent
 {
     /**
      * @var string

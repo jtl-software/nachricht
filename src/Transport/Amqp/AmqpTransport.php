@@ -10,9 +10,8 @@ namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
 use Exception;
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Event\AmqpEvent;
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
-use JTL\Nachricht\Contract\Transport\EventTransport;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -21,7 +20,7 @@ use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use Throwable;
 
-class AmqpTransport implements EventTransport
+class AmqpTransport
 {
     public const MESSAGE_QUEUE_PREFIX = 'msg__';
     public const DELAY_QUEUE_PREFIX = 'delayed__';
@@ -48,6 +47,11 @@ class AmqpTransport implements EventTransport
      */
     private $declaredQueueList;
 
+    /**
+     * @var AmqpConnectionSettings
+     */
+    private $connectionSettings;
+
 
     /**
      * AmqpTransport constructor.
@@ -59,29 +63,23 @@ class AmqpTransport implements EventTransport
         EventSerializer $serializer
     ) {
         $this->serializer = $serializer;
-
-        $this->connection = new AMQPStreamConnection(
-            $connectionSettings->getHost(),
-            $connectionSettings->getPort(),
-            $connectionSettings->getUser(),
-            $connectionSettings->getPassword(),
-            $connectionSettings->getVhost()
-        );
-
-        $this->channel = $this->connection->channel();
+        $this->connectionSettings = $connectionSettings;
         $this->declaredQueueList = [];
     }
 
     public function __destruct()
     {
-        $this->connection->close();
+        if ($this->connection instanceof AMQPStreamConnection) {
+            $this->connection->close();
+        }
     }
 
     /**
-     * @param Event $event
+     * @param AmqpEvent $event
      */
-    public function publish(Event $event): void
+    public function publish(AmqpEvent $event): void
     {
+        $this->connect();
         $this->declareQueue(self::MESSAGE_QUEUE_PREFIX . $event->getRoutingKey());
         $message = new AMQPMessage($this->serializer->serialize($event));
         $this->channel->basic_publish(
@@ -91,13 +89,58 @@ class AmqpTransport implements EventTransport
         );
     }
 
+    private function connect(): void
+    {
+        if ($this->connection === null) {
+            $this->connection = new AMQPStreamConnection(
+                $this->connectionSettings->getHost(),
+                $this->connectionSettings->getPort(),
+                $this->connectionSettings->getUser(),
+                $this->connectionSettings->getPassword(),
+                $this->connectionSettings->getVhost()
+            );
+
+            $this->channel = $this->connection->channel();
+        }
+    }
+
+    /**
+     * @param string $queueName
+     * @param AMQPTable|null $arguments
+     */
+    private function declareQueue(string $queueName, AMQPTable $arguments = null): void
+    {
+        if (!$this->queueAlreadyDeclared($queueName)) {
+            $this->channel->queue_declare(
+                $queueName,
+                false,
+                true,
+                false,
+                false,
+                false,
+                $arguments
+            );
+            $this->declaredQueueList[$queueName] = true;
+        }
+    }
+
+    /**
+     * @param string $queueName
+     * @return bool
+     */
+    private function queueAlreadyDeclared(string $queueName): bool
+    {
+        return isset($this->declaredQueueList[$queueName]);
+    }
+
     /**
      * @param SubscriptionSettings $subscriptionOptions
      * @param Closure $handler
-     * @return EventTransport
+     * @return AmqpTransport
      */
-    public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): EventTransport
+    public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): AmqpTransport
     {
+        $this->connect();
         foreach ($subscriptionOptions->getQueueNameList() as $queue) {
             $this->declareQueue($queue);
             $this->channel->basic_qos(0, 1, false);
@@ -115,38 +158,31 @@ class AmqpTransport implements EventTransport
         return $this;
     }
 
-    public function poll(): void
-    {
-        $this->channel->wait();
-    }
-
     /**
      * @param Closure $handler
      * @return Closure
      */
     private function createCallbackFromHandler(Closure $handler): Closure
     {
+        $this->connect();
         $serializer = $this->serializer;
         return function (AMQPMessage $message) use ($serializer, $handler) {
             try {
                 $event = $serializer->deserialize($message->getBody());
+                if (!$event instanceof AmqpEvent) {
+                    $this->handleFailedMessage($message);
+                } else {
+                    try {
+                        $handler($event);
+                    } catch (Exception|Throwable $exception) {
+                        $this->handleFailedEvent($message, $event);
+                    }
+                }
             } catch (DeserializationFailedException $exception) {
                 $this->handleFailedMessage($message);
-                return;
             }
 
-            if (!$event instanceof Event) {
-                $this->handleFailedMessage($message);
-                return;
-            }
-
-            try {
-                $handler($event);
-                $this->ack($message);
-            } catch (Exception|Throwable $exception) {
-                $this->handleFailedEvent($message, $event);
-                return;
-            }
+            $this->ack($message);
         };
     }
 
@@ -156,43 +192,41 @@ class AmqpTransport implements EventTransport
     private function handleFailedMessage(AMQPMessage $message): void
     {
         $this->publishMessageToFailureQueue($message);
-        $this->ack($message);
     }
 
     /**
      * @param AMQPMessage $message
-     * @param Event $event
      */
-    private function handleFailedEvent(AMQPMessage $message, Event $event): void
+    private function publishMessageToFailureQueue(AMQPMessage $message): void
+    {
+        $this->declareQueue(self::FAILURE_QUEUE);
+        $this->channel->basic_publish($message, '', self::FAILURE_QUEUE);
+    }
+
+    /**
+     * @param AMQPMessage $message
+     * @param AmqpEvent $event
+     */
+    private function handleFailedEvent(AMQPMessage $message, AmqpEvent $event): void
     {
         if ($this->maxRetryCountReached($message, $event)) {
             $this->publishMessageToDeadLetterQueue($message, $event);
         } else {
             $this->publishMessageToDelayQueue($message, $event);
         }
-
-        $this->ack($message);
     }
 
     /**
      * @param AMQPMessage $message
-     */
-    private function ack(AMQPMessage $message): void
-    {
-        $this->channel->basic_ack($message->delivery_info['delivery_tag']);
-    }
-
-    /**
-     * @param AMQPMessage $message
-     * @param Event $event
+     * @param AmqpEvent $event
      * @return bool
      */
-    private function maxRetryCountReached(AMQPMessage $message, Event $event): bool
+    private function maxRetryCountReached(AMQPMessage $message, AmqpEvent $event): bool
     {
         if (!isset($message->get_properties()['application_headers'])) {
             return false;
         }
-        
+
         /** @var AMQPTable $headers */
         $headers = $message->get_properties()['application_headers'];
         $headerData = $headers->getNativeData();
@@ -206,31 +240,34 @@ class AmqpTransport implements EventTransport
 
     /**
      * @param AMQPMessage $message
-     * @param Event $event
+     * @param AmqpEvent $event
      */
-    private function publishMessageToDelayQueue(AMQPMessage $message, Event $event): void
-    {
-        $delayQueueName = $this->declareDelayQueue($event->getRoutingKey());
-        $this->channel->basic_publish($message, '', $delayQueueName);
-    }
-
-    /**
-     * @param AMQPMessage $message
-     * @param Event $event
-     */
-    private function publishMessageToDeadLetterQueue(AMQPMessage $message, Event $event): void
+    private function publishMessageToDeadLetterQueue(AMQPMessage $message, AmqpEvent $event): void
     {
         $deadLetterQueueName = $this->declareDeadLetterQueue($event->getRoutingKey());
         $this->channel->basic_publish($message, '', $deadLetterQueueName);
     }
 
     /**
-     * @param AMQPMessage $message
+     * @param string $queueName
+     * @return string
      */
-    private function publishMessageToFailureQueue(AMQPMessage $message): void
+    private function declareDeadLetterQueue(string $queueName): string
     {
-        $this->declareQueue(self::FAILURE_QUEUE);
-        $this->channel->basic_publish($message, '', self::FAILURE_QUEUE);
+        $deadLetterQueueName = self::DEAD_LETTER_QUEUE_PREFIX . $queueName;
+        $this->declareQueue($deadLetterQueueName);
+
+        return $deadLetterQueueName;
+    }
+
+    /**
+     * @param AMQPMessage $message
+     * @param AmqpEvent $event
+     */
+    private function publishMessageToDelayQueue(AMQPMessage $message, AmqpEvent $event): void
+    {
+        $delayQueueName = $this->declareDelayQueue($event->getRoutingKey());
+        $this->channel->basic_publish($message, '', $delayQueueName);
     }
 
     /**
@@ -255,43 +292,16 @@ class AmqpTransport implements EventTransport
     }
 
     /**
-     * @param string $queueName
-     * @return string
+     * @param AMQPMessage $message
      */
-    private function declareDeadLetterQueue(string $queueName): string
+    private function ack(AMQPMessage $message): void
     {
-        $deadLetterQueueName = self::DEAD_LETTER_QUEUE_PREFIX . $queueName;
-        $this->declareQueue($deadLetterQueueName);
-
-        return $deadLetterQueueName;
+        $this->channel->basic_ack($message->delivery_info['delivery_tag']);
     }
 
-    /**
-     * @param string $queueName
-     * @return bool
-     */
-    private function queueAlreadyDeclared(string $queueName): bool
+    public function poll(): void
     {
-        return isset($this->declaredQueueList[$queueName]);
-    }
-
-    /**
-     * @param string $queueName
-     * @param AMQPTable|null $arguments
-     */
-    private function declareQueue(string $queueName, AMQPTable $arguments = null): void
-    {
-        if (!$this->queueAlreadyDeclared($queueName)) {
-            $this->channel->queue_declare(
-                $queueName,
-                false,
-                true,
-                false,
-                false,
-                false,
-                $arguments
-            );
-            $this->declaredQueueList[$queueName] = true;
-        }
+        $this->connect();
+        $this->channel->wait();
     }
 }

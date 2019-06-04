@@ -7,7 +7,7 @@
  */
 
 use JTL\Nachricht\Emitter\AmqpEmitter;
-use JTL\Nachricht\Examples\Amqp\Event\CreateFileEvent;
+use JTL\Nachricht\Examples\Amqp\Event\CreateFileAmqpEvent;
 
 include_once __DIR__ . '/../common/common.php';
 
@@ -15,6 +15,6 @@ include_once __DIR__ . '/../common/common.php';
 $rmqEmitter = $containerBuilder->get(AmqpEmitter::class);
 
 foreach (range(1, 100) as $i) {
-    $event = new CreateFileEvent($i);
+    $event = new CreateFileAmqpEvent($i);
     $rmqEmitter->emit($event);
 }
