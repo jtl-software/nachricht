@@ -10,14 +10,18 @@ namespace JTL\Nachricht\Examples\Amqp\Listener;
 
 
 use Exception;
-use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Listener\Listener;
+use JTL\Nachricht\Examples\Amqp\Event\CreateFileAmqpEvent;
 
 class CreateFileListener implements Listener
 {
     private const TMP_DIR = __DIR__ . '/../tmp';
 
-    public function __invoke(Event $event): void
+    /**
+     * @param CreateFileAmqpEvent $event
+     * @throws Exception
+     */
+    public function listen(CreateFileAmqpEvent $event): void
     {
         if (!is_dir(self::TMP_DIR)) {
             mkdir(self::TMP_DIR);

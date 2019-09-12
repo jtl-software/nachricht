@@ -8,9 +8,9 @@
 
 namespace JTL\Nachricht\Listener;
 
-use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Listener\Listener;
+use JTL\Nachricht\Listener\Cache\ListenerCache;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -43,12 +43,18 @@ class ListenerProviderTest extends TestCase
      */
     private $listener;
 
+    /**
+     * @var ListenerCache|Mockery\MockInterface
+     */
+    private $listenerCache;
+
     public function setUp(): void
     {
         $this->container = Mockery::mock(ContainerInterface::class);
         $this->event = Mockery::mock(Event::class);
         $this->listener = Mockery::mock(Listener::class);
-        $this->listenerProvider = new ListenerProvider($this->container);
+        $this->listenerCache = Mockery::mock(ListenerCache::class);
+        $this->listenerProvider = new ListenerProvider($this->container, $this->listenerCache);
     }
 
     public function tearDown(): void
@@ -58,19 +64,24 @@ class ListenerProviderTest extends TestCase
 
     public function testGetListenersForEvent(): void
     {
-        $randomListenerClass = uniqid('listenerClass', true);
+        $listenerList = [
+            [
+                'listenerClass' => 'FooListener',
+                'method' => 'listen'
+            ]
+        ];
 
-        $this->event->shouldReceive('getListenerClassList')
+        $this->listenerCache->shouldReceive('getListenerListForEvent')
             ->once()
-            ->andReturn(StringCollection::from($randomListenerClass));
+            ->andReturn($listenerList);
 
         $this->container->shouldReceive('get')
-            ->with($randomListenerClass)
+            ->with('FooListener')
             ->once()
             ->andReturn($this->listener);
 
-        foreach ($this->listenerProvider->getListenersForEvent($this->event) as $listener) {
-            $this->assertEquals($this->listener, $listener);
+        foreach ($this->listenerProvider->getListenersForEvent($this->event) as $listenerClosure) {
+            $this->assertTrue(is_callable($listenerClosure));
         }
     }
 }

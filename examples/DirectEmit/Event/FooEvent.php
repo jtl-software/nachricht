@@ -12,7 +12,7 @@ use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Examples\DirectEmit\Listener\FooListener;
 
-class FooAmqpEvent implements Event
+class FooEvent implements Event
 {
     private $fooProperty;
 

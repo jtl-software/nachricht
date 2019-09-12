@@ -7,13 +7,13 @@
  */
 
 use JTL\Nachricht\Emitter\DirectEmitter;
-use JTL\Nachricht\Examples\DirectEmit\Event\FooAmqpEvent;
+use JTL\Nachricht\Examples\DirectEmit\Event\FooEvent;
 
 include_once __DIR__ . '/../common/common.php';
 
 /** @var DirectEmitter $emitter */
 $emitter = $containerBuilder->get(DirectEmitter::class);
 
-$event = new FooAmqpEvent('Test');
+$event = new FooEvent('Test');
 
 $emitter->emit($event);

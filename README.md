@@ -16,11 +16,10 @@ via `$container->get($listenerClass)`.
 
 ## Usage
 
-Create an event class by extending `JTL\Nachricht\Event\AbstractEvent`.
-Listeners have to be registered in the `getListenerClassList()` method.
+Create an event class by implementing `JTL\Nachricht\Contract\Event\Event`.
  
 ```php
-class DummyEvent extends AbstractEvent
+class DummyEvent implements Event
 {
     private $data;
 
@@ -33,11 +32,6 @@ class DummyEvent extends AbstractEvent
     {
         return $this->data;
     }
-
-    public function getListenerClassList(): StringCollection
-    {
-        return StringCollection::from(DummyListener::class);
-    }
 }
 ```
 
@@ -46,7 +40,7 @@ Create a listener class by implementing `JTL\Nachricht\Contract\Listener\Listene
 ```php
 class DummyListener implements Listener
 {
-    public function __invoke(Event $event): void
+    public function listen(DummyEvent $event): void
     {
         echo 'Dummy Listener called: ' . $event->getData() . "\n";
     }

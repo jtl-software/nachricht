@@ -10,7 +10,6 @@ namespace JTL\Nachricht\Emitter;
 
 use JTL\Nachricht\Contract\Emitter\Emitter;
 use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Listener\ListenerProvider;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -43,7 +42,6 @@ class DirectEmitter implements Emitter, EventDispatcherInterface
      */
     public function dispatch(object $event)
     {
-        /** @var Listener $listener */
         foreach ($this->listenerProvider->getListenersForEvent($event) as $listener) {
             $listener($event);
         }

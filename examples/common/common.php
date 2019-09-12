@@ -12,6 +12,9 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+define('PROJECT_ROOT', __DIR__ . '/../');
+define('CACHE_PATH', __DIR__ . '/../cache.php');
+
 $containerBuilder = new ContainerBuilder();
 
 $loader = new YamlFileLoader($containerBuilder, new FileLocator(__DIR__));

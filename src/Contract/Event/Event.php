@@ -8,12 +8,6 @@
 
 namespace JTL\Nachricht\Contract\Event;
 
-use JTL\Nachricht\Collection\StringCollection;
-
 interface Event
 {
-    /**
-     * @return StringCollection
-     */
-    public function getListenerClassList(): StringCollection;
 }

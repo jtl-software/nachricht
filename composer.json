@@ -7,7 +7,9 @@
         "jtl/php-generic-collection": "^0.2.4",
         "psr/container": "^1.0",
         "psr/event-dispatcher": "^1.0",
-        "ext-json": "*"
+        "ext-json": "*",
+        "symfony/config": "^4.3",
+        "nikic/php-parser": "^4.2"
     },
     "suggest" : {
         "symfony/dependency-injection": "Recommended DI-Container",
