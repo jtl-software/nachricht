@@ -25,7 +25,7 @@ class ListenerDetector extends NodeVisitorAbstract
     /**
      * @var array
      */
-    private $listenerMethods;
+    private $listenerMethods = [];
 
     /**
      * @var string
