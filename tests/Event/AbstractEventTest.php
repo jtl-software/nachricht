@@ -8,19 +8,10 @@
 
 namespace JTL\Nachricht\Event;
 
-use JTL\Nachricht\Collection\StringCollection;
 use PHPUnit\Framework\TestCase;
 
 class TestAmqpEvent extends AbstractAmqpEvent
 {
-
-    /**
-     * @return StringCollection
-     */
-    public function getListenerClassList(): StringCollection
-    {
-        return new StringCollection();
-    }
 }
 
 /**

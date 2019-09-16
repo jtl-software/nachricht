@@ -8,21 +8,12 @@
 
 namespace JTL\Nachricht\Serializer;
 
-use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Event\AbstractAmqpEvent;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use PHPUnit\Framework\TestCase;
 
 class MockAmqpEvent extends AbstractAmqpEvent
 {
-
-    /**
-     * @return StringCollection
-     */
-    public function getListenerClassList(): StringCollection
-    {
-        return new StringCollection();
-    }
 }
 
 /**
