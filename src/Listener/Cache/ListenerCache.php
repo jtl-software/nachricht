@@ -30,6 +30,6 @@ class ListenerCache
      */
     public function getListenerListForEvent(string $eventClass): array
     {
-        return $this->listenerCache[$eventClass] ?? null;
+        return $this->listenerCache[$eventClass] ?? [];
     }
 }
