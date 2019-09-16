@@ -49,8 +49,8 @@ class ListenerDetector extends NodeVisitorAbstract
         if ($this->classIsListener) {
             if ($node instanceof ClassMethod && $this->classHasHandlerMethod($node)) {
                 $this->listenerMethods[] = [
-                    "methodName" => $node->name->name,
-                    "eventClass" => $this->getArgumentClass($node)
+                    'methodName' => $node->name->name,
+                    'eventClass' => $this->getArgumentClass($node)
                 ];
             }
         }

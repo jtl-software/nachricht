@@ -2,6 +2,9 @@ parameters:
     level: 7
     paths:
         - src
+    excludes_analyse:
+        - src/Listener/Cache/ListenerCacheCreator.php
+        - src/Listener/Cache/ListenerDetector.php
     ignoreErrors:
          - message: '#.*PhpAmqpLib\\Channel\\AMQPChannel::queue_declare\(\) expects array.*#'
            path: 'src/Transport/Amqp/AmqpTransport.php'

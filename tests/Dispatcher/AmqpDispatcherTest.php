@@ -36,16 +36,9 @@ class AmqpDispatcherTest extends TestCase
      */
     private $event;
 
-    /**
-     * @var \Closure|Mockery\MockInterface
-     */
-    private $listener;
-
-
     public function setUp(): void
     {
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
-        $this->listener = Mockery::on(\Closure::class);
         $this->event = Mockery::mock(Event::class);
         $this->dispatcher = new AmqpDispatcher($this->listenerProvider);
     }
@@ -57,18 +50,15 @@ class AmqpDispatcherTest extends TestCase
 
     public function testCanDispatch(): void
     {
+        $listener = function (object $event) {
+            $this->assertEquals($this->event, $event);
+        };
+
         $this->listenerProvider->shouldReceive('getListenersForEvent')
             ->with($this->event)
             ->once()
-            ->andReturn([$this->listener]);
-
-        $this->listener->shouldReceive('__invoke')
-            ->with($this->event)
-            ->once();
+            ->andReturn([$listener]);
 
         $this->dispatcher->dispatch($this->event);
-
-        //For coverage
-        $this->assertTrue(true);
     }
 }

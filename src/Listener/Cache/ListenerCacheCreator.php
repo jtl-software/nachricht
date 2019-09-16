@@ -28,6 +28,8 @@ class ListenerCacheCreator
             $isDevelopment
         );
 
+        $cacheFileLoader = new ListenerCacheFileLoader();
+
         if (!$configCache->isFresh()) {
             $eventToListenerMap = [];
 
@@ -45,6 +47,10 @@ class ListenerCacheCreator
                 $nodeTraverser->addVisitor($listenerDetector);
 
                 $phpCode = file_get_contents($file);
+
+                if ($phpCode === false) {
+                    continue;
+                }
 
                 $ast = $parser->parse($phpCode);
                 $nodeTraverser->traverse($ast);
@@ -64,7 +70,7 @@ class ListenerCacheCreator
             $configCache->write("<?php\nreturn {$map};");
         }
 
-        return new ListenerCache(require $cacheFile);
+        return new ListenerCache($cacheFileLoader->load($cacheFile));
     }
 
     /**

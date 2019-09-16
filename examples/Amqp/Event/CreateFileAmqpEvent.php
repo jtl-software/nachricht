@@ -9,9 +9,7 @@
 namespace JTL\Nachricht\Examples\Amqp\Event;
 
 
-use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Event\AbstractAmqpEvent;
-use JTL\Nachricht\Examples\Amqp\Listener\CreateFileListener;
 
 class CreateFileAmqpEvent extends AbstractAmqpEvent
 {
@@ -39,13 +37,5 @@ class CreateFileAmqpEvent extends AbstractAmqpEvent
     public function getRoutingKey(): string
     {
         return 'test_queue';
-    }
-
-    /**
-     * @return StringCollection
-     */
-    public function getListenerClassList(): StringCollection
-    {
-        return StringCollection::from(CreateFileListener::class);
     }
 }
