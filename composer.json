@@ -13,13 +13,12 @@
     },
     "suggest" : {
         "symfony/dependency-injection": "Recommended DI-Container",
-        "symfony/config": "Required for Symfony DI-Container and examples",
         "symfony/yaml": "Required for Symfony DI-Container and examples",
         "php-amqplib/php-amqplib": "Required for RabbitMq Transport"
     },
     "require-dev": {
         "php-amqplib/php-amqplib": "^2.9",
-        "phpunit/phpunit": "^8.1",
+        "phpunit/phpunit": "^8.3",
         "friendsofphp/php-cs-fixer": "^2.15",
         "phpstan/phpstan": "^0.11.6",
         "mockery/mockery": "^1.2"
