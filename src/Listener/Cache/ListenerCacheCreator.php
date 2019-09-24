@@ -31,43 +31,7 @@ class ListenerCacheCreator
         $cacheFileLoader = new ListenerCacheFileLoader();
 
         if (!$configCache->isFresh()) {
-            $eventToListenerMap = [];
-
-            $parserFactory = new ParserFactory();
-            $nameResolver = new NameResolver();
-
-            $parser = $parserFactory->create(ParserFactory::ONLY_PHP7);
-
-            $files = $this->loadPhpFilesFromPathList($lookupPathList);
-
-            foreach ($files as $file) {
-                $listenerDetector = new ListenerDetector();
-                $nodeTraverser = new NodeTraverser();
-                $nodeTraverser->addVisitor($nameResolver);
-                $nodeTraverser->addVisitor($listenerDetector);
-
-                $phpCode = file_get_contents($file);
-
-                if ($phpCode === false) {
-                    continue;
-                }
-
-                $ast = $parser->parse($phpCode);
-                $nodeTraverser->traverse($ast);
-
-                if (!$listenerDetector->isClassListener()) {
-                    continue;
-                }
-
-                $this->mapListenerToEvent(
-                    $listenerDetector->getListenerClass(),
-                    $listenerDetector->getListenerMethods(),
-                    $eventToListenerMap
-                );
-            }
-
-            $map = var_export($eventToListenerMap, true);
-            $configCache->write("<?php\nreturn {$map};");
+            $this->rebuildCache($lookupPathList, $configCache);
         }
 
         return new ListenerCache($cacheFileLoader->load($cacheFile));
@@ -117,5 +81,51 @@ class ListenerCacheCreator
                 'method' => $listenerFunction['methodName']
             ];
         }
+    }
+
+    /**
+     * @param array $lookupPathList
+     * @param ConfigCache $configCache
+     * @return void
+     */
+    private function rebuildCache(array $lookupPathList, ConfigCache $configCache): void
+    {
+        $eventToListenerMap = [];
+
+        $parserFactory = new ParserFactory();
+        $nameResolver = new NameResolver();
+
+        $parser = $parserFactory->create(ParserFactory::ONLY_PHP7);
+
+        $files = $this->loadPhpFilesFromPathList($lookupPathList);
+
+        foreach ($files as $file) {
+            $listenerDetector = new ListenerDetector();
+            $nodeTraverser = new NodeTraverser();
+            $nodeTraverser->addVisitor($nameResolver);
+            $nodeTraverser->addVisitor($listenerDetector);
+
+            $phpCode = file_get_contents($file);
+
+            if ($phpCode === false) {
+                continue;
+            }
+
+            $ast = $parser->parse($phpCode);
+            $nodeTraverser->traverse($ast);
+
+            if (!$listenerDetector->isClassListener()) {
+                continue;
+            }
+
+            $this->mapListenerToEvent(
+                $listenerDetector->getListenerClass(),
+                $listenerDetector->getListenerMethods(),
+                $eventToListenerMap
+            );
+        }
+
+        $map = var_export($eventToListenerMap, true);
+        $configCache->write("<?php\nreturn {$map};");
     }
 }
