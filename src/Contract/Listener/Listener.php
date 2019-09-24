@@ -8,13 +8,6 @@
 
 namespace JTL\Nachricht\Contract\Listener;
 
-use JTL\Nachricht\Contract\Event\Event;
-
 interface Listener
 {
-    /**
-     * @param Event $event
-     * @return void
-     */
-    public function __invoke(Event $event): void;
 }

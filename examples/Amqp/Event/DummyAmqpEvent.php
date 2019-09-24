@@ -9,9 +9,7 @@
 namespace JTL\Nachricht\Examples\Amqp\Event;
 
 
-use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Event\AbstractAmqpEvent;
-use JTL\Nachricht\Examples\Amqp\Listener\DummyListener;
 
 class DummyAmqpEvent extends AbstractAmqpEvent
 {
@@ -31,13 +29,5 @@ class DummyAmqpEvent extends AbstractAmqpEvent
     public function getData(): string
     {
         return $this->data;
-    }
-
-    /**
-     * @return StringCollection
-     */
-    public function getListenerClassList(): StringCollection
-    {
-        return StringCollection::from(DummyListener::class);
     }
 }

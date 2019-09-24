@@ -9,7 +9,6 @@
 namespace JTL\Nachricht\Emitter;
 
 use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Listener\ListenerProvider;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -29,11 +28,6 @@ class DirectEmitterTest extends TestCase
     private $listenerProvider;
 
     /**
-     * @var Listener|Mockery\MockInterface
-     */
-    private $listener;
-
-    /**
      * @var Event|Mockery\MockInterface
      */
     private $event;
@@ -46,7 +40,6 @@ class DirectEmitterTest extends TestCase
     public function setUp(): void
     {
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
-        $this->listener = Mockery::mock(Listener::class);
         $this->event = Mockery::mock(Event::class);
         $this->directEmitter = new DirectEmitter($this->listenerProvider);
     }
@@ -58,18 +51,15 @@ class DirectEmitterTest extends TestCase
 
     public function testCanEmit()
     {
+        $listener = function (object $event) {
+            $this->assertEquals($this->event, $event);
+        };
+
         $this->listenerProvider->shouldReceive('getListenersForEvent')
             ->with($this->event)
             ->once()
-            ->andReturn([$this->listener]);
-
-        $this->listener->shouldReceive('__invoke')
-            ->with($this->event)
-            ->once();
+            ->andReturn([$listener]);
 
         $this->directEmitter->emit($this->event);
-
-        //For coverage
-        $this->assertTrue(true);
     }
 }

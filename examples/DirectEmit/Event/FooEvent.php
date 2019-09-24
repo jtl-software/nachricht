@@ -8,11 +8,9 @@
 
 namespace JTL\Nachricht\Examples\DirectEmit\Event;
 
-use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Examples\DirectEmit\Listener\FooListener;
 
-class FooAmqpEvent implements Event
+class FooEvent implements Event
 {
     private $fooProperty;
 
@@ -31,11 +29,5 @@ class FooAmqpEvent implements Event
     public function getFooProperty()
     {
         return $this->fooProperty;
-    }
-
-
-    public function getListenerClassList(): StringCollection
-    {
-        return StringCollection::from(FooListener::class);
     }
 }
