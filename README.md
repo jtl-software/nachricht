@@ -19,6 +19,8 @@ via `$container->get($listenerClass)`.
 Create an event class by implementing `JTL\Nachricht\Contract\Event\Event`.
  
 ```php
+use JTL\Nachricht\Contract\Event\Event;
+
 class DummyEvent implements Event
 {
     private $data;
@@ -38,6 +40,8 @@ class DummyEvent implements Event
 Create a listener class by implementing `JTL\Nachricht\Contract\Listener\Listener`
 
 ```php
+use JTL\Nachricht\Contract\Listener\Listener;
+
 class DummyListener implements Listener
 {
     public function listen(DummyEvent $event): void
