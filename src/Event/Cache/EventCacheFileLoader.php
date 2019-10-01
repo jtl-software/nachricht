@@ -6,9 +6,9 @@
  * Date: 2019/09/16
  */
 
-namespace JTL\Nachricht\Listener\Cache;
+namespace JTL\Nachricht\Event\Cache;
 
-class ListenerCacheFileLoader
+class EventCacheFileLoader
 {
     /**
      * @param string $fileName

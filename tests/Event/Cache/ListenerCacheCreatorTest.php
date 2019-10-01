@@ -6,7 +6,7 @@
  * Date: 2019/09/12
  */
 
-namespace JTL\Nachricht\Listener\Cache;
+namespace JTL\Nachricht\Event\Cache;
 
 use Mockery;
 use PhpParser\Node\Stmt;
@@ -19,9 +19,9 @@ use Symfony\Component\Config\ConfigCache;
 
 /**
  * Class ListenerCacheCreatorTest
- * @package JTL\Nachricht\Listener\Cache
+ * @package JTL\Nachricht\Event\Cache
  *
- * @covers \JTL\Nachricht\Listener\Cache\ListenerCacheCreator
+ * @covers \JTL\Nachricht\Event\Cache\EventCacheCreator
  * @runTestsInSeparateProcesses
  * @preserveGlobalState disabled
  */
@@ -53,7 +53,7 @@ class ListenerCacheCreatorTest extends TestCase
     private $nodeTraverser;
 
     /**
-     * @var ListenerCacheCreator
+     * @var EventCacheCreator
      */
     private $listenerCacheCreator;
 
@@ -87,6 +87,11 @@ class ListenerCacheCreatorTest extends TestCase
      */
     private $cacheFileLoader;
 
+    /**
+     * @var Mockery\LegacyMockInterface|Mockery\MockInterface
+     */
+    private $amqpEventRoutingKeyExtractor;
+
     public function setUp(): void
     {
         Mockery::getConfiguration()->setConstantsMap([
@@ -99,12 +104,13 @@ class ListenerCacheCreatorTest extends TestCase
         $this->parserFactory = Mockery::mock('overload:' . ParserFactory::class);
         $this->nameResolver = Mockery::mock('overload:' . NameResolver::class);
         $this->listenerDetector = Mockery::mock('overload:' . ListenerDetector::class);
+        $this->amqpEventRoutingKeyExtractor = Mockery::mock('overload:' . AmqpEventRoutingKeyExtractor::class);
         $this->nodeTraverser = Mockery::mock('overload:' . NodeTraverser::class);
         $this->parser = Mockery::mock(Parser::class);
         $this->stmt = Mockery::mock(Stmt::class);
-        $this->cacheFileLoader = Mockery::mock('overload:' . ListenerCacheFileLoader::class);
+        $this->cacheFileLoader = Mockery::mock('overload:' . EventCacheFileLoader::class);
 
-        $this->listenerCacheCreator = new ListenerCacheCreator();
+        $this->listenerCacheCreator = new EventCacheCreator();
         $this->cacheFile = uniqid('cachefile', true);
         $this->lookupPathList = [
             uniqid('path', true)
@@ -139,9 +145,25 @@ class ListenerCacheCreatorTest extends TestCase
             ->with(Mockery::type(ListenerDetector::class))
             ->once();
 
+        $this->nodeTraverser->shouldReceive('addVisitor')
+            ->with(Mockery::type(AmqpEventRoutingKeyExtractor::class))
+            ->once();
+
         $this->listenerDetector->shouldReceive('isClassListener')
             ->once()
             ->andReturnTrue();
+
+        $this->amqpEventRoutingKeyExtractor->shouldReceive('isClassEvent')
+            ->once()
+            ->andReturnTrue();
+
+        $this->amqpEventRoutingKeyExtractor->shouldReceive('getEventClass')
+            ->twice()
+            ->andReturn('FooEvent');
+
+        $this->amqpEventRoutingKeyExtractor->shouldReceive('getRoutingKey')
+            ->once()
+            ->andReturn('test_queue');
 
         $this->parser->shouldReceive('parse')
             ->once()
@@ -153,7 +175,7 @@ class ListenerCacheCreatorTest extends TestCase
             ->once();
 
         $this->listenerDetector->shouldReceive('getListenerClass')
-            ->once()
+            ->twice()
             ->andReturn('FooListener');
 
         $this->listenerDetector->shouldReceive('getListenerMethods')
@@ -167,10 +189,13 @@ class ListenerCacheCreatorTest extends TestCase
 
         $eventToListenerMap = [
             'FooEvent' => [
-                [
+                'listenerList' => [
+                    [
                     'listenerClass' => 'FooListener',
                     'method' => 'fooMethod'
-                ]
+                    ]
+                ],
+                'routingKey' => 'msg__test_queue',
             ]
         ];
 

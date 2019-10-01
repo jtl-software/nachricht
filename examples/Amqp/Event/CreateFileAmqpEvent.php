@@ -34,7 +34,7 @@ class CreateFileAmqpEvent extends AbstractAmqpEvent
     /**
      * @return string
      */
-    public function getRoutingKey(): string
+    public static function getRoutingKey(): string
     {
         return 'test_queue';
     }

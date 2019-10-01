@@ -12,7 +12,8 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-define('PROJECT_ROOT', __DIR__ . '/../');
+define('PROJECT_ROOT_AMQP', __DIR__ . '/../Amqp');
+define('PROJECT_ROOT_DIRECT', __DIR__ . '/../DirectEmit');
 define('CACHE_PATH', __DIR__ . '/../cache.php');
 
 $containerBuilder = new ContainerBuilder();

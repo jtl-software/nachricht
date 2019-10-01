@@ -13,15 +13,15 @@ interface AmqpEvent extends Event
     /**
      * @return string
      */
-    public function getRoutingKey(): string;
+    public static function getRoutingKey(): string;
 
     /**
      * @return string
      */
-    public function getExchange(): string;
+    public static function getExchange(): string;
 
     /**
      * @return int
      */
-    public function getMaxRetryCount(): int;
+    public static function getMaxRetryCount(): int;
 }

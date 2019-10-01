@@ -6,9 +6,9 @@
  * Date: 2019/09/11
  */
 
-namespace JTL\Nachricht\Listener\Cache;
+namespace JTL\Nachricht\Event\Cache;
 
-class ListenerCache
+class EventCache
 {
     /**
      * @var array
@@ -30,6 +30,23 @@ class ListenerCache
      */
     public function getListenerListForEvent(string $eventClass): array
     {
-        return $this->listenerCache[$eventClass] ?? [];
+        return $this->listenerCache[$eventClass]['listenerList'] ?? [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getEventClassList(): array
+    {
+        return array_keys($this->listenerCache);
+    }
+
+    /**
+     * @param string $eventClass
+     * @return string|null
+     */
+    public function getRoutingKeyForEvent(string $eventClass): ?string
+    {
+        return $this->listenerCache[$eventClass]['routingKey'] ?? null;
     }
 }
