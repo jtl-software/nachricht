@@ -50,4 +50,13 @@ class ListenerProvider implements ListenerProviderInterface
             };
         }
     }
+
+    /**
+     * @param object $event
+     * @return bool
+     */
+    public function eventHasListeners(object $event): bool
+    {
+        return count($this->listenerCache->getListenerListForEvent(get_class($event))) > 0;
+    }
 }
