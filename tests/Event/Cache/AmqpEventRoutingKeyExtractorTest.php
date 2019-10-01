@@ -34,6 +34,10 @@ class AmqpEventRoutingKeyExtractorTest extends TestCase
         $className->parts = ['JTL', 'Nachricht', 'Event', 'Cache', 'TestAmqpEvent'];
         $class->namespacedName = $className;
 
+        $class->shouldReceive('isAbstract')
+            ->once()
+            ->andReturnFalse();
+
         $extractor = new AmqpEventRoutingKeyExtractor();
 
         $extractor->enterNode($class);

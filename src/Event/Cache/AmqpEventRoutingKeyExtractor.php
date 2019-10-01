@@ -35,7 +35,7 @@ class AmqpEventRoutingKeyExtractor extends AbstractVisitor
      */
     public function enterNode(Node $node)
     {
-        if ($node instanceof Class_) {
+        if ($node instanceof Class_ && !$node->isAbstract()) {
             $this->classIsEvent = $this->classImplementsInterface($node, AmqpEvent::class);
 
             if ($this->classIsEvent) {
