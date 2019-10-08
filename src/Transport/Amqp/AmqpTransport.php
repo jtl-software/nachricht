@@ -12,6 +12,7 @@ use Closure;
 use Exception;
 use JTL\Nachricht\Contract\Event\AmqpEvent;
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Listener\ListenerProvider;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -52,19 +53,27 @@ class AmqpTransport
      */
     private $connectionSettings;
 
+    /**
+     * @var ListenerProvider
+     */
+    private $listenerProvider;
+
 
     /**
      * AmqpTransport constructor.
      * @param AmqpConnectionSettings $connectionSettings
      * @param EventSerializer $serializer
+     * @param ListenerProvider $listenerProvider
      */
     public function __construct(
         AmqpConnectionSettings $connectionSettings,
-        EventSerializer $serializer
+        EventSerializer $serializer,
+        ListenerProvider $listenerProvider
     ) {
         $this->serializer = $serializer;
         $this->connectionSettings = $connectionSettings;
         $this->declaredQueueList = [];
+        $this->listenerProvider = $listenerProvider;
     }
 
     public function __destruct()
@@ -172,6 +181,10 @@ class AmqpTransport
                 if (!$event instanceof AmqpEvent) {
                     $this->handleFailedMessage($message);
                 } else {
+                    if (!$this->listenerProvider->eventHasListeners($event)) {
+                        return;
+                    }
+
                     try {
                         $handler($event);
                     } catch (Exception|Throwable $exception) {

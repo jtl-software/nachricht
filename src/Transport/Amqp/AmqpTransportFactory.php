@@ -9,16 +9,21 @@
 namespace JTL\Nachricht\Transport\Amqp;
 
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Listener\ListenerProvider;
 
 class AmqpTransportFactory
 {
     /**
      * @param array $connectionSettings
      * @param EventSerializer $serializer
+     * @param ListenerProvider $listenerProvider
      * @return AmqpTransport
      */
-    public function createTransport(array $connectionSettings, EventSerializer $serializer): AmqpTransport
-    {
+    public function createTransport(
+        array $connectionSettings,
+        EventSerializer $serializer,
+        ListenerProvider $listenerProvider
+    ): AmqpTransport {
         return new AmqpTransport(
             new AmqpConnectionSettings(
                 $connectionSettings['host'],
@@ -27,7 +32,8 @@ class AmqpTransportFactory
                 $connectionSettings['password'],
                 $connectionSettings['vhost'] ?? '/'
             ),
-            $serializer
+            $serializer,
+            $listenerProvider
         );
     }
 }

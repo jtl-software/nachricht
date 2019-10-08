@@ -21,14 +21,16 @@ services:
         user: 'guest'
         password: 'guest'
       - '@JTL\Nachricht\Contract\Serializer\EventSerializer'
+      - '@JTL\Nachricht\Listener\ListenerProvider'
 
-  JTL\Nachricht\Listener\Cache\ListenerCache:
-    factory: 'JTL\Nachricht\Listener\Cache\ListenerCacheCreator:create'
+  JTL\Nachricht\Event\Cache\EventCache:
+    factory: 'JTL\Nachricht\Event\Cache\EventCacheCreator:create'
     arguments:
       $cacheFile: !php/const CACHE_PATH
       $lookupPathList:
-        - !php/const PROJECT_ROOT
-      $isDevelopment: false
+        - !php/const PROJECT_ROOT_AMQP
+        - !php/const PROJECT_ROOT_DIRECT
+      $isDevelopment: true
 
   JTL\Nachricht\Transport\Amqp\AmqpConsumer:
     public: true

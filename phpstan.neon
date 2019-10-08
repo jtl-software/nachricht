@@ -6,5 +6,7 @@ parameters:
         - src/Listener/Cache/ListenerCacheCreator.php
         - src/Listener/Cache/ListenerDetector.php
     ignoreErrors:
-         - message: '#.*PhpAmqpLib\\Channel\\AMQPChannel::queue_declare\(\) expects array.*#'
-           path: 'src/Transport/Amqp/AmqpTransport.php'
+        - message: '#.*PhpAmqpLib\\Channel\\AMQPChannel::queue_declare\(\) expects array.*#'
+          path: 'src/Transport/Amqp/AmqpTransport.php'
+        - message: '#.*Strict comparison using === between array<string, string> and false will always evaluate to false.*#'
+          path: 'src/Event/Cache/AbstractVisitor.php'

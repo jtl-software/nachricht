@@ -6,9 +6,10 @@
  * Date: 2019/09/12
  */
 
-namespace JTL\Nachricht\Listener\Cache;
+namespace JTL\Nachricht\Event\Cache;
 
 use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Listener\Listener;
 use Mockery;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
@@ -19,9 +20,9 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Class ListenerDetectorTest
- * @package JTL\Nachricht\Listener\Cache
+ * @package JTL\Nachricht\Event\Cache
  *
- * @covers \JTL\Nachricht\Listener\Cache\ListenerDetector
+ * @covers \JTL\Nachricht\Event\Cache\ListenerDetector
  */
 class ListenerDetectorTest extends TestCase
 {
@@ -80,12 +81,10 @@ class ListenerDetectorTest extends TestCase
 
     public function testCanDetectListener(): void
     {
-        $this->interfaceName->parts = ['JTL', 'Nachricht', 'Contract', 'Listener', 'Listener'];
-        $this->class->implements[0] = $this->interfaceName;
-        $this->listenerClassName->parts = ['JTL', 'Nachricht', 'FooListener'];
+        $this->listenerClassName->parts = ['JTL', 'Nachricht', 'Event', 'Cache', 'FooListener'];
         $this->class->namespacedName = $this->listenerClassName;
 
-        $this->eventClassName->parts = ['JTL', 'Nachricht', 'Listener', 'Cache', 'TestEvent'];
+        $this->eventClassName->parts = ['JTL', 'Nachricht', 'Event', 'Cache', 'TestEvent'];
         $this->param->type = $this->eventClassName;
         $this->classMethod->params[0] = $this->param;
 
@@ -98,16 +97,20 @@ class ListenerDetectorTest extends TestCase
         $this->assertEquals([
             [
                 'methodName' => 'listen',
-                'eventClass' => 'JTL\Nachricht\Listener\Cache\TestEvent'
+                'eventClass' => 'JTL\Nachricht\Event\Cache\TestEvent'
             ]
         ], $this->listenerDetector->getListenerMethods());
 
-        $this->assertEquals('JTL\Nachricht\FooListener', $this->listenerDetector->getListenerClass());
+        $this->assertEquals('JTL\Nachricht\Event\Cache\FooListener', $this->listenerDetector->getListenerClass());
         $this->assertTrue($this->listenerDetector->isClassListener());
     }
 }
 
 
 class TestEvent implements Event
+{
+}
+
+class FooListener implements Listener
 {
 }

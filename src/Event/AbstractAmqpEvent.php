@@ -15,15 +15,15 @@ abstract class AbstractAmqpEvent implements AmqpEvent
     /**
      * @return string
      */
-    public function getRoutingKey(): string
+    public static function getRoutingKey(): string
     {
-        return $this->getDefaultRoutingKey();
+        return self::getDefaultRoutingKey();
     }
 
     /**
      * @return string
      */
-    public function getExchange(): string
+    public static function getExchange(): string
     {
         return '';
     }
@@ -31,7 +31,7 @@ abstract class AbstractAmqpEvent implements AmqpEvent
     /**
      * @return int
      */
-    public function getMaxRetryCount(): int
+    public static function getMaxRetryCount(): int
     {
         return 3;
     }
@@ -39,8 +39,8 @@ abstract class AbstractAmqpEvent implements AmqpEvent
     /**
      * @return string
      */
-    private function getDefaultRoutingKey(): string
+    private static function getDefaultRoutingKey(): string
     {
-        return get_class($this);
+        return static::class;
     }
 }

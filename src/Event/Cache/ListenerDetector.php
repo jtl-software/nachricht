@@ -6,16 +6,15 @@
  * Date: 2019/09/10
  */
 
-namespace JTL\Nachricht\Listener\Cache;
+namespace JTL\Nachricht\Event\Cache;
 
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Listener\Listener;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeVisitorAbstract;
 
-class ListenerDetector extends NodeVisitorAbstract
+class ListenerDetector extends AbstractVisitor
 {
     /**
      * @var bool
@@ -28,7 +27,7 @@ class ListenerDetector extends NodeVisitorAbstract
     private $listenerMethods = [];
 
     /**
-     * @var string
+     * @var string|null
      */
     private $listenerClass;
 
@@ -39,7 +38,7 @@ class ListenerDetector extends NodeVisitorAbstract
     public function enterNode(Node $node)
     {
         if ($node instanceof Class_) {
-            $this->classIsListener = $this->classImplementsListenerInterface($node);
+            $this->classIsListener = $this->classImplementsInterface($node, Listener::class);
 
             if ($this->classIsListener) {
                 $this->listenerClass = $this->getClassName($node);
@@ -73,33 +72,11 @@ class ListenerDetector extends NodeVisitorAbstract
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getListenerClass(): string
+    public function getListenerClass(): ?string
     {
         return $this->listenerClass;
-    }
-
-    /**
-     * @param Class_ $class
-     * @return string
-     */
-    private function getClassName(Class_ $class): string
-    {
-        return implode('\\', $class->namespacedName->parts);
-    }
-
-    /**
-     * @param Class_ $class
-     * @return bool
-     */
-    private function classImplementsListenerInterface(Class_ $class): bool
-    {
-        $implementedInterfaces = array_map(function ($implements) {
-            return implode('\\', $implements->parts);
-        }, $class->implements);
-
-        return in_array(Listener::class, $implementedInterfaces);
     }
 
     /**
@@ -108,6 +85,10 @@ class ListenerDetector extends NodeVisitorAbstract
      */
     private function getArgumentClass(ClassMethod $classMethod): string
     {
+        if (!isset($classMethod->params[0]->type->parts)) {
+            throw new \RuntimeException('Argument classname is unknown');
+        }
+
         return implode("\\", $classMethod->params[0]->type->parts);
     }
 

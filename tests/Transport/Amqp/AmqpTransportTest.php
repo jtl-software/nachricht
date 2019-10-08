@@ -13,6 +13,7 @@ use JTL\Nachricht\Collection\StringCollection;
 use JTL\Nachricht\Contract\Event\AmqpEvent;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Listener\ListenerProvider;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use Mockery;
@@ -113,6 +114,11 @@ class AmqpTransportTest extends TestCase
      */
     private $message;
 
+    /**
+     * @var ListenerProvider|Mockery\LegacyMockInterface|Mockery\MockInterface
+     */
+    private $listenerProvider;
+
     public function setUp(): void
     {
         $this->routingKey = uniqid('routingKey', true);
@@ -154,7 +160,9 @@ class AmqpTransportTest extends TestCase
         $this->message = Mockery::mock(AMQPMessage::class);
         $this->message->delivery_info['delivery_tag'] = uniqid('delivery_tag', true);
 
-        $this->transport = new AmqpTransport($this->connectionSettings, $this->serializer);
+        $this->listenerProvider = Mockery::mock(ListenerProvider::class);
+
+        $this->transport = new AmqpTransport($this->connectionSettings, $this->serializer, $this->listenerProvider);
     }
 
     public function tearDown(): void
@@ -248,6 +256,9 @@ class AmqpTransportTest extends TestCase
             ->with($this->message->delivery_info['delivery_tag'])
             ->once();
 
+        $this->listenerProvider->shouldReceive('eventHasListeners')
+            ->once()
+            ->andReturnTrue();
 
         $callback($this->message);
 
@@ -348,6 +359,10 @@ class AmqpTransportTest extends TestCase
             ->with($this->message->delivery_info['delivery_tag'])
             ->once();
 
+        $this->listenerProvider->shouldReceive('eventHasListeners')
+            ->once()
+            ->andReturnTrue();
+
         $this->channel->shouldReceive('basic_publish')
             ->with($this->message, '', AmqpTransport::DELAY_QUEUE_PREFIX . $this->routingKey);
 
@@ -392,6 +407,10 @@ class AmqpTransportTest extends TestCase
         $this->channel->shouldReceive('basic_ack')
             ->with($this->message->delivery_info['delivery_tag'])
             ->once();
+
+        $this->listenerProvider->shouldReceive('eventHasListeners')
+            ->once()
+            ->andReturnTrue();
 
         $this->channel->shouldReceive('basic_publish')
             ->with($this->message, '', AmqpTransport::DELAY_QUEUE_PREFIX . $this->routingKey);
@@ -441,6 +460,10 @@ class AmqpTransportTest extends TestCase
 
         $this->channel->shouldReceive('basic_publish')
             ->with($this->message, '', AmqpTransport::DEAD_LETTER_QUEUE_PREFIX . $this->routingKey);
+
+        $this->listenerProvider->shouldReceive('eventHasListeners')
+            ->once()
+            ->andReturnTrue();
 
         $callback($this->message);
 

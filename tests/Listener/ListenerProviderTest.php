@@ -10,7 +10,7 @@ namespace JTL\Nachricht\Listener;
 
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Listener\Listener;
-use JTL\Nachricht\Listener\Cache\ListenerCache;
+use JTL\Nachricht\Event\Cache\EventCache;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -44,7 +44,7 @@ class ListenerProviderTest extends TestCase
     private $listener;
 
     /**
-     * @var ListenerCache|Mockery\MockInterface
+     * @var EventCache|Mockery\MockInterface
      */
     private $listenerCache;
 
@@ -52,8 +52,8 @@ class ListenerProviderTest extends TestCase
     {
         $this->container = Mockery::mock(ContainerInterface::class);
         $this->event = Mockery::mock(Event::class);
-        $this->listener = Mockery::mock(Listener::class);
-        $this->listenerCache = Mockery::mock(ListenerCache::class);
+        $this->listener = new TestListener();
+        $this->listenerCache = Mockery::mock(EventCache::class);
         $this->listenerProvider = new ListenerProvider($this->container, $this->listenerCache);
     }
 
@@ -81,7 +81,16 @@ class ListenerProviderTest extends TestCase
             ->andReturn($this->listener);
 
         foreach ($this->listenerProvider->getListenersForEvent($this->event) as $listenerClosure) {
+            $listenerClosure($this->event);
             $this->assertTrue(is_callable($listenerClosure));
         }
+    }
+}
+
+class TestListener implements Listener
+{
+    public function listen(Event $event): Event
+    {
+        return $event;
     }
 }

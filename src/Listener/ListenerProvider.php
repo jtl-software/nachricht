@@ -8,7 +8,7 @@
 
 namespace JTL\Nachricht\Listener;
 
-use JTL\Nachricht\Listener\Cache\ListenerCache;
+use JTL\Nachricht\Event\Cache\EventCache;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 
@@ -20,16 +20,16 @@ class ListenerProvider implements ListenerProviderInterface
     private $container;
 
     /**
-     * @var ListenerCache
+     * @var EventCache
      */
     private $listenerCache;
 
     /**
      * ListenerProvider constructor.
      * @param ContainerInterface $container
-     * @param ListenerCache $listenerCache
+     * @param EventCache $listenerCache
      */
-    public function __construct(ContainerInterface $container, ListenerCache $listenerCache)
+    public function __construct(ContainerInterface $container, EventCache $listenerCache)
     {
         $this->container = $container;
         $this->listenerCache = $listenerCache;
@@ -49,5 +49,14 @@ class ListenerProvider implements ListenerProviderInterface
                 $listenerInstance->{$method}($event);
             };
         }
+    }
+
+    /**
+     * @param object $event
+     * @return bool
+     */
+    public function eventHasListeners(object $event): bool
+    {
+        return count($this->listenerCache->getListenerListForEvent(get_class($event))) > 0;
     }
 }
