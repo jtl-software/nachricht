@@ -46,7 +46,7 @@ class ListenerDetector extends AbstractVisitor
         }
 
         if ($this->classIsListener) {
-            if ($node instanceof ClassMethod && $this->classHasHandlerMethod($node)) {
+            if ($node instanceof ClassMethod && $node->isPublic() && $this->classHasHandlerMethod($node)) {
                 $this->listenerMethods[] = [
                     'methodName' => $node->name->name,
                     'eventClass' => $this->getArgumentClass($node)
