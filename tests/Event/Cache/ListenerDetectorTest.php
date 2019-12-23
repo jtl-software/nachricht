@@ -86,6 +86,7 @@ class ListenerDetectorTest extends TestCase
 
         $this->eventClassName->parts = ['JTL', 'Nachricht', 'Event', 'Cache', 'TestEvent'];
         $this->param->type = $this->eventClassName;
+        $this->classMethod->shouldReceive('isPublic')->andReturn(true);
         $this->classMethod->params[0] = $this->param;
 
         $this->methodIdentifier->name = 'listen';
@@ -103,6 +104,11 @@ class ListenerDetectorTest extends TestCase
 
         $this->assertEquals('JTL\Nachricht\Event\Cache\FooListener', $this->listenerDetector->getListenerClass());
         $this->assertTrue($this->listenerDetector->isClassListener());
+    }
+
+    public function tearDown(): void
+    {
+        Mockery::close();
     }
 }
 
