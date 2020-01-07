@@ -8,7 +8,7 @@
 
 namespace JTL\Nachricht\Transport;
 
-use JTL\Nachricht\Collection\StringCollection;
+use JTL\Generic\StringCollection;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 
@@ -22,9 +22,9 @@ class SubscriptionSettingsTest extends TestCase
 {
     public function testCreate(): void
     {
-        $stringCollection = Mockery::mock(StringCollection::class);
+        $stringCollection = new StringCollection();
         $settings = new SubscriptionSettings($stringCollection);
 
-        $this->assertEquals($stringCollection, $settings->getQueueNameList());
+        $this->assertSame($stringCollection, $settings->getQueueNameList());
     }
 }

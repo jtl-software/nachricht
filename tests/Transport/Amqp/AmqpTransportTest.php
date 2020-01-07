@@ -9,7 +9,7 @@
 namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
-use JTL\Nachricht\Collection\StringCollection;
+use JTL\Generic\StringCollection;
 use JTL\Nachricht\Contract\Event\AmqpEvent;
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Contract\Serializer\EventSerializer;

@@ -2,9 +2,12 @@
 language: php
 php:
   - 7.3
-  - 7.4snapshot
+  - 7.4
+
+install:
+  - composer install
 
 script:
-  - composer install
-  - composer phpunit
   - composer phpstan
+  - composer phpcs-dry
+  - composer phpunit

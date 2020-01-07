@@ -8,7 +8,7 @@
 
 namespace JTL\Nachricht\Transport;
 
-use JTL\Nachricht\Collection\StringCollection;
+use JTL\Generic\StringCollection;
 
 class SubscriptionSettings
 {
