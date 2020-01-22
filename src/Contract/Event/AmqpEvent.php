@@ -10,6 +10,12 @@ namespace JTL\Nachricht\Contract\Event;
 
 interface AmqpEvent extends Event
 {
+
+    /**
+     * @param string $errorMessage
+     */
+    public function setLastError(string $errorMessage): void;
+
     /**
      * @return string
      */

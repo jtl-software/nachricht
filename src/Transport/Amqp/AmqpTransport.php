@@ -19,6 +19,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 class AmqpTransport
@@ -58,22 +59,30 @@ class AmqpTransport
      */
     private $listenerProvider;
 
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
 
     /**
      * AmqpTransport constructor.
      * @param AmqpConnectionSettings $connectionSettings
      * @param EventSerializer $serializer
      * @param ListenerProvider $listenerProvider
+     * @param LoggerInterface $logger
      */
     public function __construct(
         AmqpConnectionSettings $connectionSettings,
         EventSerializer $serializer,
-        ListenerProvider $listenerProvider
+        ListenerProvider $listenerProvider,
+        LoggerInterface $logger
     ) {
         $this->serializer = $serializer;
         $this->connectionSettings = $connectionSettings;
         $this->declaredQueueList = [];
         $this->listenerProvider = $listenerProvider;
+        $this->logger = $logger;
     }
 
     public function __destruct()
@@ -96,6 +105,37 @@ class AmqpTransport
             $event->getExchange(),
             self::MESSAGE_QUEUE_PREFIX . $event->getRoutingKey()
         );
+    }
+
+    /**
+     * @param SubscriptionSettings $subscriptionOptions
+     * @param Closure $handler
+     * @return AmqpTransport
+     */
+    public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): AmqpTransport
+    {
+        $this->connect();
+        foreach ($subscriptionOptions->getQueueNameList() as $queue) {
+            $this->declareQueue($queue);
+            $this->channel->basic_qos(0, 1, false);
+            $this->channel->basic_consume(
+                $queue,
+                '',
+                false,
+                false,
+                false,
+                false,
+                $this->createCallbackFromHandler($handler)
+            );
+        }
+
+        return $this;
+    }
+
+    public function poll(): void
+    {
+        $this->connect();
+        $this->channel->wait();
     }
 
     private function connect(): void
@@ -143,31 +183,6 @@ class AmqpTransport
     }
 
     /**
-     * @param SubscriptionSettings $subscriptionOptions
-     * @param Closure $handler
-     * @return AmqpTransport
-     */
-    public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): AmqpTransport
-    {
-        $this->connect();
-        foreach ($subscriptionOptions->getQueueNameList() as $queue) {
-            $this->declareQueue($queue);
-            $this->channel->basic_qos(0, 1, false);
-            $this->channel->basic_consume(
-                $queue,
-                '',
-                false,
-                false,
-                false,
-                false,
-                $this->createCallbackFromHandler($handler)
-            );
-        }
-
-        return $this;
-    }
-
-    /**
      * @param Closure $handler
      * @return Closure
      */
@@ -179,6 +194,7 @@ class AmqpTransport
             try {
                 $event = $serializer->deserialize($message->getBody());
                 if (!$event instanceof AmqpEvent) {
+                    $this->logger->error(get_class($event) . ' need to implement ' . AmqpEvent::class);
                     $this->handleFailedMessage($message);
                 } else {
                     if (!$this->listenerProvider->eventHasListeners($event)) {
@@ -188,10 +204,12 @@ class AmqpTransport
                     try {
                         $handler($event);
                     } catch (Exception|Throwable $exception) {
+                        $this->logger->error($exception->__toString());
                         $this->handleFailedEvent($message, $event);
                     }
                 }
             } catch (DeserializationFailedException $exception) {
+                $this->logger->error($exception->__toString());
                 $this->handleFailedMessage($message);
             }
 
@@ -220,8 +238,9 @@ class AmqpTransport
      * @param AMQPMessage $message
      * @param AmqpEvent $event
      */
-    private function handleFailedEvent(AMQPMessage $message, AmqpEvent $event): void
+    private function handleFailedEvent(AMQPMessage $message, AmqpEvent $event, Throwable $throwable): void
     {
+        $event->setLastError($throwable->getMessage());
         if ($this->maxRetryCountReached($message, $event)) {
             $this->publishMessageToDeadLetterQueue($message, $event);
         } else {
@@ -280,6 +299,9 @@ class AmqpTransport
     private function publishMessageToDelayQueue(AMQPMessage $message, AmqpEvent $event): void
     {
         $delayQueueName = $this->declareDelayQueue($event->getRoutingKey());
+
+        # todo auch bei deadletter - und testen
+        $message->setBody($this->serializer->serialize($event));
         $this->channel->basic_publish($message, '', $delayQueueName);
     }
 
@@ -310,11 +332,5 @@ class AmqpTransport
     private function ack(AMQPMessage $message): void
     {
         $this->channel->basic_ack($message->delivery_info['delivery_tag']);
-    }
-
-    public function poll(): void
-    {
-        $this->connect();
-        $this->channel->wait();
     }
 }
