@@ -9,6 +9,12 @@ services:
   JTL\Nachricht\:
     resource: '../../src/*'
 
+  Psr\Log\LoggerInterface: '@Monolog\Logger'
+
+  Monolog\Logger:
+    arguments:
+      - 'example'
+
   JTL\Nachricht\TestListener:
     public: true
 
@@ -22,6 +28,7 @@ services:
         password: 'guest'
       - '@JTL\Nachricht\Contract\Serializer\EventSerializer'
       - '@JTL\Nachricht\Listener\ListenerProvider'
+      - '@Psr\Log\LoggerInterface'
 
   JTL\Nachricht\Event\Cache\EventCache:
     factory: 'JTL\Nachricht\Event\Cache\EventCacheCreator:create'

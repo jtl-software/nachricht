@@ -1,0 +1,9 @@
+version: "3"
+services:
+
+  nachricht-queue:
+    image: rabbitmq:management-alpine
+    container_name: nachricht-queue
+    ports:
+      - "15672:15672"
+      - "5672:5672"

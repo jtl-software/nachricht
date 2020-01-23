@@ -29,41 +29,14 @@ class AmqpTransport
     public const DEAD_LETTER_QUEUE_PREFIX = 'dl__';
     public const FAILURE_QUEUE = 'failure';
 
-    /**
-     * @var AMQPStreamConnection
-     */
-    private $connection;
+    private array $declaredQueueList = [];
 
-    /**
-     * @var EventSerializer
-     */
-    private $serializer;
-
-    /**
-     * @var AMQPChannel
-     */
-    private $channel;
-
-    /**
-     * @var array
-     */
-    private $declaredQueueList;
-
-    /**
-     * @var AmqpConnectionSettings
-     */
-    private $connectionSettings;
-
-    /**
-     * @var ListenerProvider
-     */
-    private $listenerProvider;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
+    private AmqpConnectionSettings $connectionSettings;
+    private EventSerializer $serializer;
+    private ListenerProvider $listenerProvider;
+    private ?LoggerInterface $logger;
+    private ?AMQPStreamConnection $connection = null;
+    private AMQPChannel $channel;
 
     /**
      * AmqpTransport constructor.
@@ -76,11 +49,10 @@ class AmqpTransport
         AmqpConnectionSettings $connectionSettings,
         EventSerializer $serializer,
         ListenerProvider $listenerProvider,
-        LoggerInterface $logger
+        LoggerInterface $logger = null
     ) {
-        $this->serializer = $serializer;
         $this->connectionSettings = $connectionSettings;
-        $this->declaredQueueList = [];
+        $this->serializer = $serializer;
         $this->listenerProvider = $listenerProvider;
         $this->logger = $logger;
     }
@@ -194,7 +166,7 @@ class AmqpTransport
             try {
                 $event = $serializer->deserialize($message->getBody());
                 if (!$event instanceof AmqpEvent) {
-                    $this->logger->error(get_class($event) . ' need to implement ' . AmqpEvent::class);
+                    $this->logError(get_class($event) . ' need to implement ' . AmqpEvent::class);
                     $this->handleFailedMessage($message);
                 } else {
                     if (!$this->listenerProvider->eventHasListeners($event)) {
@@ -204,17 +176,24 @@ class AmqpTransport
                     try {
                         $handler($event);
                     } catch (Exception|Throwable $exception) {
-                        $this->logger->error($exception->__toString());
-                        $this->handleFailedEvent($message, $event);
+                        $this->logError($exception->__toString());
+                        $this->handleFailedEvent($message, $event, $exception);
                     }
                 }
             } catch (DeserializationFailedException $exception) {
-                $this->logger->error($exception->__toString());
+                $this->logError($exception->__toString());
                 $this->handleFailedMessage($message);
             }
 
             $this->ack($message);
         };
+    }
+
+    private function logError(string $message): void
+    {
+        if ($this->logger !== null) {
+            $this->logger->error($message);
+        }
     }
 
     /**
@@ -241,7 +220,7 @@ class AmqpTransport
     private function handleFailedEvent(AMQPMessage $message, AmqpEvent $event, Throwable $throwable): void
     {
         $event->setLastError($throwable->getMessage());
-        if ($this->maxRetryCountReached($message, $event)) {
+        if ($event->isDeadLetter()) {
             $this->publishMessageToDeadLetterQueue($message, $event);
         } else {
             $this->publishMessageToDelayQueue($message, $event);
@@ -251,32 +230,11 @@ class AmqpTransport
     /**
      * @param AMQPMessage $message
      * @param AmqpEvent $event
-     * @return bool
-     */
-    private function maxRetryCountReached(AMQPMessage $message, AmqpEvent $event): bool
-    {
-        if (!isset($message->get_properties()['application_headers'])) {
-            return false;
-        }
-
-        /** @var AMQPTable $headers */
-        $headers = $message->get_properties()['application_headers'];
-        $headerData = $headers->getNativeData();
-
-        if (!isset($headerData['x-death'][0]['count'])) {
-            return false;
-        }
-
-        return (int)$headerData['x-death'][0]['count'] + 1 >= $event->getMaxRetryCount();
-    }
-
-    /**
-     * @param AMQPMessage $message
-     * @param AmqpEvent $event
      */
     private function publishMessageToDeadLetterQueue(AMQPMessage $message, AmqpEvent $event): void
     {
         $deadLetterQueueName = $this->declareDeadLetterQueue($event->getRoutingKey());
+        $message->setBody($this->serializer->serialize($event));
         $this->channel->basic_publish($message, '', $deadLetterQueueName);
     }
 
@@ -299,8 +257,6 @@ class AmqpTransport
     private function publishMessageToDelayQueue(AMQPMessage $message, AmqpEvent $event): void
     {
         $delayQueueName = $this->declareDelayQueue($event->getRoutingKey());
-
-        # todo auch bei deadletter - und testen
         $message->setBody($this->serializer->serialize($event));
         $this->channel->basic_publish($message, '', $delayQueueName);
     }

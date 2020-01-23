@@ -10,24 +10,13 @@ namespace JTL\Nachricht\Contract\Event;
 
 interface AmqpEvent extends Event
 {
-
-    /**
-     * @param string $errorMessage
-     */
-    public function setLastError(string $errorMessage): void;
-
-    /**
-     * @return string
-     */
     public static function getRoutingKey(): string;
 
-    /**
-     * @return string
-     */
     public static function getExchange(): string;
 
-    /**
-     * @return int
-     */
-    public static function getMaxRetryCount(): int;
+    public function getEventId(): string;
+
+    public function setLastError(string $errorMessage): void;
+
+    public function isDeadLetter(): bool;
 }

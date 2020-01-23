@@ -30,12 +30,6 @@ class CreateFileListener implements Listener
         usleep(random_int(50, 800) * 1000);
 
         $this->randomFail();
-
-        $handle = fopen(self::TMP_DIR . '/' . $event->getFilename(), 'w+');
-        fwrite($handle, bin2hex(random_bytes(1024 * 1024)));
-        fclose($handle);
-
-        echo "Created file {$event->getFilename()}\n";
     }
 
     /**
@@ -44,8 +38,9 @@ class CreateFileListener implements Listener
     private function randomFail(): void
     {
         if(random_int(1, 10000) % 6 === 0) {
-            echo "Listener failed intentionally\n";
-            throw new Exception();
+            $msg = "Listener failed intentionally";
+            echo $msg . PHP_EOL;
+            throw new Exception($msg);
         }
     }
 }

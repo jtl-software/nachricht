@@ -6,7 +6,7 @@
  * Date: 2019/05/21
  */
 
-use JTL\Nachricht\Collection\StringCollection;
+use JTL\Generic\StringCollection;
 use JTL\Nachricht\Transport\Amqp\AmqpConsumer;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 
