@@ -8,6 +8,14 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
+/**
+ * Overwrite php error_log() function to avoid test output in phpunit
+ */
+function error_log($message)
+{
+    return;
+}
+
 use Closure;
 use JTL\Generic\StringCollection;
 use JTL\Nachricht\Contract\Event\AmqpEvent;

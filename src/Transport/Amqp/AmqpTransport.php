@@ -191,9 +191,12 @@ class AmqpTransport
 
     private function logError(string $message): void
     {
-        if ($this->logger !== null) {
-            $this->logger->error($message);
+        if ($this->logger === null) {
+            error_log($message);
+            return;
         }
+
+        $this->logger->error($message);
     }
 
     /**
