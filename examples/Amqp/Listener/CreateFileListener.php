@@ -30,6 +30,12 @@ class CreateFileListener implements Listener
         usleep(random_int(50, 800) * 1000);
 
         $this->randomFail();
+
+        $handle = fopen(self::TMP_DIR . '/' . $event->getFilename(), 'w+');
+        fwrite($handle, bin2hex(random_bytes(1024 * 1024)));
+        fclose($handle);
+
+        echo "{$event->getEventId()} Created file {$event->getFilename()}\n";
     }
 
     /**
