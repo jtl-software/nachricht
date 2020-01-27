@@ -1,14 +1,17 @@
 {
   "require": {
+    "php": "^7.4",
     "php-amqplib/php-amqplib": "^2.9",
-    "jtl/php-generic-collection": "^0.2",
+    "jtl/php-generic-collection": "^0.3",
     "psr/container": "^1.0",
     "symfony/dependency-injection": "^4.2",
     "symfony/config": "^4.2",
     "symfony/yaml": "^4.2",
     "psr/event-dispatcher": "^1.0",
     "ext-json": "*",
-    "nikic/php-parser": "^4.2"
+    "nikic/php-parser": "^4.2",
+    "monolog/monolog": "^2.0",
+    "ramsey/uuid": "^3.9"
   },
   "autoload": {
     "psr-4": {

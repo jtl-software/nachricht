@@ -8,10 +8,12 @@
 
 namespace JTL\Nachricht\Event;
 
+use JTL\Nachricht\Event\Cache\TestEvent;
 use PHPUnit\Framework\TestCase;
 
 class TestAmqpEvent extends AbstractAmqpEvent
 {
+    const DEFAULT_RETRY_COUNT = 1;
 }
 
 /**
@@ -22,28 +24,62 @@ class TestAmqpEvent extends AbstractAmqpEvent
  */
 class AbstractEventTest extends TestCase
 {
-    /**
-     * @var TestAmqpEvent
-     */
-    private $testEvent;
-
-    public function setUp(): void
+    public function testCanCreateWithEventId()
     {
-        $this->testEvent = new TestAmqpEvent();
+        $eventId = uniqid();
+        $event = new TestAmqpEvent($eventId);
+        $this->assertEquals($eventId, $event->getEventId());
+    }
+
+    public function testCanCreateWithoutEventId()
+    {
+        $event = new TestAmqpEvent();
+        $this->assertIsString($event->getEventId());
+        $this->assertTrue(strlen($event->getEventId()) > 0);
+    }
+
+    public function testCanSetLastErrorMessage()
+    {
+        $errorMessage = uniqid();
+        $event = new TestAmqpEvent();
+        $event->setLastError($errorMessage);
+
+        $this->assertStringContainsString($errorMessage, serialize($event));
+    }
+
+    public function testCanCheckIfEventIsDeadLetterTrue()
+    {
+        $event = new class extends AbstractAmqpEvent {
+            const DEFAULT_RETRY_COUNT = 0;
+        };
+        $this->assertTrue($event->isDeadLetter());
+    }
+
+    public function testCanCheckIfEventIsDeadLetterFalse()
+    {
+        $event = new class extends AbstractAmqpEvent {
+            const DEFAULT_RETRY_COUNT = 1;
+        };
+        $this->assertFalse($event->isDeadLetter());
+    }
+
+    public function testCanIncreaseReceiveCountOnDeserialization()
+    {
+        $event = new TestAmqpEvent();
+        $this->assertFalse($event->isDeadLetter());
+        $event = unserialize(serialize($event));
+        $this->assertTrue($event->isDeadLetter());
     }
 
     public function testGetRoutingKey(): void
     {
-        $this->assertEquals(get_class($this->testEvent), $this->testEvent->getRoutingKey());
+        $event = new TestAmqpEvent();
+        $this->assertEquals(get_class($event), $event->getRoutingKey());
     }
 
     public function testGetExchange(): void
     {
-        $this->assertEquals('', $this->testEvent->getExchange());
-    }
-
-    public function testGetMaxRetryCount(): void
-    {
-        $this->assertEquals(3, $this->testEvent->getMaxRetryCount());
+        $event = new TestAmqpEvent();
+        $this->assertEquals('', $event->getExchange());
     }
 }

@@ -8,6 +8,14 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
+/**
+ * Overwrite php error_log() function to avoid test output in phpunit
+ */
+function error_log($message)
+{
+    return;
+}
+
 use Closure;
 use JTL\Generic\StringCollection;
 use JTL\Nachricht\Contract\Event\AmqpEvent;
@@ -349,60 +357,12 @@ class AmqpTransportTest extends TestCase
             ->once()
             ->andReturn($this->event);
 
-        $this->message->shouldReceive('get_properties')
-            ->once()
-            ->andReturn([]);
+        $this->event->shouldReceive('setLastError');
+        $this->event->shouldReceive('isDeadLetter')->once()->andReturn(false);
 
         $this->queueDeclareDelay();
-
-        $this->channel->shouldReceive('basic_ack')
-            ->with($this->message->delivery_info['delivery_tag'])
-            ->once();
-
-        $this->listenerProvider->shouldReceive('eventHasListeners')
-            ->once()
-            ->andReturnTrue();
-
-        $this->channel->shouldReceive('basic_publish')
-            ->with($this->message, '', AmqpTransport::DELAY_QUEUE_PREFIX . $this->routingKey);
-
-        $callback($this->message);
-
-        $this->assertTrue(true);
-    }
-
-    public function testCanDelayMessageWithoutDeathHeader(): void
-    {
-        $messageBody = uniqid('messageBody', true);
-
-        $handler = function (Event $e) {
-            throw new \Exception();
-        };
-        $callback = $this->getSubscriptionCallback($handler);
-
-        $this->message->shouldReceive('getBody')
-            ->once()
-            ->andReturn($messageBody);
-
-        $this->serializer->shouldReceive('deserialize')
-            ->with($messageBody)
-            ->once()
-            ->andReturn($this->event);
-
-
-        $headers = new AMQPTable([
-            'x-death' => [
-            ]
-        ]);
-
-        $this->message->shouldReceive('get_properties')
-            ->twice()
-            ->andReturn([
-                'application_headers' => $headers
-            ]);
-
-
-        $this->queueDeclareDelay();
+        $this->serializer->shouldReceive('serialize')->with($this->event)->andReturn($messageBody);
+        $this->message->shouldReceive('setBody')->with($messageBody);
 
         $this->channel->shouldReceive('basic_ack')
             ->with($this->message->delivery_info['delivery_tag'])
@@ -425,7 +385,7 @@ class AmqpTransportTest extends TestCase
         $messageBody = uniqid('messageBody', true);
 
         $handler = function (Event $e) {
-            throw new \Exception();
+            throw new \Exception('error message in exception');
         };
         $callback = $this->getSubscriptionCallback($handler);
 
@@ -433,33 +393,26 @@ class AmqpTransportTest extends TestCase
             ->once()
             ->andReturn($messageBody);
 
+        $this->event->shouldReceive('setLastError')
+            ->with('error message in exception');
+
         $this->serializer->shouldReceive('deserialize')
             ->with($messageBody)
             ->once()
             ->andReturn($this->event);
 
+        $this->event->shouldReceive('isDeadLetter')->once()->andReturn(true);
+
         $this->queueDeclareDeadLetter();
+        $this->serializer->shouldReceive('serialize')->with($this->event)->andReturn($messageBody);
+        $this->message->shouldReceive('setBody')->with($messageBody);
 
-        $headers = new AMQPTable([
-            'x-death' => [
-                [
-                    'count' => 6
-                ]
-            ]
-        ]);
-
-        $this->message->shouldReceive('get_properties')
-            ->twice()
-            ->andReturn([
-                'application_headers' => $headers
-            ]);
+        $this->channel->shouldReceive('basic_publish')
+            ->with($this->message, '', AmqpTransport::DEAD_LETTER_QUEUE_PREFIX . $this->routingKey);
 
         $this->channel->shouldReceive('basic_ack')
             ->with($this->message->delivery_info['delivery_tag'])
             ->once();
-
-        $this->channel->shouldReceive('basic_publish')
-            ->with($this->message, '', AmqpTransport::DEAD_LETTER_QUEUE_PREFIX . $this->routingKey);
 
         $this->listenerProvider->shouldReceive('eventHasListeners')
             ->once()

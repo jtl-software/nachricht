@@ -10,19 +10,15 @@ namespace JTL\Nachricht\Transport\Amqp;
 
 use JTL\Nachricht\Contract\Serializer\EventSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
+use Psr\Log\LoggerInterface;
 
 class AmqpTransportFactory
 {
-    /**
-     * @param array $connectionSettings
-     * @param EventSerializer $serializer
-     * @param ListenerProvider $listenerProvider
-     * @return AmqpTransport
-     */
     public function createTransport(
         array $connectionSettings,
         EventSerializer $serializer,
-        ListenerProvider $listenerProvider
+        ListenerProvider $listenerProvider,
+        LoggerInterface $logger = null
     ): AmqpTransport {
         return new AmqpTransport(
             new AmqpConnectionSettings(
@@ -33,7 +29,8 @@ class AmqpTransportFactory
                 $connectionSettings['vhost'] ?? '/'
             ),
             $serializer,
-            $listenerProvider
+            $listenerProvider,
+            $logger
         );
     }
 }

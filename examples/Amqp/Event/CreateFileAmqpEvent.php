@@ -20,6 +20,7 @@ class CreateFileAmqpEvent extends AbstractAmqpEvent
 
     public function __construct(string $filename)
     {
+        parent::__construct();
         $this->filename = $filename;
     }
 

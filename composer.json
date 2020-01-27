@@ -4,17 +4,21 @@
     "type": "library",
     "license": "MIT",
     "require": {
+        "php": "^7.4",
+        "ext-json": "*",
         "jtl/php-generic-collection": "^0.3",
+        "nikic/php-parser": "^4.2",
         "psr/container": "^1.0",
         "psr/event-dispatcher": "^1.0",
-        "ext-json": "*",
-        "symfony/config": "^4.3",
-        "nikic/php-parser": "^4.2"
+        "psr/log": "^1.1",
+        "ramsey/uuid": "^3.9",
+        "symfony/config": "^4.3"
     },
     "suggest" : {
         "symfony/dependency-injection": "Recommended DI-Container",
         "symfony/yaml": "Required for Symfony DI-Container and examples",
-        "php-amqplib/php-amqplib": "Required for RabbitMq Transport"
+        "php-amqplib/php-amqplib": "Required for RabbitMq Transport",
+        "monolog/monolog": "Required when using AmqpEmitter / Consumer"
     },
     "require-dev": {
         "php-amqplib/php-amqplib": "^2.9",
@@ -33,6 +37,9 @@
             "JTL\\Nachricht\\": "tests/",
             "JTL\\Nachricht\\Tests\\": "tests/"
         }
+    },
+    "config": {
+        "sort-packages": true
     },
     "scripts" : {
         "phpcs": [

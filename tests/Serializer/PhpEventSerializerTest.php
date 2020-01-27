@@ -12,7 +12,7 @@ use JTL\Nachricht\Event\AbstractAmqpEvent;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use PHPUnit\Framework\TestCase;
 
-class MockAmqpEvent extends AbstractAmqpEvent
+class StubAmqpEvent extends AbstractAmqpEvent
 {
 }
 
@@ -30,30 +30,26 @@ class PhpEventSerializerTest extends TestCase
     private $serializer;
 
     /**
-     * @var MockAmqpEvent
+     * @var StubAmqpEvent
      */
     private $event;
 
     public function setUp(): void
     {
-        $this->event = new MockAmqpEvent();
+        $this->event = new StubAmqpEvent();
         $this->serializer = new PhpEventSerializer();
     }
 
-    public function testCanSerialize(): void
+    public function testCanSerializeAndDeserialize(): void
     {
-        $this->assertEquals(
-            'O:38:"JTL\Nachricht\Serializer\MockAmqpEvent":0:{}',
-            $this->serializer->serialize($this->event)
-        );
+        $event = new StubAmqpEvent();
+        $serializedEvent = $this->serializer->serialize($event);
+        $deserializedEvent = $this->serializer->deserialize($serializedEvent);
+
+        $this->assertIsString($serializedEvent);
+        $this->assertInstanceOf(StubAmqpEvent::class, $deserializedEvent);
     }
 
-    public function testCanDeserialize(): void
-    {
-        $event = $this->serializer->deserialize('O:38:"JTL\Nachricht\Serializer\MockAmqpEvent":0:{}');
-        $this->assertInstanceOf(MockAmqpEvent::class, $event);
-    }
-    
     public function testCanNotDeserializeBecauseStringIsInvalid(): void
     {
         $this->expectException(DeserializationFailedException::class);
