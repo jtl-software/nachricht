@@ -12,17 +12,18 @@
  * @link https://github.com/jtl-software/nachricht GitHub
  */
 
-namespace JTL\Nachricht\Contract\Event;
+namespace JTL\Nachricht\Contract\Hook;
 
-interface AmqpEvent extends Event
+use JTL\Nachricht\Contract\Event\Event;
+
+/**
+ * Implement BeforeEventHook Interface to do stuff before the listener method is called.
+ *
+ */
+interface BeforeEventHook
 {
-    public static function getRoutingKey(): string;
-
-    public static function getExchange(): string;
-
-    public function getEventId(): string;
-
-    public function setLastError(string $errorMessage): void;
-
-    public function isDeadLetter(): bool;
+    /**
+     * @param Event $event
+     */
+    public function setup(Event $event): void;
 }

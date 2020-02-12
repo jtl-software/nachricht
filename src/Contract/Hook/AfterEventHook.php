@@ -12,17 +12,19 @@
  * @link https://github.com/jtl-software/nachricht GitHub
  */
 
-namespace JTL\Nachricht\Contract\Event;
+namespace JTL\Nachricht\Contract\Hook;
 
-interface AmqpEvent extends Event
+use JTL\Nachricht\Contract\Event\Event;
+
+/**
+ * Implement AfterEventHook Interface to to do stuff after the listener method is complete.
+ * The method AfterEventHook::after() is called even an Exception was thrown in a prior step.
+ *
+ */
+interface AfterEventHook
 {
-    public static function getRoutingKey(): string;
-
-    public static function getExchange(): string;
-
-    public function getEventId(): string;
-
-    public function setLastError(string $errorMessage): void;
-
-    public function isDeadLetter(): bool;
+    /**
+     * @param Event $event
+     */
+    public function after(Event $event): void;
 }
