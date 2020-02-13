@@ -15,26 +15,20 @@ use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 
 class AmqpEmitter implements Emitter
 {
-    /**
-     * @var AmqpTransport
-     */
-    private $transport;
+    private AmqpTransport $transport;
 
-
-    /**
-     * AmqpEmitter constructor.
-     * @param AmqpTransport $transport
-     */
     public function __construct(AmqpTransport $transport)
     {
         $this->transport = $transport;
     }
 
     /**
-     * @param Event&AmqpEvent $event
+     * @param Event&AmqpEvent ...$eventList
      */
-    public function emit(Event $event): void
+    public function emit(Event ...$eventList): void
     {
-        $this->transport->publish($event);
+        foreach ($eventList as $event) {
+            $this->transport->publish($event);
+        }
     }
 }

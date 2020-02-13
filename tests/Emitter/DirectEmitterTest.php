@@ -1,65 +1,57 @@
 <?php declare(strict_types=1);
 /**
- * This File is part of JTL-Software
+ * This file is part of the jtl-software/nachricht
  *
- * User: pkanngiesser
- * Date: 2019/05/27
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * @copyright Copyright (c) JTL-Software-GmbH
+ * @author avermeulen
+ * @license http://opensource.org/licenses/MIT MIT
+ * @link https://packagist.org/packages/jtl/nachricht Packagist
+ * @link https://github.com/jtl-software/nachricht GitHub
  */
 
 namespace JTL\Nachricht\Emitter;
 
 use JTL\Nachricht\Contract\Event\Event;
 use JTL\Nachricht\Listener\ListenerProvider;
-use Mockery;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class DirectEmitterTest
- * @package JTL\Nachricht\Emitter
- *
  * @covers \JTL\Nachricht\Emitter\DirectEmitter
  */
 class DirectEmitterTest extends TestCase
 {
-
-    /**
-     * @var ListenerProvider|Mockery\MockInterface
-     */
-    private $listenerProvider;
-
-    /**
-     * @var Event|Mockery\MockInterface
-     */
-    private $event;
-
-    /**
-     * @var DirectEmitter
-     */
-    private $directEmitter;
-
-    public function setUp(): void
-    {
-        $this->listenerProvider = Mockery::mock(ListenerProvider::class);
-        $this->event = Mockery::mock(Event::class);
-        $this->directEmitter = new DirectEmitter($this->listenerProvider);
-    }
-
-    public function tearDown(): void
-    {
-        Mockery::close();
-    }
-
     public function testCanEmit()
     {
-        $listener = function (object $event) {
-            $this->assertEquals($this->event, $event);
+        $eventStub = $this->createStub(Event::class);
+        $eventExecuteCounter = 0;
+        $listener = function (object $event) use (&$eventExecuteCounter) {
+            ++$eventExecuteCounter;
         };
+        $listenerProviderMock = $this->createMock(ListenerProvider::class);
+        $listenerProviderMock->expects($this->once())->method('getListenersForEvent')->with($eventStub)->willReturn([$listener]);
 
-        $this->listenerProvider->shouldReceive('getListenersForEvent')
-            ->with($this->event)
-            ->once()
-            ->andReturn([$listener]);
+        $emitter = new DirectEmitter($listenerProviderMock);
+        $emitter->emit($eventStub);
 
-        $this->directEmitter->emit($this->event);
+        $this->assertEquals(1, $eventExecuteCounter);
+    }
+
+    public function testCanEmitEventList()
+    {
+        $eventStub = $this->createStub(Event::class);
+        $eventExecuteCounter = 0;
+        $listener = function (object $event) use (&$eventExecuteCounter) {
+            ++$eventExecuteCounter;
+        };
+        $listenerProviderMock = $this->createMock(ListenerProvider::class);
+        $listenerProviderMock->expects($this->exactly(4))->method('getListenersForEvent')->with($eventStub)->willReturn([$listener]);
+
+        $emitter = new DirectEmitter($listenerProviderMock);
+        $emitter->emit($eventStub, $eventStub, $eventStub, $eventStub);
+
+        $this->assertEquals(4, $eventExecuteCounter);
     }
 }

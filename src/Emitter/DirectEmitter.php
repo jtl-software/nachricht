@@ -15,26 +15,18 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 class DirectEmitter implements Emitter, EventDispatcherInterface
 {
-    /**
-     * @var ListenerProvider
-     */
-    private $listenerProvider;
+    private ListenerProvider $listenerProvider;
 
-    /**
-     * DirectEmitter constructor.
-     * @param ListenerProvider $listenerProvider
-     */
     public function __construct(ListenerProvider $listenerProvider)
     {
         $this->listenerProvider = $listenerProvider;
     }
 
-    /**
-     * @param Event $event
-     */
-    public function emit(Event $event): void
+    public function emit(Event ...$eventList): void
     {
-        $this->dispatch($event);
+        foreach ($eventList as $event) {
+            $this->dispatch($event);
+        }
     }
 
     /**

@@ -1,9 +1,15 @@
 <?php declare(strict_types=1);
 /**
- * This File is part of JTL-Software
+ * This file is part of the jtl-software/nachricht
  *
- * User: pkanngiesser
- * Date: 2019/05/27
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * @copyright Copyright (c) JTL-Software-GmbH
+ * @author pkanngiesser
+ * @license http://opensource.org/licenses/MIT MIT
+ * @link https://packagist.org/packages/jtl/nachricht Packagist
+ * @link https://github.com/jtl-software/nachricht GitHub
  */
 
 namespace JTL\Nachricht\Emitter;
@@ -15,49 +21,29 @@ use Mockery;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class AmqpEmitterTest
- * @package JTL\Nachricht\Emitter
- *
  * @covers \JTL\Nachricht\Emitter\AmqpEmitter
  */
 class AmqpEmitterTest extends TestCase
 {
-    /**
-     * @var AmqpTransport|Mockery\MockInterface
-     */
-    private $rabbitMqTransport;
-
-    /**
-     * @var AmqpEmitter
-     */
-    private $rabbitMqEmitter;
-
-    /**
-     * @var Event|Mockery\MockInterface
-     */
-    private $event;
-
-    public function setUp(): void
+    public function testCamEmitEvent(): void
     {
-        $this->rabbitMqTransport = Mockery::mock(AmqpTransport::class);
-        $this->event = Mockery::mock(AmqpEvent::class);
-        $this->rabbitMqEmitter = new AmqpEmitter($this->rabbitMqTransport);
+        $eventStub = $this->createStub(AmqpEvent::class);
+
+        $transportMock = $this->createMock(AmqpTransport::class);
+        $transportMock->expects($this->once())->method('publish')->with($eventStub);
+
+        $emitter = new AmqpEmitter($transportMock);
+        $emitter->emit($eventStub);
     }
 
-    public function tearDown(): void
+    public function testCanEmitEventList(): void
     {
-        Mockery::close();
-    }
+        $eventStub = $this->createStub(AmqpEvent::class);
 
-    public function testEmit(): void
-    {
-        $this->rabbitMqTransport->shouldReceive('publish')
-            ->with($this->event)
-            ->once();
+        $transportMock = $this->createMock(AmqpTransport::class);
+        $transportMock->expects($this->exactly(4))->method('publish')->with($eventStub);
 
-        $this->rabbitMqEmitter->emit($this->event);
-
-        //For coverage
-        $this->assertTrue(true);
+        $emitter = new AmqpEmitter($transportMock);
+        $emitter->emit($eventStub, $eventStub, $eventStub, $eventStub);
     }
 }
