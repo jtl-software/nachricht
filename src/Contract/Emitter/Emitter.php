@@ -13,7 +13,7 @@ use JTL\Nachricht\Contract\Event\Event;
 interface Emitter
 {
     /**
-     * @param Event $event
+     * @param Event ...$eventList
      */
-    public function emit(Event $event): void;
+    public function emit(Event ...$eventList): void;
 }

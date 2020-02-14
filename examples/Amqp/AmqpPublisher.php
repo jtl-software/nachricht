@@ -14,7 +14,9 @@ include_once __DIR__ . '/../common/common.php';
 /** @var AmqpEmitter $rmqEmitter */
 $rmqEmitter = $containerBuilder->get(AmqpEmitter::class);
 
+$event = [];
 foreach (range(1, 100) as $i) {
-    $event = new CreateFileAmqpEvent($i);
-    $rmqEmitter->emit($event);
+    $event[] = new CreateFileAmqpEvent($i);
+
 }
+$rmqEmitter->emit(...$event);
