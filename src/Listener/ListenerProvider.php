@@ -8,46 +8,46 @@
 
 namespace JTL\Nachricht\Listener;
 
-use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Contract\Hook\AfterEventErrorHook;
-use JTL\Nachricht\Contract\Hook\AfterEventHook;
-use JTL\Nachricht\Contract\Hook\BeforeEventHook;
-use JTL\Nachricht\Event\Cache\EventCache;
+use JTL\Nachricht\Contract\Listener\ListenerProviderInterface;
+use JTL\Nachricht\Contract\Message\Message;
+use JTL\Nachricht\Contract\Hook\AfterMessageErrorHook;
+use JTL\Nachricht\Contract\Hook\AfterMessageHook;
+use JTL\Nachricht\Contract\Hook\BeforeMessageHook;
+use JTL\Nachricht\Message\Cache\MessageCache;
 use Psr\Container\ContainerInterface;
-use Psr\EventDispatcher\ListenerProviderInterface;
 
 class ListenerProvider implements ListenerProviderInterface
 {
     private ContainerInterface $container;
-    private EventCache $listenerCache;
+    private MessageCache $listenerCache;
 
-    public function __construct(ContainerInterface $container, EventCache $listenerCache)
+    public function __construct(ContainerInterface $container, MessageCache $listenerCache)
     {
         $this->container = $container;
         $this->listenerCache = $listenerCache;
     }
 
-    public function getListenersForEvent(object $event): iterable
+    public function getListenersForMessage(Message $event): iterable
     {
-        foreach ($this->listenerCache->getListenerListForEvent(get_class($event)) as $listener) {
+        foreach ($this->listenerCache->getListenerListForMessage(get_class($event)) as $listener) {
             $listenerInstance = $this->container->get($listener['listenerClass']);
             $method = $listener['method'];
 
-            yield function (object $event) use ($listenerInstance, $method) {
+            yield function (Message $event) use ($listenerInstance, $method) {
                 try {
-                    if ($listenerInstance instanceof BeforeEventHook && $event instanceof Event) {
+                    if ($listenerInstance instanceof BeforeMessageHook) {
                         $listenerInstance->setup($event);
                     }
 
                     $listenerInstance->{$method}($event);
                 } catch (\Throwable $exception) {
-                    if ($listenerInstance instanceof AfterEventErrorHook && $event instanceof Event) {
+                    if ($listenerInstance instanceof AfterMessageErrorHook) {
                         $listenerInstance->onError($event, $exception);
                     } else {
                         throw $exception;
                     }
                 } finally {
-                    if ($listenerInstance instanceof AfterEventHook && $event instanceof Event) {
+                    if ($listenerInstance instanceof AfterMessageHook) {
                         $listenerInstance->after($event);
                     }
                 }
@@ -55,8 +55,8 @@ class ListenerProvider implements ListenerProviderInterface
         }
     }
 
-    public function eventHasListeners(object $event): bool
+    public function eventHasListeners(Message $event): bool
     {
-        return count($this->listenerCache->getListenerListForEvent(get_class($event))) > 0;
+        return count($this->listenerCache->getListenerListForMessage(get_class($event))) > 0;
     }
 }

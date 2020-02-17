@@ -18,9 +18,9 @@ function error_log($message)
 
 use Closure;
 use JTL\Generic\StringCollection;
-use JTL\Nachricht\Contract\Event\AmqpEvent;
-use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
+use JTL\Nachricht\Contract\Message\Message;
+use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
@@ -48,7 +48,7 @@ class AmqpTransportTest extends TestCase
     private $connectionSettings;
 
     /**
-     * @var EventSerializer|Mockery\MockInterface
+     * @var MessageSerializer|Mockery\MockInterface
      */
     private $serializer;
 
@@ -68,7 +68,7 @@ class AmqpTransportTest extends TestCase
     private $channel;
 
     /**
-     * @var Event|Mockery\MockInterface
+     * @var Message|Mockery\MockInterface
      */
     private $event;
 
@@ -148,12 +148,12 @@ class AmqpTransportTest extends TestCase
             'getVhost' => $this->vhost,
         ]);
 
-        $this->serializer = Mockery::mock(EventSerializer::class);
+        $this->serializer = Mockery::mock(MessageSerializer::class);
         $this->channel = Mockery::mock(AMQPChannel::class);
         $this->amqpConnection = Mockery::mock('overload:' . AMQPStreamConnection::class, [
             'channel' => $this->channel
         ]);
-        $this->event = Mockery::mock(AmqpEvent::class, [
+        $this->event = Mockery::mock(AmqpTransportableMessage::class, [
             'getRoutingKey' => $this->routingKey,
             'getExchange' => $this->exchange,
             'getMaxRetryCount' => 3
@@ -181,14 +181,14 @@ class AmqpTransportTest extends TestCase
 
     public function testPublish(): void
     {
-        $serializedEventData = uniqid('data', true);
+        $serializedMessageData = uniqid('data', true);
 
         $this->queueDeclareMessage();
 
         $this->serializer->shouldReceive('serialize')
             ->with($this->event)
             ->once()
-            ->andReturn($serializedEventData);
+            ->andReturn($serializedMessageData);
 
         $this->channel->shouldReceive('basic_publish')
             ->with(
@@ -234,7 +234,7 @@ class AmqpTransportTest extends TestCase
                 Mockery::type(Closure::class)
             );
 
-        $handler = function (Event $e) {
+        $handler = function (Message $e) {
         };
 
         $result = $this->transport->subscribe($this->subscriptionSettings, $handler);
@@ -246,7 +246,7 @@ class AmqpTransportTest extends TestCase
     {
         $messageBody = uniqid('messageBody', true);
 
-        $handler = function (Event $e) {
+        $handler = function (Message $e) {
             return;
         };
         $callback = $this->getSubscriptionCallback($handler);
@@ -277,7 +277,7 @@ class AmqpTransportTest extends TestCase
     {
         $messageBody = uniqid('messageBody', true);
 
-        $handler = function (Event $e) {
+        $handler = function (Message $e) {
             return;
         };
         $callback = $this->getSubscriptionCallback($handler);
@@ -306,11 +306,11 @@ class AmqpTransportTest extends TestCase
         $this->assertTrue(true);
     }
 
-    public function testCanFailedMessageBecauseNotInstanceOfEvent(): void
+    public function testCanFailedMessageBecauseNotInstanceOfMessage(): void
     {
         $messageBody = uniqid('messageBody', true);
 
-        $handler = function (Event $e) {
+        $handler = function (Message $e) {
             return;
         };
         $callback = $this->getSubscriptionCallback($handler);
@@ -343,7 +343,7 @@ class AmqpTransportTest extends TestCase
     {
         $messageBody = uniqid('messageBody', true);
 
-        $handler = function (Event $e) {
+        $handler = function (Message $e) {
             throw new \Exception();
         };
         $callback = $this->getSubscriptionCallback($handler);
@@ -384,7 +384,7 @@ class AmqpTransportTest extends TestCase
     {
         $messageBody = uniqid('messageBody', true);
 
-        $handler = function (Event $e) {
+        $handler = function (Message $e) {
             throw new \Exception('error message in exception');
         };
         $callback = $this->getSubscriptionCallback($handler);

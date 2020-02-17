@@ -8,12 +8,12 @@
 
 namespace JTL\Nachricht\Emitter;
 
+use JTL\Nachricht\Contract\Dispatcher\MessageDispatcherInterface;
 use JTL\Nachricht\Contract\Emitter\Emitter;
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Listener\ListenerProvider;
-use Psr\EventDispatcher\EventDispatcherInterface;
 
-class DirectEmitter implements Emitter, EventDispatcherInterface
+class DirectEmitter implements Emitter, MessageDispatcherInterface
 {
     private ListenerProvider $listenerProvider;
 
@@ -22,19 +22,16 @@ class DirectEmitter implements Emitter, EventDispatcherInterface
         $this->listenerProvider = $listenerProvider;
     }
 
-    public function emit(Event ...$eventList): void
+    public function emit(Message ...$eventList): void
     {
         foreach ($eventList as $event) {
             $this->dispatch($event);
         }
     }
 
-    /**
-     * @param Event&object $event
-     */
-    public function dispatch(object $event)
+    public function dispatch(Message $event): void
     {
-        foreach ($this->listenerProvider->getListenersForEvent($event) as $listener) {
+        foreach ($this->listenerProvider->getListenersForMessage($event) as $listener) {
             $listener($event);
         }
     }

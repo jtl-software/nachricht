@@ -8,7 +8,7 @@
 
 namespace JTL\Nachricht\Dispatcher;
 
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Listener\ListenerProvider;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -32,14 +32,14 @@ class AmqpDispatcherTest extends TestCase
     private $dispatcher;
 
     /**
-     * @var Event|Mockery\MockInterface
+     * @var Message|Mockery\MockInterface
      */
     private $event;
 
     public function setUp(): void
     {
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
-        $this->event = Mockery::mock(Event::class);
+        $this->event = Mockery::mock(Message::class);
         $this->dispatcher = new AmqpDispatcher($this->listenerProvider);
     }
 
@@ -54,7 +54,7 @@ class AmqpDispatcherTest extends TestCase
             $this->assertEquals($this->event, $event);
         };
 
-        $this->listenerProvider->shouldReceive('getListenersForEvent')
+        $this->listenerProvider->shouldReceive('getListenersForMessage')
             ->with($this->event)
             ->once()
             ->andReturn([$listener]);

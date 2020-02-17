@@ -8,12 +8,12 @@
 
 namespace JTL\Nachricht\Listener;
 
-use JTL\Nachricht\Contract\Event\Event;
-use JTL\Nachricht\Contract\Hook\AfterEventErrorHook;
-use JTL\Nachricht\Contract\Hook\AfterEventHook;
-use JTL\Nachricht\Contract\Hook\BeforeEventHook;
+use JTL\Nachricht\Contract\Message\Message;
+use JTL\Nachricht\Contract\Hook\AfterMessageErrorHook;
+use JTL\Nachricht\Contract\Hook\AfterMessageHook;
+use JTL\Nachricht\Contract\Hook\BeforeMessageHook;
 use JTL\Nachricht\Contract\Listener\Listener;
-use JTL\Nachricht\Event\Cache\EventCache;
+use JTL\Nachricht\Message\Cache\MessageCache;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -37,7 +37,7 @@ class ListenerProviderTest extends TestCase
     private $listenerProvider;
 
     /**
-     * @var Event|Mockery\MockInterface
+     * @var Message|Mockery\MockInterface
      */
     private $event;
 
@@ -47,16 +47,16 @@ class ListenerProviderTest extends TestCase
     private $listener;
 
     /**
-     * @var EventCache|Mockery\MockInterface
+     * @var MessageCache|Mockery\MockInterface
      */
     private $listenerCache;
 
     public function setUp(): void
     {
         $this->container = Mockery::mock(ContainerInterface::class);
-        $this->event = Mockery::mock(Event::class);
+        $this->event = Mockery::mock(Message::class);
         $this->listener = new TestListener();
-        $this->listenerCache = Mockery::mock(EventCache::class);
+        $this->listenerCache = Mockery::mock(MessageCache::class);
         $this->listenerProvider = new ListenerProvider($this->container, $this->listenerCache);
     }
 
@@ -65,7 +65,7 @@ class ListenerProviderTest extends TestCase
         Mockery::close();
     }
 
-    public function testGetListenersForEvent(): void
+    public function testGetListenersForMessage(): void
     {
         $listenerList = [
             [
@@ -74,7 +74,7 @@ class ListenerProviderTest extends TestCase
             ]
         ];
 
-        $this->listenerCache->shouldReceive('getListenerListForEvent')
+        $this->listenerCache->shouldReceive('getListenerListForMessage')
             ->once()
             ->andReturn($listenerList);
 
@@ -83,7 +83,7 @@ class ListenerProviderTest extends TestCase
             ->once()
             ->andReturn($this->listener);
 
-        foreach ($this->listenerProvider->getListenersForEvent($this->event) as $listenerClosure) {
+        foreach ($this->listenerProvider->getListenersForMessage($this->event) as $listenerClosure) {
             $this->assertTrue(is_callable($listenerClosure));
             $listenerClosure($this->event);
         }
@@ -92,18 +92,18 @@ class ListenerProviderTest extends TestCase
     public function dataProviderTestHooks(): array
     {
         return [
-            [TestListenerWithBeforeEventHook::class, ['setup']],
-            [TestListenerWithAfterEventHook::class, ['after']],
-            [TestListenerWithAfterAndBeforeEventHook::class, ['setup', 'after']],
+            [TestListenerWithBeforeMessageHook::class, ['setup']],
+            [TestListenerWithAfterMessageHook::class, ['after']],
+            [TestListenerWithAfterAndBeforeMessageHook::class, ['setup', 'after']],
         ];
     }
 
     /**
      * @dataProvider dataProviderTestHooks
      */
-    public function testCanHandleBeforeEventHook($testlistenerClass, array $hookList)
+    public function testCanHandleBeforeMessageHook($testlistenerClass, array $hookList)
     {
-        $eventStub = $this->createStub(Event::class);
+        $eventStub = $this->createStub(Message::class);
 
         $testListenerMock = $this->createMock($testlistenerClass);
         foreach ($hookList as $methodToCall) {
@@ -117,8 +117,8 @@ class ListenerProviderTest extends TestCase
             ->with('TestListener')
             ->willReturn($testListenerMock);
 
-        $eventCacheMock = $this->createMock(EventCache::class);
-        $eventCacheMock->expects($this->once())->method('getListenerListForEvent')
+        $eventCacheMock = $this->createMock(MessageCache::class);
+        $eventCacheMock->expects($this->once())->method('getListenerListForMessage')
             ->willReturn([
                 [
                     'listenerClass' => 'TestListener',
@@ -126,17 +126,17 @@ class ListenerProviderTest extends TestCase
                 ]
             ]);
         $provider = new ListenerProvider($containerMock, $eventCacheMock);
-        foreach ($provider->getListenersForEvent($eventStub) as $listenerClosure) {
+        foreach ($provider->getListenersForMessage($eventStub) as $listenerClosure) {
             $listenerClosure($eventStub);
         }
     }
 
-    public function testAfterEventErrorHook()
+    public function testAfterMessageErrorHook()
     {
-        $eventStub = $this->createStub(Event::class);
+        $eventStub = $this->createStub(Message::class);
         $throwableStub = $this->createStub(\Throwable::class);
 
-        $testListenerMock = $this->createMock(TestListenerWithErrorAndAfterEventHook::class);
+        $testListenerMock = $this->createMock(TestListenerWithErrorAndAfterMessageHook::class);
         $testListenerMock->expects($this->once())->method('onError')->with($eventStub, $throwableStub);
         $testListenerMock->expects($this->once())->method('after')->with($eventStub);
         $testListenerMock->expects($this->once())->method('listen')->with($eventStub)
@@ -147,8 +147,8 @@ class ListenerProviderTest extends TestCase
             ->with('TestListener')
             ->willReturn($testListenerMock);
 
-        $eventCacheMock = $this->createMock(EventCache::class);
-        $eventCacheMock->expects($this->once())->method('getListenerListForEvent')
+        $eventCacheMock = $this->createMock(MessageCache::class);
+        $eventCacheMock->expects($this->once())->method('getListenerListForMessage')
             ->willReturn([
                 [
                     'listenerClass' => 'TestListener',
@@ -157,17 +157,17 @@ class ListenerProviderTest extends TestCase
             ]);
         $provider = new ListenerProvider($containerMock, $eventCacheMock);
 
-        foreach ($provider->getListenersForEvent($eventStub) as $listenerClosure) {
+        foreach ($provider->getListenersForMessage($eventStub) as $listenerClosure) {
             $listenerClosure($eventStub);
         }
     }
 
     public function testOnErrorHookCanThrowExceptionAndAfterHookIsAlsoExecuted()
     {
-        $eventStub = $this->createStub(Event::class);
+        $eventStub = $this->createStub(Message::class);
         $throwableStub = $this->createStub(\Throwable::class);
 
-        $testListenerMock = $this->createMock(TestListenerWithErrorAndAfterEventHook::class);
+        $testListenerMock = $this->createMock(TestListenerWithErrorAndAfterMessageHook::class);
         $testListenerMock->expects($this->once())->method('onError')
             ->with($eventStub, $throwableStub)->willThrowException($throwableStub);
         $testListenerMock->expects($this->once())->method('after')->with($eventStub);
@@ -179,8 +179,8 @@ class ListenerProviderTest extends TestCase
             ->with('TestListener')
             ->willReturn($testListenerMock);
 
-        $eventCacheMock = $this->createMock(EventCache::class);
-        $eventCacheMock->expects($this->once())->method('getListenerListForEvent')
+        $eventCacheMock = $this->createMock(MessageCache::class);
+        $eventCacheMock->expects($this->once())->method('getListenerListForMessage')
             ->willReturn([
                 [
                     'listenerClass' => 'TestListener',
@@ -190,14 +190,14 @@ class ListenerProviderTest extends TestCase
         $provider = new ListenerProvider($containerMock, $eventCacheMock);
 
         $this->expectException(\Throwable::class);
-        foreach ($provider->getListenersForEvent($eventStub) as $listenerClosure) {
+        foreach ($provider->getListenersForMessage($eventStub) as $listenerClosure) {
             $listenerClosure($eventStub);
         }
     }
 
     public function testExceptionIsThrown()
     {
-        $eventStub = $this->createStub(Event::class);
+        $eventStub = $this->createStub(Message::class);
         $throwableStub = $this->createStub(\Throwable::class);
 
         $testListenerMock = $this->createMock(TestListener::class);
@@ -209,8 +209,8 @@ class ListenerProviderTest extends TestCase
             ->with('TestListener')
             ->willReturn($testListenerMock);
 
-        $eventCacheMock = $this->createMock(EventCache::class);
-        $eventCacheMock->expects($this->once())->method('getListenerListForEvent')
+        $eventCacheMock = $this->createMock(MessageCache::class);
+        $eventCacheMock->expects($this->once())->method('getListenerListForMessage')
             ->willReturn([
                 [
                     'listenerClass' => 'TestListener',
@@ -220,7 +220,7 @@ class ListenerProviderTest extends TestCase
         $provider = new ListenerProvider($containerMock, $eventCacheMock);
 
         $this->expectException(\Throwable::class);
-        foreach ($provider->getListenersForEvent($eventStub) as $listenerClosure) {
+        foreach ($provider->getListenersForMessage($eventStub) as $listenerClosure) {
             $listenerClosure($eventStub);
         }
     }
@@ -228,44 +228,44 @@ class ListenerProviderTest extends TestCase
 
 class TestListener implements Listener
 {
-    public function listen(Event $event): Event
+    public function listen(Message $event): Message
     {
         return $event;
     }
 }
 
-class TestListenerWithBeforeEventHook extends TestListener implements BeforeEventHook
+class TestListenerWithBeforeMessageHook extends TestListener implements BeforeMessageHook
 {
-    public function setup(Event $event): void
+    public function setup(Message $event): void
     {
     }
 }
 
-class TestListenerWithAfterEventHook extends TestListener implements AfterEventHook
+class TestListenerWithAfterMessageHook extends TestListener implements AfterMessageHook
 {
-    public function after(Event $event): void
+    public function after(Message $event): void
     {
     }
 }
 
-class TestListenerWithAfterAndBeforeEventHook extends TestListener implements AfterEventHook, BeforeEventHook
+class TestListenerWithAfterAndBeforeMessageHook extends TestListener implements AfterMessageHook, BeforeMessageHook
 {
-    public function setup(Event $event): void
+    public function setup(Message $event): void
     {
     }
 
-    public function after(Event $event): void
+    public function after(Message $event): void
     {
     }
 }
 
-class TestListenerWithErrorAndAfterEventHook extends TestListener implements AfterEventHook, AfterEventErrorHook
+class TestListenerWithErrorAndAfterMessageHook extends TestListener implements AfterMessageHook, AfterMessageErrorHook
 {
-    public function onError(Event $event, \Throwable $throwable): void
+    public function onError(Message $event, \Throwable $throwable): void
     {
     }
 
-    public function after(Event $event): void
+    public function after(Message $event): void
     {
     }
 }
