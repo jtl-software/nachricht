@@ -26,12 +26,12 @@ services:
         port: '5672'
         user: 'guest'
         password: 'guest'
-      - '@JTL\Nachricht\Contract\Serializer\EventSerializer'
+      - '@JTL\Nachricht\Contract\Serializer\MessageSerializer'
       - '@JTL\Nachricht\Listener\ListenerProvider'
       - '@Psr\Log\LoggerInterface'
 
-  JTL\Nachricht\Event\Cache\EventCache:
-    factory: 'JTL\Nachricht\Event\Cache\EventCacheCreator:create'
+  JTL\Nachricht\Message\Cache\MessageCache:
+    factory: 'JTL\Nachricht\Message\Cache\MessageCacheCreator:create'
     arguments:
       $cacheFile: !php/const CACHE_PATH
       $lookupPathList:

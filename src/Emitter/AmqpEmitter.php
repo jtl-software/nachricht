@@ -9,8 +9,8 @@
 namespace JTL\Nachricht\Emitter;
 
 use JTL\Nachricht\Contract\Emitter\Emitter;
-use JTL\Nachricht\Contract\Event\AmqpEvent;
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
+use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 
 class AmqpEmitter implements Emitter
@@ -23,12 +23,12 @@ class AmqpEmitter implements Emitter
     }
 
     /**
-     * @param Event&AmqpEvent ...$eventList
+     * @param Message&AmqpTransportableMessage ...$messageList
      */
-    public function emit(Event ...$eventList): void
+    public function emit(Message ...$messageList): void
     {
-        foreach ($eventList as $event) {
-            $this->transport->publish($event);
+        foreach ($messageList as $message) {
+            $this->transport->publish($message);
         }
     }
 }

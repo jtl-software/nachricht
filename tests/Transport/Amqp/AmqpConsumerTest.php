@@ -10,8 +10,8 @@ namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
 use Exception;
-use JTL\Nachricht\Contract\Event\AmqpEvent;
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
+use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Dispatcher\AmqpDispatcher;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use Mockery;
@@ -51,14 +51,14 @@ class AmqpConsumerTest extends TestCase
     private $subscriptionSettings;
 
     /**
-     * @var Event|Mockery\MockInterface
+     * @var Message|Mockery\MockInterface
      */
-    private $event;
+    private $message;
 
     public function setUp(): void
     {
         $this->transport = Mockery::mock(AmqpTransport::class);
-        $this->event = Mockery::mock(AmqpEvent::class);
+        $this->event = Mockery::mock(AmqpTransportableMessage::class);
         $this->dispatcher = Mockery::mock(AmqpDispatcher::class);
         $this->subscriptionSettings = Mockery::mock(SubscriptionSettings::class);
 

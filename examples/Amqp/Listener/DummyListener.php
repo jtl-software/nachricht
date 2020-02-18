@@ -10,15 +10,15 @@ namespace JTL\Nachricht\Examples\Amqp\Listener;
 
 
 use JTL\Nachricht\Contract\Listener\Listener;
-use JTL\Nachricht\Examples\Amqp\Event\DummyAmqpEvent;
+use JTL\Nachricht\Examples\Amqp\Message\DummyAmqpMessage;
 
 class DummyListener implements Listener
 {
     /**
-     * @param DummyAmqpEvent $event
+     * @param DummyAmqpMessage $message
      */
-    public function listen(DummyAmqpEvent $event): void
+    public function listen(DummyAmqpMessage $message): void
     {
-        echo 'Dummy Listener called: ' . $event->getData() . "\n";
+        echo 'Dummy Listener called: ' . $message->getData() . "\n";
     }
 }

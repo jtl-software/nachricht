@@ -8,12 +8,12 @@
 
 namespace JTL\Nachricht\Contract\Emitter;
 
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Message\Message;
 
 interface Emitter
 {
     /**
-     * @param Event ...$eventList
+     * @param Message ...$messageList
      */
-    public function emit(Event ...$eventList): void;
+    public function emit(Message ...$messageList): void;
 }

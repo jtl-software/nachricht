@@ -8,7 +8,7 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
-use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -25,9 +25,9 @@ class AmqpTransportFactoryTest extends TestCase
 {
 
     /**
-     * @var EventSerializer|Mockery\MockInterface
+     * @var MessageSerializer|Mockery\MockInterface
      */
-    private $eventSerializer;
+    private $messageSerializer;
 
     /**
      * @var AmqpTransportFactory
@@ -41,7 +41,7 @@ class AmqpTransportFactoryTest extends TestCase
 
     public function setUp(): void
     {
-        $this->eventSerializer = Mockery::mock(EventSerializer::class);
+        $this->eventSerializer = Mockery::mock(MessageSerializer::class);
         $this->factory = new AmqpTransportFactory();
         $this->provider = Mockery::mock(ListenerProvider::class);
     }

@@ -2,12 +2,14 @@
 
 # Nachricht
 
-Nachricht is an event dispatcher which focuses on distributing workloads.
+Nachricht is an message dispatcher which focuses on distributing workloads.
 
 ## Features
 
-* Directly dispatch events
-* Dispatch events via AMQP   
+* Directly dispatch messages
+* Dispatch messages via AMQP
+* auto-discovery to find and create AMQP Messages queues
+* dead-lettering mechanism    
  
 ## Requirements
 A PSR-11 compatible container (we recommend the [Symfony DependencyInjection component](https://symfony.com/doc/current/components/dependency_injection.html))
@@ -16,14 +18,14 @@ via `$container->get($listenerClass)`.
 
 ## Usage
 
-Create an event class by implementing `JTL\Nachricht\Contract\Event\Event`.
+Create an message class by implementing `JTL\Nachricht\Contract\Message\Message`.
  
 ```php
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Message\Message;
 
-class DummyEvent implements Event
+class DummyMessage implements Message
 {
-    private $data;
+    private string $data;
 
     public function __construct(string $data)
     {
@@ -44,7 +46,7 @@ use JTL\Nachricht\Contract\Listener\Listener;
 
 class DummyListener implements Listener
 {
-    public function listen(DummyEvent $event): void
+    public function listen(DummyMessage $event): void
     {
         echo 'Dummy Listener called: ' . $event->getData() . "\n";
     }
@@ -56,7 +58,7 @@ Emit the Event
 ```php
 $emitter = $container->get(DirectEmitter::class);
 
-$event = new FooEvent('Test');
+$event = new FooMessage('Test');
 
 $emitter->emit($event); 
 ```

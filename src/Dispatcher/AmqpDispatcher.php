@@ -8,11 +8,11 @@
 
 namespace JTL\Nachricht\Dispatcher;
 
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Dispatcher\MessageDispatcherInterface;
+use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Listener\ListenerProvider;
-use Psr\EventDispatcher\EventDispatcherInterface;
 
-class AmqpDispatcher implements EventDispatcherInterface
+class AmqpDispatcher implements MessageDispatcherInterface
 {
     /**
      * @var ListenerProvider
@@ -30,12 +30,12 @@ class AmqpDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * @param Event&object $event
+     * @param Message&object $message
      */
-    public function dispatch(object $event)
+    public function dispatch(object $message): void
     {
-        foreach ($this->listenerProvider->getListenersForEvent($event) as $listener) {
-            $listener($event);
+        foreach ($this->listenerProvider->getListenersForMessage($message) as $listener) {
+            $listener($message);
         }
     }
 }

@@ -9,4 +9,4 @@ parameters:
         - message: '#.*PhpAmqpLib\\Channel\\AMQPChannel::queue_declare\(\) expects array.*#'
           path: 'src/Transport/Amqp/AmqpTransport.php'
         - message: '#.*Strict comparison using === between array<string, string> and false will always evaluate to false.*#'
-          path: 'src/Event/Cache/AbstractVisitor.php'
+          path: 'src/Message/Cache/AbstractVisitor.php'

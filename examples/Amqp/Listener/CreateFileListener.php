@@ -11,17 +11,17 @@ namespace JTL\Nachricht\Examples\Amqp\Listener;
 
 use Exception;
 use JTL\Nachricht\Contract\Listener\Listener;
-use JTL\Nachricht\Examples\Amqp\Event\CreateFileAmqpEvent;
+use JTL\Nachricht\Examples\Amqp\Message\CreateFileAmqpMessage;
 
 class CreateFileListener implements Listener
 {
     private const TMP_DIR = __DIR__ . '/../tmp';
 
     /**
-     * @param CreateFileAmqpEvent $event
+     * @param CreateFileAmqpMessage $message
      * @throws Exception
      */
-    public function listen(CreateFileAmqpEvent $event): void
+    public function listen(CreateFileAmqpMessage $message): void
     {
         if (!is_dir(self::TMP_DIR)) {
             mkdir(self::TMP_DIR);
@@ -31,11 +31,11 @@ class CreateFileListener implements Listener
 
         $this->randomFail();
 
-        $handle = fopen(self::TMP_DIR . '/' . $event->getFilename(), 'w+');
+        $handle = fopen(self::TMP_DIR . '/' . $message->getFilename(), 'w+');
         fwrite($handle, bin2hex(random_bytes(1024 * 1024)));
         fclose($handle);
 
-        echo "{$event->getEventId()} Created file {$event->getFilename()}\n";
+        echo "{$message->getMessageId()} Created file {$message->getFilename()}\n";
     }
 
     /**

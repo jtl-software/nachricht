@@ -10,8 +10,8 @@ namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
 use Exception;
-use JTL\Nachricht\Contract\Event\AmqpEvent;
-use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
+use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
@@ -32,7 +32,7 @@ class AmqpTransport
     private array $declaredQueueList = [];
 
     private AmqpConnectionSettings $connectionSettings;
-    private EventSerializer $serializer;
+    private MessageSerializer $serializer;
     private ListenerProvider $listenerProvider;
     private ?LoggerInterface $logger;
     private ?AMQPStreamConnection $connection = null;
@@ -41,13 +41,13 @@ class AmqpTransport
     /**
      * AmqpTransport constructor.
      * @param AmqpConnectionSettings $connectionSettings
-     * @param EventSerializer $serializer
+     * @param MessageSerializer $serializer
      * @param ListenerProvider $listenerProvider
      * @param LoggerInterface $logger
      */
     public function __construct(
         AmqpConnectionSettings $connectionSettings,
-        EventSerializer $serializer,
+        MessageSerializer $serializer,
         ListenerProvider $listenerProvider,
         LoggerInterface $logger = null
     ) {
@@ -65,17 +65,17 @@ class AmqpTransport
     }
 
     /**
-     * @param AmqpEvent $event
+     * @param AmqpTransportableMessage $message
      */
-    public function publish(AmqpEvent $event): void
+    public function publish(AmqpTransportableMessage $message): void
     {
         $this->connect();
-        $this->declareQueue(self::MESSAGE_QUEUE_PREFIX . $event->getRoutingKey());
-        $message = new AMQPMessage($this->serializer->serialize($event));
+        $this->declareQueue(self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey());
+        $amqpMessage = new AMQPMessage($this->serializer->serialize($message));
         $this->channel->basic_publish(
-            $message,
-            $event->getExchange(),
-            self::MESSAGE_QUEUE_PREFIX . $event->getRoutingKey()
+            $amqpMessage,
+            $message->getExchange(),
+            self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey()
         );
     }
 
@@ -165,9 +165,9 @@ class AmqpTransport
         return function (AMQPMessage $message) use ($serializer, $handler) {
             try {
                 $event = $serializer->deserialize($message->getBody());
-                if (!$event instanceof AmqpEvent) {
-                    $this->logError(get_class($event) . ' need to implement ' . AmqpEvent::class);
-                    $this->handleFailedMessage($message);
+                if (!$event instanceof AmqpTransportableMessage) {
+                    $this->logError(get_class($event) . ' need to implement ' . AmqpTransportableMessage::class);
+                    $this->handleUnprocessableMessage($message);
                 } else {
                     if (!$this->listenerProvider->eventHasListeners($event)) {
                         return;
@@ -177,12 +177,12 @@ class AmqpTransport
                         $handler($event);
                     } catch (Exception|Throwable $exception) {
                         $this->logError($exception->__toString());
-                        $this->handleFailedEvent($message, $event, $exception);
+                        $this->handleFailedMessage($message, $event, $exception);
                     }
                 }
             } catch (DeserializationFailedException $exception) {
                 $this->logError($exception->__toString());
-                $this->handleFailedMessage($message);
+                $this->handleUnprocessableMessage($message);
             }
 
             $this->ack($message);
@@ -202,7 +202,7 @@ class AmqpTransport
     /**
      * @param AMQPMessage $message
      */
-    private function handleFailedMessage(AMQPMessage $message): void
+    private function handleUnprocessableMessage(AMQPMessage $message): void
     {
         $this->publishMessageToFailureQueue($message);
     }
@@ -217,28 +217,29 @@ class AmqpTransport
     }
 
     /**
-     * @param AMQPMessage $message
-     * @param AmqpEvent $event
+     * @param AMQPMessage $amqpMessage
+     * @param AmqpTransportableMessage $message
+     * @param Throwable $throwable
      */
-    private function handleFailedEvent(AMQPMessage $message, AmqpEvent $event, Throwable $throwable): void
+    private function handleFailedMessage(AMQPMessage $amqpMessage, AmqpTransportableMessage $message, Throwable $throwable): void
     {
-        $event->setLastError($throwable->getMessage());
-        if ($event->isDeadLetter()) {
-            $this->publishMessageToDeadLetterQueue($message, $event);
+        $message->setLastError($throwable->getMessage());
+        if ($message->isDeadLetter()) {
+            $this->publishMessageToDeadLetterQueue($amqpMessage, $message);
         } else {
-            $this->publishMessageToDelayQueue($message, $event);
+            $this->publishMessageToDelayQueue($amqpMessage, $message);
         }
     }
 
     /**
-     * @param AMQPMessage $message
-     * @param AmqpEvent $event
+     * @param AMQPMessage $amqpMessage
+     * @param AmqpTransportableMessage $message
      */
-    private function publishMessageToDeadLetterQueue(AMQPMessage $message, AmqpEvent $event): void
+    private function publishMessageToDeadLetterQueue(AMQPMessage $amqpMessage, AmqpTransportableMessage $message): void
     {
-        $deadLetterQueueName = $this->declareDeadLetterQueue($event->getRoutingKey());
-        $message->setBody($this->serializer->serialize($event));
-        $this->channel->basic_publish($message, '', $deadLetterQueueName);
+        $deadLetterQueueName = $this->declareDeadLetterQueue($message->getRoutingKey());
+        $amqpMessage->setBody($this->serializer->serialize($message));
+        $this->channel->basic_publish($amqpMessage, '', $deadLetterQueueName);
     }
 
     /**
@@ -254,14 +255,14 @@ class AmqpTransport
     }
 
     /**
-     * @param AMQPMessage $message
-     * @param AmqpEvent $event
+     * @param AMQPMessage $amqpMessage
+     * @param AmqpTransportableMessage $message
      */
-    private function publishMessageToDelayQueue(AMQPMessage $message, AmqpEvent $event): void
+    private function publishMessageToDelayQueue(AMQPMessage $amqpMessage, AmqpTransportableMessage $message): void
     {
-        $delayQueueName = $this->declareDelayQueue($event->getRoutingKey());
-        $message->setBody($this->serializer->serialize($event));
-        $this->channel->basic_publish($message, '', $delayQueueName);
+        $delayQueueName = $this->declareDelayQueue($message->getRoutingKey());
+        $amqpMessage->setBody($this->serializer->serialize($message));
+        $this->channel->basic_publish($amqpMessage, '', $delayQueueName);
     }
 
     /**

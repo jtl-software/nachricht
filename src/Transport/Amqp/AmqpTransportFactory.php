@@ -8,7 +8,7 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
-use JTL\Nachricht\Contract\Serializer\EventSerializer;
+use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
 use Psr\Log\LoggerInterface;
 
@@ -16,7 +16,7 @@ class AmqpTransportFactory
 {
     public function createTransport(
         array $connectionSettings,
-        EventSerializer $serializer,
+        MessageSerializer $serializer,
         ListenerProvider $listenerProvider,
         LoggerInterface $logger = null
     ): AmqpTransport {

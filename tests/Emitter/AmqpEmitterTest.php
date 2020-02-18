@@ -14,8 +14,8 @@
 
 namespace JTL\Nachricht\Emitter;
 
-use JTL\Nachricht\Contract\Event\AmqpEvent;
-use JTL\Nachricht\Contract\Event\Event;
+use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
+use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -25,25 +25,25 @@ use PHPUnit\Framework\TestCase;
  */
 class AmqpEmitterTest extends TestCase
 {
-    public function testCamEmitEvent(): void
+    public function testCamEmitMessage(): void
     {
-        $eventStub = $this->createStub(AmqpEvent::class);
+        $messageStub = $this->createStub(AmqpTransportableMessage::class);
 
         $transportMock = $this->createMock(AmqpTransport::class);
-        $transportMock->expects($this->once())->method('publish')->with($eventStub);
+        $transportMock->expects($this->once())->method('publish')->with($messageStub);
 
         $emitter = new AmqpEmitter($transportMock);
-        $emitter->emit($eventStub);
+        $emitter->emit($messageStub);
     }
 
-    public function testCanEmitEventList(): void
+    public function testCanEmitMessageList(): void
     {
-        $eventStub = $this->createStub(AmqpEvent::class);
+        $messageStub = $this->createStub(AmqpTransportableMessage::class);
 
         $transportMock = $this->createMock(AmqpTransport::class);
-        $transportMock->expects($this->exactly(4))->method('publish')->with($eventStub);
+        $transportMock->expects($this->exactly(4))->method('publish')->with($messageStub);
 
         $emitter = new AmqpEmitter($transportMock);
-        $emitter->emit($eventStub, $eventStub, $eventStub, $eventStub);
+        $emitter->emit($messageStub, $messageStub, $messageStub, $messageStub);
     }
 }
