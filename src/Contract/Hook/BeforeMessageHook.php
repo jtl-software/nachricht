@@ -23,7 +23,7 @@ use JTL\Nachricht\Contract\Message\Message;
 interface BeforeMessageHook
 {
     /**
-     * @param Message $event
+     * @param Message $message
      */
-    public function setup(Message $event): void;
+    public function setup(Message $message): void;
 }

@@ -15,12 +15,12 @@ use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 class PhpMessageSerializer implements MessageSerializer
 {
     /**
-     * @param object $event
+     * @param object $message
      * @return string
      */
-    public function serialize(object $event): string
+    public function serialize(object $message): string
     {
-        return serialize($event);
+        return serialize($message);
     }
 
     /**

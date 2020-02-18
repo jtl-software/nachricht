@@ -14,6 +14,6 @@ include_once __DIR__ . '/../common/common.php';
 /** @var DirectEmitter $emitter */
 $emitter = $containerBuilder->get(DirectEmitter::class);
 
-$event = new FooMessage('Test');
+$message = new FooMessage('Test');
 
-$emitter->emit($event);
+$emitter->emit($message);

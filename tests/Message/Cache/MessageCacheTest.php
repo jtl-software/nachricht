@@ -27,7 +27,7 @@ class MessageCacheTest extends TestCase
     /**
      * @var MessageCache
      */
-    private $eventCache;
+    private $messageCache;
 
     public function tearDown(): void
     {

@@ -34,7 +34,7 @@ class AmqpDispatcherTest extends TestCase
     /**
      * @var Message|Mockery\MockInterface
      */
-    private $event;
+    private $message;
 
     public function setUp(): void
     {
@@ -50,8 +50,8 @@ class AmqpDispatcherTest extends TestCase
 
     public function testCanDispatch(): void
     {
-        $listener = function (object $event) {
-            $this->assertEquals($this->event, $event);
+        $listener = function (object $message) {
+            $this->assertEquals($this->event, $message);
         };
 
         $this->listenerProvider->shouldReceive('getListenersForMessage')

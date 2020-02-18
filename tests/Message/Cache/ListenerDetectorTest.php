@@ -50,7 +50,7 @@ class ListenerDetectorTest extends TestCase
     /**
      * @var Mockery\MockInterface|Name
      */
-    private $eventClassName;
+    private $messageClassName;
 
     /**
      * @var Mockery\MockInterface|Name

@@ -26,60 +26,60 @@ class AbstractMessageTest extends TestCase
 {
     public function testCanCreateWithMessageId()
     {
-        $eventId = uniqid();
-        $event = new TestAmqpMessage($eventId);
-        $this->assertEquals($eventId, $event->getMessageId());
+        $messageId = uniqid();
+        $message = new TestAmqpMessage($messageId);
+        $this->assertEquals($messageId, $message->getMessageId());
     }
 
     public function testCanCreateWithoutMessageId()
     {
-        $event = new TestAmqpMessage();
-        $this->assertIsString($event->getMessageId());
-        $this->assertTrue(strlen($event->getMessageId()) > 0);
+        $message = new TestAmqpMessage();
+        $this->assertIsString($message->getMessageId());
+        $this->assertTrue(strlen($message->getMessageId()) > 0);
     }
 
     public function testCanSetLastErrorMessage()
     {
         $errorMessage = uniqid();
-        $event = new TestAmqpMessage();
-        $event->setLastError($errorMessage);
+        $message = new TestAmqpMessage();
+        $message->setLastError($errorMessage);
 
-        $this->assertStringContainsString($errorMessage, serialize($event));
+        $this->assertStringContainsString($errorMessage, serialize($message));
     }
 
     public function testCanCheckIfMessageIsDeadLetterTrue()
     {
-        $event = new class extends AbstractAmqpTransportableMessage {
+        $message = new class extends AbstractAmqpTransportableMessage {
             const DEFAULT_RETRY_COUNT = 0;
         };
-        $this->assertTrue($event->isDeadLetter());
+        $this->assertTrue($message->isDeadLetter());
     }
 
     public function testCanCheckIfMessageIsDeadLetterFalse()
     {
-        $event = new class extends AbstractAmqpTransportableMessage {
+        $message = new class extends AbstractAmqpTransportableMessage {
             const DEFAULT_RETRY_COUNT = 1;
         };
-        $this->assertFalse($event->isDeadLetter());
+        $this->assertFalse($message->isDeadLetter());
     }
 
     public function testCanIncreaseReceiveCountOnDeserialization()
     {
-        $event = new TestAmqpMessage();
-        $this->assertFalse($event->isDeadLetter());
-        $event = unserialize(serialize($event));
-        $this->assertTrue($event->isDeadLetter());
+        $message = new TestAmqpMessage();
+        $this->assertFalse($message->isDeadLetter());
+        $message = unserialize(serialize($message));
+        $this->assertTrue($message->isDeadLetter());
     }
 
     public function testGetRoutingKey(): void
     {
-        $event = new TestAmqpMessage();
-        $this->assertEquals(get_class($event), $event->getRoutingKey());
+        $message = new TestAmqpMessage();
+        $this->assertEquals(get_class($message), $message->getRoutingKey());
     }
 
     public function testGetExchange(): void
     {
-        $event = new TestAmqpMessage();
-        $this->assertEquals('', $event->getExchange());
+        $message = new TestAmqpMessage();
+        $this->assertEquals('', $message->getExchange());
     }
 }

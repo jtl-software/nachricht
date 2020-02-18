@@ -27,23 +27,23 @@ class AmqpEmitterTest extends TestCase
 {
     public function testCamEmitMessage(): void
     {
-        $eventStub = $this->createStub(AmqpTransportableMessage::class);
+        $messageStub = $this->createStub(AmqpTransportableMessage::class);
 
         $transportMock = $this->createMock(AmqpTransport::class);
-        $transportMock->expects($this->once())->method('publish')->with($eventStub);
+        $transportMock->expects($this->once())->method('publish')->with($messageStub);
 
         $emitter = new AmqpEmitter($transportMock);
-        $emitter->emit($eventStub);
+        $emitter->emit($messageStub);
     }
 
     public function testCanEmitMessageList(): void
     {
-        $eventStub = $this->createStub(AmqpTransportableMessage::class);
+        $messageStub = $this->createStub(AmqpTransportableMessage::class);
 
         $transportMock = $this->createMock(AmqpTransport::class);
-        $transportMock->expects($this->exactly(4))->method('publish')->with($eventStub);
+        $transportMock->expects($this->exactly(4))->method('publish')->with($messageStub);
 
         $emitter = new AmqpEmitter($transportMock);
-        $emitter->emit($eventStub, $eventStub, $eventStub, $eventStub);
+        $emitter->emit($messageStub, $messageStub, $messageStub, $messageStub);
     }
 }

@@ -55,8 +55,8 @@ class AmqpConsumer implements Consumer
      */
     private function createCallback(): Closure
     {
-        return function (AmqpTransportableMessage $event) {
-            $this->dispatcher->dispatch($event);
+        return function (AmqpTransportableMessage $message) {
+            $this->dispatcher->dispatch($message);
         };
     }
 }

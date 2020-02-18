@@ -19,5 +19,5 @@ use JTL\Nachricht\Contract\Message\Message;
 
 interface MessageDispatcherInterface
 {
-    public function dispatch(Message $event): void;
+    public function dispatch(Message $message): void;
 }

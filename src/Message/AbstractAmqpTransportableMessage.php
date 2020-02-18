@@ -40,9 +40,9 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     private string $__eventId;
 
-    public function __construct(string $eventId = null)
+    public function __construct(string $messageId = null)
     {
-        $this->__eventId = $eventId ?? Uuid::uuid4()->toString();
+        $this->__eventId = $messageId ?? Uuid::uuid4()->toString();
     }
 
     public static function getRoutingKey(): string

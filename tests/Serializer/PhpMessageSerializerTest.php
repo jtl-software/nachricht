@@ -32,7 +32,7 @@ class PhpMessageSerializerTest extends TestCase
     /**
      * @var StubAmqpMessage
      */
-    private $event;
+    private $message;
 
     public function setUp(): void
     {
@@ -42,8 +42,8 @@ class PhpMessageSerializerTest extends TestCase
 
     public function testCanSerializeAndDeserialize(): void
     {
-        $event = new StubAmqpMessage();
-        $serializedMessage = $this->serializer->serialize($event);
+        $message = new StubAmqpMessage();
+        $serializedMessage = $this->serializer->serialize($message);
         $deserializedMessage = $this->serializer->deserialize($serializedMessage);
 
         $this->assertIsString($serializedMessage);

@@ -25,33 +25,33 @@ class DirectEmitterTest extends TestCase
 {
     public function testCanEmit()
     {
-        $eventStub = $this->createStub(Message::class);
-        $eventExecuteCounter = 0;
-        $listener = function (object $event) use (&$eventExecuteCounter) {
-            ++$eventExecuteCounter;
+        $messageStub = $this->createStub(Message::class);
+        $messageExecuteCounter = 0;
+        $listener = function (object $message) use (&$messageExecuteCounter) {
+            ++$messageExecuteCounter;
         };
         $listenerProviderMock = $this->createMock(ListenerProvider::class);
-        $listenerProviderMock->expects($this->once())->method('getListenersForMessage')->with($eventStub)->willReturn([$listener]);
+        $listenerProviderMock->expects($this->once())->method('getListenersForMessage')->with($messageStub)->willReturn([$listener]);
 
         $emitter = new DirectEmitter($listenerProviderMock);
-        $emitter->emit($eventStub);
+        $emitter->emit($messageStub);
 
-        $this->assertEquals(1, $eventExecuteCounter);
+        $this->assertEquals(1, $messageExecuteCounter);
     }
 
     public function testCanEmitMessageList()
     {
-        $eventStub = $this->createStub(Message::class);
-        $eventExecuteCounter = 0;
-        $listener = function (object $event) use (&$eventExecuteCounter) {
-            ++$eventExecuteCounter;
+        $messageStub = $this->createStub(Message::class);
+        $messageExecuteCounter = 0;
+        $listener = function (object $message) use (&$messageExecuteCounter) {
+            ++$messageExecuteCounter;
         };
         $listenerProviderMock = $this->createMock(ListenerProvider::class);
-        $listenerProviderMock->expects($this->exactly(4))->method('getListenersForMessage')->with($eventStub)->willReturn([$listener]);
+        $listenerProviderMock->expects($this->exactly(4))->method('getListenersForMessage')->with($messageStub)->willReturn([$listener]);
 
         $emitter = new DirectEmitter($listenerProviderMock);
-        $emitter->emit($eventStub, $eventStub, $eventStub, $eventStub);
+        $emitter->emit($messageStub, $messageStub, $messageStub, $messageStub);
 
-        $this->assertEquals(4, $eventExecuteCounter);
+        $this->assertEquals(4, $messageExecuteCounter);
     }
 }

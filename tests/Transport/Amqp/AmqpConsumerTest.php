@@ -53,7 +53,7 @@ class AmqpConsumerTest extends TestCase
     /**
      * @var Message|Mockery\MockInterface
      */
-    private $event;
+    private $message;
 
     public function setUp(): void
     {

@@ -19,5 +19,5 @@ use JTL\Nachricht\Contract\Message\Message;
 
 interface ListenerProviderInterface
 {
-    public function getListenersForMessage(Message $event): iterable;
+    public function getListenersForMessage(Message $message): iterable;
 }

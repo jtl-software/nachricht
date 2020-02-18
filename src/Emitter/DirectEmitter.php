@@ -22,17 +22,17 @@ class DirectEmitter implements Emitter, MessageDispatcherInterface
         $this->listenerProvider = $listenerProvider;
     }
 
-    public function emit(Message ...$eventList): void
+    public function emit(Message ...$messageList): void
     {
-        foreach ($eventList as $event) {
-            $this->dispatch($event);
+        foreach ($messageList as $message) {
+            $this->dispatch($message);
         }
     }
 
-    public function dispatch(Message $event): void
+    public function dispatch(Message $message): void
     {
-        foreach ($this->listenerProvider->getListenersForMessage($event) as $listener) {
-            $listener($event);
+        foreach ($this->listenerProvider->getListenersForMessage($message) as $listener) {
+            $listener($message);
         }
     }
 }

@@ -25,12 +25,12 @@ class MessageCache
     }
 
     /**
-     * @param string $eventClass
+     * @param string $messageClass
      * @return array
      */
-    public function getListenerListForMessage(string $eventClass): array
+    public function getListenerListForMessage(string $messageClass): array
     {
-        return $this->listenerCache[$eventClass]['listenerList'] ?? [];
+        return $this->listenerCache[$messageClass]['listenerList'] ?? [];
     }
 
     /**
@@ -42,11 +42,11 @@ class MessageCache
     }
 
     /**
-     * @param string $eventClass
+     * @param string $messageClass
      * @return string|null
      */
-    public function getRoutingKeyForMessage(string $eventClass): ?string
+    public function getRoutingKeyForMessage(string $messageClass): ?string
     {
-        return $this->listenerCache[$eventClass]['routingKey'] ?? null;
+        return $this->listenerCache[$messageClass]['routingKey'] ?? null;
     }
 }

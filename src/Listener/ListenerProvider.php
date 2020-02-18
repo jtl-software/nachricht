@@ -27,36 +27,36 @@ class ListenerProvider implements ListenerProviderInterface
         $this->listenerCache = $listenerCache;
     }
 
-    public function getListenersForMessage(Message $event): iterable
+    public function getListenersForMessage(Message $message): iterable
     {
-        foreach ($this->listenerCache->getListenerListForMessage(get_class($event)) as $listener) {
+        foreach ($this->listenerCache->getListenerListForMessage(get_class($message)) as $listener) {
             $listenerInstance = $this->container->get($listener['listenerClass']);
             $method = $listener['method'];
 
-            yield function (Message $event) use ($listenerInstance, $method) {
+            yield function (Message $message) use ($listenerInstance, $method) {
                 try {
                     if ($listenerInstance instanceof BeforeMessageHook) {
-                        $listenerInstance->setup($event);
+                        $listenerInstance->setup($message);
                     }
 
-                    $listenerInstance->{$method}($event);
+                    $listenerInstance->{$method}($message);
                 } catch (\Throwable $exception) {
                     if ($listenerInstance instanceof AfterMessageErrorHook) {
-                        $listenerInstance->onError($event, $exception);
+                        $listenerInstance->onError($message, $exception);
                     } else {
                         throw $exception;
                     }
                 } finally {
                     if ($listenerInstance instanceof AfterMessageHook) {
-                        $listenerInstance->after($event);
+                        $listenerInstance->after($message);
                     }
                 }
             };
         }
     }
 
-    public function eventHasListeners(Message $event): bool
+    public function eventHasListeners(Message $message): bool
     {
-        return count($this->listenerCache->getListenerListForMessage(get_class($event))) > 0;
+        return count($this->listenerCache->getListenerListForMessage(get_class($message))) > 0;
     }
 }

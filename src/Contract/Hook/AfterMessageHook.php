@@ -24,7 +24,7 @@ use JTL\Nachricht\Contract\Message\Message;
 interface AfterMessageHook
 {
     /**
-     * @param Message $event
+     * @param Message $message
      */
-    public function after(Message $event): void;
+    public function after(Message $message): void;
 }

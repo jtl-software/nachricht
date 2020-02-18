@@ -23,12 +23,12 @@ class AmqpEmitter implements Emitter
     }
 
     /**
-     * @param Message&AmqpTransportableMessage ...$eventList
+     * @param Message&AmqpTransportableMessage ...$messageList
      */
-    public function emit(Message ...$eventList): void
+    public function emit(Message ...$messageList): void
     {
-        foreach ($eventList as $event) {
-            $this->transport->publish($event);
+        foreach ($messageList as $message) {
+            $this->transport->publish($message);
         }
     }
 }

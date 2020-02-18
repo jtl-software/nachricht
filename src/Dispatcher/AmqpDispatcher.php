@@ -30,12 +30,12 @@ class AmqpDispatcher implements MessageDispatcherInterface
     }
 
     /**
-     * @param Message&object $event
+     * @param Message&object $message
      */
-    public function dispatch(object $event): void
+    public function dispatch(object $message): void
     {
-        foreach ($this->listenerProvider->getListenersForMessage($event) as $listener) {
-            $listener($event);
+        foreach ($this->listenerProvider->getListenersForMessage($message) as $listener) {
+            $listener($message);
         }
     }
 }

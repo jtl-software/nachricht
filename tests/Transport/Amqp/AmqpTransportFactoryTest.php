@@ -27,7 +27,7 @@ class AmqpTransportFactoryTest extends TestCase
     /**
      * @var MessageSerializer|Mockery\MockInterface
      */
-    private $eventSerializer;
+    private $messageSerializer;
 
     /**
      * @var AmqpTransportFactory

@@ -13,10 +13,10 @@ use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 interface MessageSerializer
 {
     /**
-     * @param object $event
+     * @param object $message
      * @return string
      */
-    public function serialize(object $event): string;
+    public function serialize(object $message): string;
 
     /**
      * @param string $serializedMessage

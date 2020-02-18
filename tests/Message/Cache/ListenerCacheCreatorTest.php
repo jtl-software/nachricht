@@ -187,7 +187,7 @@ class ListenerCacheCreatorTest extends TestCase
                 ]
             ]);
 
-        $eventToListenerMap = [
+        $messageToListenerMap = [
             'FooMessage' => [
                 'listenerList' => [
                     [
@@ -199,7 +199,7 @@ class ListenerCacheCreatorTest extends TestCase
             ]
         ];
 
-        $map = var_export($eventToListenerMap, true);
+        $map = var_export($messageToListenerMap, true);
 
         $this->configCache->shouldReceive('write')
             ->with("<?php\nreturn {$map};")
@@ -208,7 +208,7 @@ class ListenerCacheCreatorTest extends TestCase
         $this->cacheFileLoader->shouldReceive('load')
             ->with($this->cacheFile)
             ->once()
-            ->andReturn($eventToListenerMap);
+            ->andReturn($messageToListenerMap);
 
         $cache = $this->listenerCacheCreator->create($this->cacheFile, $this->lookupPathList, $this->isDevelopment);
 

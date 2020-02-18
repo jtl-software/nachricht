@@ -15,10 +15,10 @@ use JTL\Nachricht\Examples\Amqp\Message\DummyAmqpMessage;
 class DummyListener implements Listener
 {
     /**
-     * @param DummyAmqpMessage $event
+     * @param DummyAmqpMessage $message
      */
-    public function listen(DummyAmqpMessage $event): void
+    public function listen(DummyAmqpMessage $message): void
     {
-        echo 'Dummy Listener called: ' . $event->getData() . "\n";
+        echo 'Dummy Listener called: ' . $message->getData() . "\n";
     }
 }

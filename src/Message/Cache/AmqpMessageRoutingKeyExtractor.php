@@ -22,7 +22,7 @@ class AmqpMessageRoutingKeyExtractor extends AbstractVisitor
     /**
      * @var string|null
      */
-    private $eventClass;
+    private $messageClass;
 
     /**
      * @var string

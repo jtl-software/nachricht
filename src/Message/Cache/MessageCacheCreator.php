@@ -46,7 +46,7 @@ class MessageCacheCreator
      */
     private function rebuildCache(array $lookupPathList, ConfigCache $configCache): void
     {
-        $eventMap = [];
+        $messageMap = [];
 
         $parserFactory = new ParserFactory();
         $nameResolver = new NameResolver();
@@ -57,12 +57,12 @@ class MessageCacheCreator
 
         foreach ($files as $file) {
             $listenerDetector = new ListenerDetector();
-            $eventRoutingKeyExtractor = new AmqpMessageRoutingKeyExtractor();
+            $messageRoutingKeyExtractor = new AmqpMessageRoutingKeyExtractor();
 
             $nodeTraverser = new NodeTraverser();
             $nodeTraverser->addVisitor($nameResolver);
             $nodeTraverser->addVisitor($listenerDetector);
-            $nodeTraverser->addVisitor($eventRoutingKeyExtractor);
+            $nodeTraverser->addVisitor($messageRoutingKeyExtractor);
 
             $phpCode = file_get_contents($file);
 
@@ -81,20 +81,20 @@ class MessageCacheCreator
                 $this->mapListenerToMessage(
                     $listenerDetector->getListenerClass(),
                     $listenerDetector->getListenerMethods(),
-                    $eventMap
+                    $messageMap
                 );
             }
 
-            if ($eventRoutingKeyExtractor->isClassMessage() && $eventRoutingKeyExtractor->getMessageClass() !== null) {
+            if ($messageRoutingKeyExtractor->isClassMessage() && $messageRoutingKeyExtractor->getMessageClass() !== null) {
                 $this->mapRoutingKeyToMessage(
-                    $eventRoutingKeyExtractor->getMessageClass(),
-                    $eventRoutingKeyExtractor->getRoutingKey(),
-                    $eventMap
+                    $messageRoutingKeyExtractor->getMessageClass(),
+                    $messageRoutingKeyExtractor->getRoutingKey(),
+                    $messageMap
                 );
             }
         }
 
-        $map = var_export($eventMap, true);
+        $map = var_export($messageMap, true);
         $configCache->write("<?php\nreturn {$map};");
     }
 
@@ -130,7 +130,7 @@ class MessageCacheCreator
         if ($directoryList === false) {
             return $files;
         }
-        
+
         foreach ($directoryList as $directory) {
             $files = array_merge($files, $this->recursivePhpFileSearch($directory));
         }
@@ -141,20 +141,20 @@ class MessageCacheCreator
     /**
      * @param string $listenerClass
      * @param array $listenerList
-     * @param array $eventMap
+     * @param array $messageMap
      */
-    private function mapListenerToMessage(string $listenerClass, array $listenerList, array &$eventMap): void
+    private function mapListenerToMessage(string $listenerClass, array $listenerList, array &$messageMap): void
     {
         foreach ($listenerList as $listenerFunction) {
-            $eventMap[$listenerFunction['eventClass']]['listenerList'][] = [
+            $messageMap[$listenerFunction['eventClass']]['listenerList'][] = [
                 'listenerClass' => $listenerClass,
                 'method' => $listenerFunction['methodName']
             ];
         }
     }
 
-    private function mapRoutingKeyToMessage(string $eventClass, string $routingKey, array &$eventMap): void
+    private function mapRoutingKeyToMessage(string $messageClass, string $routingKey, array &$messageMap): void
     {
-        $eventMap[$eventClass]['routingKey'] = AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey;
+        $messageMap[$messageClass]['routingKey'] = AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey;
     }
 }

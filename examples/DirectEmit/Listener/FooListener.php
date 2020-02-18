@@ -14,8 +14,8 @@ use JTL\Nachricht\Examples\DirectEmit\Message\FooMessage;
 
 class FooListener implements Listener
 {
-    public function listen(FooMessage $event): void
+    public function listen(FooMessage $message): void
     {
-        echo 'FooListener called: ' . $event->getFooProperty();
+        echo 'FooListener called: ' . $message->getFooProperty();
     }
 }
