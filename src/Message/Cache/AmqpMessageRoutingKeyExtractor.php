@@ -14,20 +14,9 @@ use PhpParser\Node\Stmt\Class_;
 
 class AmqpMessageRoutingKeyExtractor extends AbstractVisitor
 {
-    /**
-     * @var bool
-     */
-    private $classIsMessage = false;
-
-    /**
-     * @var string|null
-     */
-    private $messageClass;
-
-    /**
-     * @var string
-     */
-    private $routingKey;
+    private bool $classIsMessage = false;
+    private ?string $messageClass;
+    private string $routingKey;
 
     /**
      * @param Node $node
@@ -39,12 +28,12 @@ class AmqpMessageRoutingKeyExtractor extends AbstractVisitor
             $this->classIsMessage = $this->classImplementsInterface($node, AmqpTransportableMessage::class);
 
             if ($this->classIsMessage) {
-                $this->eventClass = $this->getClassName($node);
+                $this->messageClass = $this->getClassName($node);
             }
         }
 
         if ($this->classIsMessage) {
-            $getRoutingKeyFunction = $this->eventClass . '::getRoutingKey';
+            $getRoutingKeyFunction = $this->messageClass . '::getRoutingKey';
             if (is_callable($getRoutingKeyFunction)) {
                 $this->routingKey = $getRoutingKeyFunction();
             }
@@ -64,7 +53,7 @@ class AmqpMessageRoutingKeyExtractor extends AbstractVisitor
      */
     public function getMessageClass(): ?string
     {
-        return $this->eventClass;
+        return $this->messageClass;
     }
 
     /**
