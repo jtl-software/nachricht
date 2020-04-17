@@ -30,6 +30,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use ReflectionClass;
 
 /**
@@ -127,6 +128,11 @@ class AmqpTransportTest extends TestCase
      */
     private $listenerProvider;
 
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject|LoggerInterface
+     */
+    private $loggerMock;
+
     public function setUp(): void
     {
         $this->routingKey = uniqid('routingKey', true);
@@ -169,8 +175,9 @@ class AmqpTransportTest extends TestCase
         $this->amqpMessage->delivery_info['delivery_tag'] = uniqid('delivery_tag', true);
 
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
+        $this->loggerMock = $this->createMock(LoggerInterface::class);
 
-        $this->transport = new AmqpTransport($this->connectionSettings, $this->serializer, $this->listenerProvider);
+        $this->transport = new AmqpTransport($this->connectionSettings, $this->serializer, $this->listenerProvider, $this->loggerMock);
     }
 
     public function tearDown(): void

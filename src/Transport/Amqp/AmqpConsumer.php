@@ -12,30 +12,38 @@ use Closure;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Contract\Transport\Consumer;
 use JTL\Nachricht\Dispatcher\AmqpDispatcher;
+use JTL\Nachricht\Log\DefaultLogger;
 use JTL\Nachricht\Transport\SubscriptionSettings;
+use Psr\Log\LoggerInterface;
 
 class AmqpConsumer implements Consumer
 {
-    /**
-     * @var AmqpTransport
-     */
-    private $transport;
+    private const EXIT_SIGNAL_LIST = [SIGINT, SIGTERM];
 
-    /**
-     * @var AmqpDispatcher
-     */
-    private $dispatcher;
+    private AmqpTransport $transport;
 
+    private AmqpDispatcher $dispatcher;
+
+    private LoggerInterface $logger;
+
+    private bool $shouldConsume;
 
     /**
      * AmqpConsumer constructor.
      * @param AmqpTransport $client
      * @param AmqpDispatcher $dispatcher
+     * @param LoggerInterface $logger
      */
-    public function __construct(AmqpTransport $client, AmqpDispatcher $dispatcher)
+    public function __construct(AmqpTransport $client, AmqpDispatcher $dispatcher, LoggerInterface $logger = null)
     {
         $this->transport = $client;
         $this->dispatcher = $dispatcher;
+        $this->shouldConsume = true;
+        if ($logger === null) {
+            $this->logger = new DefaultLogger();
+        } else {
+            $this->logger = $logger;
+        }
     }
 
     /**
@@ -43,11 +51,14 @@ class AmqpConsumer implements Consumer
      */
     public function consume(SubscriptionSettings $subscriptionSettings): void
     {
+        $this->setupSignalHandlers();
         $this->transport->subscribe($subscriptionSettings, $this->createCallback());
 
-        while (true) {
+        while ($this->shouldConsume) {
             $this->transport->poll();
         }
+
+        $this->logger->info('Consumer has been shut down');
     }
 
     /**
@@ -58,5 +69,23 @@ class AmqpConsumer implements Consumer
         return function (AmqpTransportableMessage $message) {
             $this->dispatcher->dispatch($message);
         };
+    }
+
+    /**
+     * @return Closure
+     */
+    private function createSignalCallback(): Closure
+    {
+        return function () {
+            $this->shouldConsume = false;
+            $this->logger->info('SIGTERM received. Shutting down consumer gracefully');
+        };
+    }
+
+    private function setupSignalHandlers(): void
+    {
+        foreach (self::EXIT_SIGNAL_LIST as $signal) {
+            pcntl_signal($signal, $this->createSignalCallback());
+        }
     }
 }
