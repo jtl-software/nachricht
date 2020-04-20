@@ -10,7 +10,7 @@ namespace JTL\Nachricht\Log;
 
 use Psr\Log\LoggerInterface;
 
-class DefaultLogger implements LoggerInterface
+class EchoLogger implements LoggerInterface
 {
 
     /**

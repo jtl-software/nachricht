@@ -12,7 +12,7 @@ use Closure;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Contract\Transport\Consumer;
 use JTL\Nachricht\Dispatcher\AmqpDispatcher;
-use JTL\Nachricht\Log\DefaultLogger;
+use JTL\Nachricht\Log\EchoLogger;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use Psr\Log\LoggerInterface;
 
@@ -40,7 +40,7 @@ class AmqpConsumer implements Consumer
         $this->dispatcher = $dispatcher;
         $this->shouldConsume = true;
         if ($logger === null) {
-            $this->logger = new DefaultLogger();
+            $this->logger = new EchoLogger();
         } else {
             $this->logger = $logger;
         }

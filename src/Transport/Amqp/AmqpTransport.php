@@ -13,7 +13,7 @@ use Exception;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
-use JTL\Nachricht\Log\DefaultLogger;
+use JTL\Nachricht\Log\EchoLogger;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -59,7 +59,7 @@ class AmqpTransport
         $this->serializer = $serializer;
         $this->listenerProvider = $listenerProvider;
         if ($logger === null) {
-            $this->logger = new DefaultLogger();
+            $this->logger = new EchoLogger();
         } else {
             $this->logger = $logger;
         }
