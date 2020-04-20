@@ -13,6 +13,7 @@ use Exception;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
+use JTL\Nachricht\Log\EchoLogger;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Channel\AMQPChannel;
@@ -33,8 +34,11 @@ class AmqpTransport
 
     private AmqpConnectionSettings $connectionSettings;
     private MessageSerializer $serializer;
+
     private ListenerProvider $listenerProvider;
-    private ?LoggerInterface $logger;
+
+    private LoggerInterface $logger;
+
     private ?AMQPStreamConnection $connection = null;
     private AMQPChannel $channel;
 
@@ -54,7 +58,11 @@ class AmqpTransport
         $this->connectionSettings = $connectionSettings;
         $this->serializer = $serializer;
         $this->listenerProvider = $listenerProvider;
-        $this->logger = $logger;
+        if ($logger === null) {
+            $this->logger = new EchoLogger();
+        } else {
+            $this->logger = $logger;
+        }
     }
 
     public function __destruct()
@@ -191,11 +199,6 @@ class AmqpTransport
 
     private function logError(string $message): void
     {
-        if ($this->logger === null) {
-            error_log($message);
-            return;
-        }
-
         $this->logger->error($message);
     }
 
