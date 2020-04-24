@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
 
 class AmqpConsumer implements Consumer
 {
-    private const EXIT_SIGNAL_LIST = [SIGINT, SIGTERM];
+    private const EXIT_SIGNAL_LIST = [SIGINT, SIGTERM, SIGHUP, SIGQUIT];
 
     private AmqpTransport $transport;
 
