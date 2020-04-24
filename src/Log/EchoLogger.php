@@ -83,13 +83,16 @@ class EchoLogger implements LoggerInterface
      */
     public function log($level, $message, array $context = array())
     {
+        $this->printMessage($level, $message, $context);
+
         switch ($level) {
-            case LogLevel::INFO:
-            case LogLevel::DEBUG:
-                $this->printMessage($level, $message, $context);
-                break;
-            default:
+            case LogLevel::WARNING:
+            case LogLevel::ERROR:
+            case LogLevel::CRITICAL:
+            case LogLevel::ALERT:
+            case LogLevel::EMERGENCY:
                 $this->logErrorMessage($level, $message, $context);
+                break;
         }
     }
 
