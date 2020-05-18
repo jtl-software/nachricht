@@ -12,7 +12,7 @@
         "psr/event-dispatcher": "^1.0",
         "psr/log": "^1.1",
         "ramsey/uuid": "^3.9",
-        "symfony/config": "^4.3",
+        "symfony/config": "^4.4",
         "ext-pcntl": "*"
     },
     "suggest" : {
