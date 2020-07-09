@@ -216,7 +216,7 @@ class AmqpTransportTest extends TestCase
         $this->channel->shouldReceive('wait')
             ->once();
 
-        $this->transport->poll();
+        $this->transport->poll(20);
 
         //For coverage
         $this->assertTrue(true);

@@ -112,10 +112,19 @@ class AmqpTransport
         return $this;
     }
 
-    public function poll(): void
+    public function reconnect(): void
+    {
+        if ($this->connection instanceof AMQPStreamConnection) {
+            $this->connection->reconnect();
+        } else {
+            $this->connect();
+        }
+    }
+
+    public function poll(int $timout): void
     {
         $this->connect();
-        $this->channel->wait();
+        $this->channel->wait(null, false, $timout);
     }
 
     private function connect(): void
@@ -224,8 +233,11 @@ class AmqpTransport
      * @param AmqpTransportableMessage $message
      * @param Throwable $throwable
      */
-    private function handleFailedMessage(AMQPMessage $amqpMessage, AmqpTransportableMessage $message, Throwable $throwable): void
-    {
+    private function handleFailedMessage(
+        AMQPMessage $amqpMessage,
+        AmqpTransportableMessage $message,
+        Throwable $throwable
+    ): void {
         $message->setLastError($throwable->getMessage());
         if ($message->isDeadLetter()) {
             $this->publishMessageToDeadLetterQueue($amqpMessage, $message);

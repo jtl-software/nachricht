@@ -14,6 +14,7 @@ use JTL\Nachricht\Contract\Transport\Consumer;
 use JTL\Nachricht\Dispatcher\AmqpDispatcher;
 use JTL\Nachricht\Log\EchoLogger;
 use JTL\Nachricht\Transport\SubscriptionSettings;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Psr\Log\LoggerInterface;
 
 class AmqpConsumer implements Consumer
@@ -48,14 +49,20 @@ class AmqpConsumer implements Consumer
 
     /**
      * @param SubscriptionSettings $subscriptionSettings
+     * @param int $timeout A timeout in seconds how long a poll will wait until it release polling for incoming messages
      */
-    public function consume(SubscriptionSettings $subscriptionSettings): void
+    public function consume(SubscriptionSettings $subscriptionSettings, int $timeout = 20): void
     {
         $this->setupSignalHandlers();
         $this->transport->subscribe($subscriptionSettings, $this->createCallback());
 
         while ($this->shouldConsume) {
-            $this->transport->poll();
+            try {
+                $this->transport->poll($timeout);
+            } catch (AMQPTimeoutException $e) {
+                $this->transport->subscribe($subscriptionSettings, $this->createCallback());
+                $this->transport->reconnect();
+            }
         }
 
         $this->logger->info('Consumer has been shut down');
