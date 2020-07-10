@@ -62,7 +62,7 @@ class AmqpConsumer implements Consumer
             try {
                 $this->transport->poll($timeout);
             } catch (AMQPTimeoutException $e) {
-                $this->transport->subscribe($subscriptionSettings, $callback);
+                $this->transport->renewSubscription($subscriptionSettings, $callback);
             }
         }
 
