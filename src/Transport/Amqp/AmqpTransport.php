@@ -28,6 +28,7 @@ class AmqpTransport
     public const MESSAGE_QUEUE_PREFIX = 'msg__';
     public const DELAY_QUEUE_PREFIX = 'delayed__';
     public const DEAD_LETTER_QUEUE_PREFIX = 'dl__';
+    public const MISSING_LISTENER_QUEUE_PREFIX = 'missing_listener__';
     public const FAILURE_QUEUE = 'failure';
 
     private array $declaredQueueList = [];
@@ -41,6 +42,8 @@ class AmqpTransport
 
     private ?AMQPStreamConnection $connection = null;
     private AMQPChannel $channel;
+
+    private array $consumers = [];
 
     /**
      * AmqpTransport constructor.
@@ -98,7 +101,7 @@ class AmqpTransport
         foreach ($subscriptionOptions->getQueueNameList() as $queue) {
             $this->declareQueue($queue);
             $this->channel->basic_qos(0, 1, false);
-            $this->channel->basic_consume(
+            $consumerTag = $this->channel->basic_consume(
                 $queue,
                 '',
                 false,
@@ -107,15 +110,26 @@ class AmqpTransport
                 false,
                 $this->createCallbackFromHandler($handler)
             );
+
+            $this->consumers[] = $consumerTag;
         }
 
         return $this;
     }
 
-    public function poll(): void
+    public function renewSubscription(SubscriptionSettings $subscriptionSettings, Closure $handler): AmqpTransport
+    {
+        foreach ($this->consumers as $consumer) {
+            $this->channel->basic_cancel($consumer);
+        }
+        $this->consumers = [];
+        return $this->subscribe($subscriptionSettings, $handler);
+    }
+
+    public function poll(int $timout): void
     {
         $this->connect();
-        $this->channel->wait();
+        $this->channel->wait(null, false, $timout);
     }
 
     private function connect(): void
@@ -174,18 +188,23 @@ class AmqpTransport
             try {
                 $event = $serializer->deserialize($message->getBody());
                 if (!$event instanceof AmqpTransportableMessage) {
-                    $this->logError(get_class($event) . ' need to implement ' . AmqpTransportableMessage::class);
+                    $this->logError(sprintf(
+                        'Event class "%s"  need to implement %s',
+                        get_class($event),
+                        AmqpTransportableMessage::class
+                    ));
                     $this->handleUnprocessableMessage($message);
                 } else {
-                    if (!$this->listenerProvider->eventHasListeners($event)) {
-                        return;
-                    }
-
-                    try {
-                        $handler($event);
-                    } catch (Exception|Throwable $exception) {
-                        $this->logError($exception->__toString());
-                        $this->handleFailedMessage($message, $event, $exception);
+                    if ($this->listenerProvider->eventHasListeners($event)) {
+                        try {
+                            $handler($event);
+                        } catch (Exception|Throwable $exception) {
+                            $this->logError($exception->__toString());
+                            $this->handleFailedMessage($message, $event, $exception);
+                        }
+                    } else {
+                        $this->logError(sprintf('No Listener found for "%s" event', get_class($event)));
+                        $this->handleMessageWithoutListener($message, $event);
                     }
                 }
             } catch (DeserializationFailedException $exception) {
@@ -211,6 +230,17 @@ class AmqpTransport
     }
 
     /**
+     * @param AMQPMessage $amqpMessage
+     * @param AmqpTransportableMessage $message
+     */
+    private function handleMessageWithoutListener(AMQPMessage $amqpMessage, AmqpTransportableMessage $message): void
+    {
+        $queueName = self::MISSING_LISTENER_QUEUE_PREFIX . $message->getRoutingKey();
+        $this->declareQueue($queueName);
+        $this->channel->basic_publish($amqpMessage, '', $queueName);
+    }
+
+    /**
      * @param AMQPMessage $message
      */
     private function publishMessageToFailureQueue(AMQPMessage $message): void
@@ -224,8 +254,11 @@ class AmqpTransport
      * @param AmqpTransportableMessage $message
      * @param Throwable $throwable
      */
-    private function handleFailedMessage(AMQPMessage $amqpMessage, AmqpTransportableMessage $message, Throwable $throwable): void
-    {
+    private function handleFailedMessage(
+        AMQPMessage $amqpMessage,
+        AmqpTransportableMessage $message,
+        Throwable $throwable
+    ): void {
         $message->setLastError($throwable->getMessage());
         if ($message->isDeadLetter()) {
             $this->publishMessageToDeadLetterQueue($amqpMessage, $message);
