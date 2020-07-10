@@ -112,15 +112,6 @@ class AmqpTransport
         return $this;
     }
 
-    public function reconnect(): void
-    {
-        if ($this->connection instanceof AMQPStreamConnection) {
-            $this->connection->reconnect();
-        } else {
-            $this->connect();
-        }
-    }
-
     public function poll(int $timout): void
     {
         $this->connect();

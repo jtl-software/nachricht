@@ -54,14 +54,15 @@ class AmqpConsumer implements Consumer
     public function consume(SubscriptionSettings $subscriptionSettings, int $timeout = 20): void
     {
         $this->setupSignalHandlers();
-        $this->transport->subscribe($subscriptionSettings, $this->createCallback());
+
+        $callback = $this->createCallback();
+        $this->transport->subscribe($subscriptionSettings, $callback);
 
         while ($this->shouldConsume) {
             try {
                 $this->transport->poll($timeout);
             } catch (AMQPTimeoutException $e) {
-                $this->transport->subscribe($subscriptionSettings, $this->createCallback());
-                $this->transport->reconnect();
+                $this->transport->subscribe($subscriptionSettings, $callback);
             }
         }
 
