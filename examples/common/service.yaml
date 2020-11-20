@@ -14,7 +14,7 @@ services:
 
   JTL\Nachricht\Transport\Amqp\AmqpTransport:
     public: true
-    factory: 'JTL\Nachricht\Transport\Amqp\AmqpTransportFactory:createTransport'
+    factory: ['JTL\Nachricht\Transport\Amqp\AmqpTransportFactory', 'createTransport']
     arguments:
       - host: 'localhost'
         port: '5672'
@@ -24,7 +24,7 @@ services:
       - '@JTL\Nachricht\Listener\ListenerProvider'
 
   JTL\Nachricht\Message\Cache\MessageCache:
-    factory: 'JTL\Nachricht\Message\Cache\MessageCacheCreator:create'
+    factory: ['JTL\Nachricht\Message\Cache\MessageCacheCreator', 'create']
     arguments:
       $cacheFile: !php/const CACHE_PATH
       $lookupPathList:
