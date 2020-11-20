@@ -74,7 +74,6 @@ class MessageCacheCreator
             if ($ast === null) {
                 continue;
             }
-
             $nodeTraverser->traverse($ast);
 
             if ($listenerDetector->isClassListener() && $listenerDetector->getListenerClass() !== null) {
