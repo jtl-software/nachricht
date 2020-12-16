@@ -30,7 +30,11 @@ class PhpMessageSerializer implements MessageSerializer
      */
     public function deserialize(string $serializedMessage): object
     {
-        $result = @unserialize($serializedMessage);
+        try {
+            $result = @unserialize($serializedMessage);
+        } catch (\Throwable $throwable) {
+            throw new DeserializationFailedException($throwable->getMessage());
+        }
 
         if ($result === false || !$result instanceof Message) {
             throw new DeserializationFailedException();
