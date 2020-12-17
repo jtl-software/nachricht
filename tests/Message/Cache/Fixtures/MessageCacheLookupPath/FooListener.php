@@ -15,7 +15,6 @@
 
 namespace JTL\Nachricht\Message\Cache\Fixtures\MessageCacheLookupPath;
 
-
 use JTL\Nachricht\Contract\Listener\Listener;
 
 class FooListener implements Listener
