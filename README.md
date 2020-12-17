@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/jtl-software/nachricht.svg?branch=master)](https://travis-ci.org/jtl-software/nachricht)
+![Testing](https://github.com/jtl-software/nachricht/workflows/Testing/badge.svg)
 
 # Nachricht
 
