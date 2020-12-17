@@ -19,5 +19,9 @@ use JTL\Nachricht\Contract\Message\Message;
 
 interface ListenerProviderInterface
 {
+    /**
+     * @param Message $message
+     * @return iterable<mixed>
+     */
     public function getListenersForMessage(Message $message): iterable;
 }

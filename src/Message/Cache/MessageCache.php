@@ -11,13 +11,13 @@ namespace JTL\Nachricht\Message\Cache;
 class MessageCache
 {
     /**
-     * @var array
+     * @var array<string, array{listenerList: array<int, array{listenerClass: string, method: string}>, routingKey: string}>
      */
-    private $listenerCache;
+    private array $listenerCache;
 
     /**
      * ListenerCache constructor.
-     * @param array $listenerCache
+     * @param array<string, array{listenerList: array<int, array{listenerClass: string, method: string}>, routingKey: string}> $listenerCache
      */
     public function __construct(array $listenerCache)
     {
@@ -26,7 +26,7 @@ class MessageCache
 
     /**
      * @param string $messageClass
-     * @return array
+     * @return array<int, array{listenerClass: string, method: string}>
      */
     public function getListenerListForMessage(string $messageClass): array
     {
@@ -34,7 +34,7 @@ class MessageCache
     }
 
     /**
-     * @return array
+     * @return array<int, string>
      */
     public function getMessageClassList(): array
     {

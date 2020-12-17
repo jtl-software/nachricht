@@ -99,7 +99,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @param string $severity
      * @param mixed $message
-     * @param array $context
+     * @param array<mixed> $context
      */
     private function logErrorMessage(string $severity, $message, array $context = []): void
     {
@@ -109,7 +109,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @param string $severity
      * @param mixed $message
-     * @param array $context
+     * @param array<mixed> $context
      */
     private function printMessage(string $severity, $message, array $context = []): void
     {
@@ -119,7 +119,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @param string $severity
      * @param string $message
-     * @param array $context
+     * @param mixed[] $context
      * @return string
      */
     private function generateLogMessage(string $severity, string $message, array $context = []): string

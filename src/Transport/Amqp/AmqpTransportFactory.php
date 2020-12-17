@@ -14,6 +14,13 @@ use Psr\Log\LoggerInterface;
 
 class AmqpTransportFactory
 {
+    /**
+     * @param array<string, string> $connectionSettings
+     * @param MessageSerializer $serializer
+     * @param ListenerProvider $listenerProvider
+     * @param LoggerInterface|null $logger
+     * @return AmqpTransport
+     */
     public function createTransport(
         array $connectionSettings,
         MessageSerializer $serializer,
