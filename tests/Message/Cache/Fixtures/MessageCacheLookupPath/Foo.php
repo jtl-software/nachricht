@@ -19,5 +19,4 @@ use JTL\Nachricht\Message\AbstractAmqpTransportableMessage;
 
 class Foo extends AbstractAmqpTransportableMessage
 {
-
 }

@@ -12,7 +12,7 @@ class MessageCacheFileLoader
 {
     /**
      * @param string $fileName
-     * @return array
+     * @return array<mixed>
      */
     public function load(string $fileName): array
     {

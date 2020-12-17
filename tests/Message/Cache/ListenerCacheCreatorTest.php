@@ -15,7 +15,6 @@ use PHPUnit\Framework\TestCase;
  */
 class ListenerCacheCreatorTest extends TestCase
 {
-
     private string $cacheFile;
     private array $lookupPathList;
 

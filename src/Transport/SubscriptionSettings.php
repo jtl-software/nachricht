@@ -13,13 +13,13 @@ use JTL\Generic\StringCollection;
 class SubscriptionSettings
 {
     /**
-     * @var StringCollection
+     * @var StringCollection<string>
      */
     private $queueNameList;
 
     /**
      * SubscriptionSettings constructor.
-     * @param StringCollection $queueNameList
+     * @param StringCollection<string> $queueNameList
      */
     public function __construct(StringCollection $queueNameList)
     {
@@ -27,7 +27,7 @@ class SubscriptionSettings
     }
 
     /**
-     * @return StringCollection
+     * @return StringCollection<string>
      */
     public function getQueueNameList(): StringCollection
     {

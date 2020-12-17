@@ -31,6 +31,9 @@ class AmqpTransport
     public const MISSING_LISTENER_QUEUE_PREFIX = 'missing_listener__';
     public const FAILURE_QUEUE = 'failure';
 
+    /**
+     * @var array<string, bool>
+     */
     private array $declaredQueueList = [];
 
     private AmqpConnectionSettings $connectionSettings;
@@ -43,6 +46,9 @@ class AmqpTransport
     private ?AMQPStreamConnection $connection = null;
     private AMQPChannel $channel;
 
+    /**
+     * @var array<string>
+     */
     private array $consumers = [];
 
     /**
@@ -149,7 +155,7 @@ class AmqpTransport
 
     /**
      * @param string $queueName
-     * @param AMQPTable|null $arguments
+     * @param AMQPTable<mixed>|null $arguments
      */
     private function declareQueue(string $queueName, AMQPTable $arguments = null): void
     {
@@ -161,6 +167,7 @@ class AmqpTransport
                 false,
                 false,
                 false,
+                /** @phpstan-ignore-next-line */
                 $arguments
             );
             $this->declaredQueueList[$queueName] = true;

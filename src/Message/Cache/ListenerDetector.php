@@ -8,8 +8,8 @@
 
 namespace JTL\Nachricht\Message\Cache;
 
-use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Contract\Listener\Listener;
+use JTL\Nachricht\Contract\Message\Message;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -19,17 +19,17 @@ class ListenerDetector extends AbstractVisitor
     /**
      * @var bool
      */
-    private $classIsListener = false;
+    private bool $classIsListener = false;
 
     /**
-     * @var array
+     * @var array<int, array{methodName: string, eventClass: string}>
      */
-    private $listenerMethods = [];
+    private array $listenerMethods = [];
 
     /**
      * @var string|null
      */
-    private $listenerClass;
+    private ?string $listenerClass;
 
     /**
      * @param Node $node
@@ -64,7 +64,7 @@ class ListenerDetector extends AbstractVisitor
     }
 
     /**
-     * @return array
+     * @return array<int, array{methodName: string, eventClass: string}>
      */
     public function getListenerMethods(): array
     {
@@ -108,6 +108,9 @@ class ListenerDetector extends AbstractVisitor
 
         $argumentClass = $this->getArgumentClass($classMethod);
         $implementedInterfaces = class_implements($argumentClass);
+        if ($implementedInterfaces === false) {
+            return false;
+        }
 
         return in_array(Message::class, $implementedInterfaces);
     }

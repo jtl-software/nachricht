@@ -18,7 +18,7 @@ class MessageCacheCreator
 {
     /**
      * @param string $cacheFile
-     * @param array $lookupPathList
+     * @param array<string> $lookupPathList
      * @param bool $isDevelopment
      * @return MessageCache
      */
@@ -40,7 +40,7 @@ class MessageCacheCreator
 
 
     /**
-     * @param array $lookupPathList
+     * @param array<string> $lookupPathList
      * @param ConfigCache $configCache
      * @return void
      */
@@ -98,8 +98,8 @@ class MessageCacheCreator
     }
 
     /**
-     * @param array $lookupPathList
-     * @return array
+     * @param array<string> $lookupPathList
+     * @return array<string>
      */
     private function loadPhpFilesFromPathList(array $lookupPathList): array
     {
@@ -114,7 +114,7 @@ class MessageCacheCreator
 
     /**
      * @param string $path
-     * @return array
+     * @return array<string>
      */
     private function recursivePhpFileSearch(string $path): array
     {
@@ -139,8 +139,8 @@ class MessageCacheCreator
 
     /**
      * @param string $listenerClass
-     * @param array $listenerList
-     * @param array $messageMap
+     * @param array<int, array{eventClass: string, methodName: string}> $listenerList
+     * @param array<string, array{listenerList: array<int, array{listenerClass: string, method: string}>}> $messageMap
      */
     private function mapListenerToMessage(string $listenerClass, array $listenerList, array &$messageMap): void
     {
@@ -152,6 +152,11 @@ class MessageCacheCreator
         }
     }
 
+    /**
+     * @param string $messageClass
+     * @param string $routingKey
+     * @param array<string, array{listenerList: array<int, array{listenerClass: string, method: string}>}> $messageMap
+     */
     private function mapRoutingKeyToMessage(string $messageClass, string $routingKey, array &$messageMap): void
     {
         $messageMap[$messageClass]['routingKey'] = AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey;
