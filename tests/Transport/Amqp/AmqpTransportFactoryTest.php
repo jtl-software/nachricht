@@ -53,6 +53,7 @@ class AmqpTransportFactoryTest extends TestCase
         $connectionSettings = [
             'host' => 'localhost',
             'port' => (string)random_int(1, 123),
+            'httpPort' => (string)random_int(1, 123),
             'user' => 'guest',
             'password' => 'guest'
         ];

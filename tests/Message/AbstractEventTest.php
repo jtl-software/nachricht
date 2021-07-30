@@ -38,13 +38,13 @@ class AbstractMessageTest extends TestCase
         $this->assertTrue(strlen($message->getMessageId()) > 0);
     }
 
-    public function testCanSetLastErrorMessage()
+    public function testCanGetAndSetLastErrorMessage()
     {
         $errorMessage = uniqid();
         $message = new TestAmqpMessage();
         $message->setLastError($errorMessage);
 
-        $this->assertStringContainsString($errorMessage, serialize($message));
+        $this->assertSame($errorMessage, $message->getLastErrorMessage());
     }
 
     public function testCanCheckIfMessageIsDeadLetterTrue()
@@ -81,5 +81,14 @@ class AbstractMessageTest extends TestCase
     {
         $message = new TestAmqpMessage();
         $this->assertEquals('', $message->getExchange());
+    }
+
+    public function testCanSetReceiveCount(): void
+    {
+        $receiveCount = random_int(1, 10000);
+        $message = new TestAmqpMessage();
+        $this->assertEquals(0, $message->getReceiveCount());
+        $message->setReceiveCount($receiveCount);
+        $this->assertEquals($receiveCount, $message->getReceiveCount());
     }
 }

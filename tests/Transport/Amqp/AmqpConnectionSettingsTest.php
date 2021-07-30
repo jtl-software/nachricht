@@ -22,6 +22,7 @@ class AmqpConnectionSettingsTest extends TestCase
     {
         $host = uniqid('host', true);
         $port = uniqid('port', true);
+        $httpPort = uniqid('httpPort', true);
         $user = uniqid('user', true);
         $password = uniqid('password', true);
         $vhost = uniqid('vhost', true);
@@ -29,6 +30,7 @@ class AmqpConnectionSettingsTest extends TestCase
         $connectionSettings = new AmqpConnectionSettings(
             $host,
             $port,
+            $httpPort,
             $user,
             $password,
             $vhost
@@ -36,6 +38,7 @@ class AmqpConnectionSettingsTest extends TestCase
 
         $this->assertEquals($host, $connectionSettings->getHost());
         $this->assertEquals($port, $connectionSettings->getPort());
+        $this->assertEquals($httpPort, $connectionSettings->getHttpPort());
         $this->assertEquals($user, $connectionSettings->getUser());
         $this->assertEquals($password, $connectionSettings->getPassword());
         $this->assertEquals($vhost, $connectionSettings->getVhost());
