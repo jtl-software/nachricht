@@ -14,7 +14,7 @@ interface AmqpQueueLister
 {
     /**
      * @param string|null $queuePrefix
-     * @return array
+     * @return string[]
      *
      * @throws AmqpHttpConnectionFailedException
      */
