@@ -53,10 +53,11 @@ class AmqpTransport
 
     /**
      * AmqpTransport constructor.
+     *
      * @param AmqpConnectionSettings $connectionSettings
      * @param MessageSerializer $serializer
      * @param ListenerProvider $listenerProvider
-     * @param LoggerInterface $logger
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         AmqpConnectionSettings $connectionSettings,
