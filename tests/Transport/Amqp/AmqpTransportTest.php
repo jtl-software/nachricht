@@ -132,6 +132,7 @@ class AmqpTransportTest extends TestCase
      * @var \PHPUnit\Framework\MockObject\MockObject|LoggerInterface
      */
     private $loggerMock;
+    private string $amqpMessageDeliveryTag;
 
     public function setUp(): void
     {
@@ -172,7 +173,7 @@ class AmqpTransportTest extends TestCase
         $this->amqpConnection->shouldReceive('close');
 
         $this->amqpMessage = Mockery::mock(AMQPMessage::class);
-        $this->amqpMessage->delivery_info['delivery_tag'] = uniqid('delivery_tag', true);
+        $this->amqpMessageDeliveryTag = uniqid('delivery_tag', true);
 
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
         $this->loggerMock = $this->createMock(LoggerInterface::class);
@@ -262,13 +263,17 @@ class AmqpTransportTest extends TestCase
             ->once()
             ->andReturn($messageBody);
 
+        $this->amqpMessage->shouldReceive('getDeliveryTag')
+            ->once()
+            ->andReturn($this->amqpMessageDeliveryTag);
+
         $this->serializer->shouldReceive('deserialize')
             ->with($messageBody)
             ->once()
             ->andReturn($this->message);
 
         $this->channel->shouldReceive('basic_ack')
-            ->with($this->amqpMessage->delivery_info['delivery_tag'])
+            ->with($this->amqpMessageDeliveryTag)
             ->once();
 
         $this->listenerProvider->shouldReceive('eventHasListeners')
@@ -293,6 +298,10 @@ class AmqpTransportTest extends TestCase
             ->once()
             ->andReturn($messageBody);
 
+        $this->amqpMessage->shouldReceive('getDeliveryTag')
+            ->once()
+            ->andReturn($this->amqpMessageDeliveryTag);
+
         $this->serializer->shouldReceive('deserialize')
             ->with($messageBody)
             ->once()
@@ -304,7 +313,7 @@ class AmqpTransportTest extends TestCase
             ->with($this->amqpMessage, '', AmqpTransport::FAILURE_QUEUE);
 
         $this->channel->shouldReceive('basic_ack')
-            ->with($this->amqpMessage->delivery_info['delivery_tag'])
+            ->with($this->amqpMessageDeliveryTag)
             ->once();
 
 
@@ -326,6 +335,10 @@ class AmqpTransportTest extends TestCase
             ->once()
             ->andReturn($messageBody);
 
+        $this->amqpMessage->shouldReceive('getDeliveryTag')
+            ->once()
+            ->andReturn($this->amqpMessageDeliveryTag);
+
         $this->serializer->shouldReceive('deserialize')
             ->with($messageBody)
             ->once()
@@ -337,7 +350,7 @@ class AmqpTransportTest extends TestCase
             ->with($this->amqpMessage, '', AmqpTransport::FAILURE_QUEUE);
 
         $this->channel->shouldReceive('basic_ack')
-            ->with($this->amqpMessage->delivery_info['delivery_tag'])
+            ->with($this->amqpMessageDeliveryTag)
             ->once();
 
 
@@ -359,6 +372,10 @@ class AmqpTransportTest extends TestCase
             ->once()
             ->andReturn($messageBody);
 
+        $this->amqpMessage->shouldReceive('getDeliveryTag')
+            ->once()
+            ->andReturn($this->amqpMessageDeliveryTag);
+
         $this->serializer->shouldReceive('deserialize')
             ->with($messageBody)
             ->once()
@@ -372,7 +389,7 @@ class AmqpTransportTest extends TestCase
         $this->amqpMessage->shouldReceive('setBody')->with($messageBody);
 
         $this->channel->shouldReceive('basic_ack')
-            ->with($this->amqpMessage->delivery_info['delivery_tag'])
+            ->with($this->amqpMessageDeliveryTag)
             ->once();
 
         $this->listenerProvider->shouldReceive('eventHasListeners')
@@ -400,6 +417,10 @@ class AmqpTransportTest extends TestCase
             ->once()
             ->andReturn($messageBody);
 
+        $this->amqpMessage->shouldReceive('getDeliveryTag')
+            ->once()
+            ->andReturn($this->amqpMessageDeliveryTag);
+
         $this->message->shouldReceive('setLastError')
             ->with('error message in exception');
 
@@ -418,7 +439,7 @@ class AmqpTransportTest extends TestCase
             ->with($this->amqpMessage, '', AmqpTransport::DEAD_LETTER_QUEUE_PREFIX . $this->routingKey);
 
         $this->channel->shouldReceive('basic_ack')
-            ->with($this->amqpMessage->delivery_info['delivery_tag'])
+            ->with($this->amqpMessageDeliveryTag)
             ->once();
 
         $this->listenerProvider->shouldReceive('eventHasListeners')
@@ -428,6 +449,39 @@ class AmqpTransportTest extends TestCase
         $callback($this->amqpMessage);
 
         $this->assertTrue(true);
+    }
+
+    public function testCanGetMessageFromQueue(): void
+    {
+        $queue = uniqid('queue', true);
+        $noAck = (bool)random_int(0, 1);
+        $serializedMessageData = uniqid('data', true);
+
+        $message = Mockery::mock(AMQPMessage::class);
+
+        $this->channel->shouldReceive('basic_get')
+            ->once()
+            ->with($queue, $noAck)
+            ->andReturn($message);
+
+        $this->queueDeclareMessage();
+
+        $this->serializer->shouldReceive('serialize')
+            ->with($this->message)
+            ->once()
+            ->andReturn($serializedMessageData);
+
+        $this->channel->shouldReceive('basic_publish')
+            ->with(
+                Mockery::type(AMQPMessage::class),
+                $this->exchange,
+                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey
+            )
+            ->once();
+
+        $this->transport->publish($this->message);
+        $result = $this->transport->getMessageFromQueue($queue, $noAck);
+        $this->assertSame($message, $result);
     }
 
     /**

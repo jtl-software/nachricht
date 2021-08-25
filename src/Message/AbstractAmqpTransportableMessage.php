@@ -70,6 +70,21 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
         $this->__lastErrorMessage = $errorMessage;
     }
 
+    public function getLastErrorMessage(): ?string
+    {
+        return $this->__lastErrorMessage;
+    }
+
+    public function getReceiveCount(): int
+    {
+        return $this->__receiveCount;
+    }
+
+    public function setReceiveCount(int $receiveCount): void
+    {
+        $this->__receiveCount = $receiveCount;
+    }
+
     public function isDeadLetter(): bool
     {
         return $this->__receiveCount >= static::DEFAULT_RETRY_COUNT;

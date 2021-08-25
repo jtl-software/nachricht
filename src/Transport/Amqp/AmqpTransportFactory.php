@@ -31,6 +31,7 @@ class AmqpTransportFactory
             new AmqpConnectionSettings(
                 $connectionSettings['host'],
                 $connectionSettings['port'],
+                $connectionSettings['httpPort'],
                 $connectionSettings['user'],
                 $connectionSettings['password'],
                 $connectionSettings['vhost'] ?? '/'

@@ -53,10 +53,11 @@ class AmqpTransport
 
     /**
      * AmqpTransport constructor.
+     *
      * @param AmqpConnectionSettings $connectionSettings
      * @param MessageSerializer $serializer
      * @param ListenerProvider $listenerProvider
-     * @param LoggerInterface $logger
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         AmqpConnectionSettings $connectionSettings,
@@ -87,12 +88,25 @@ class AmqpTransport
     public function publish(AmqpTransportableMessage $message): void
     {
         $this->connect();
-        $this->declareQueue(self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey());
+        $routingKey = self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey();
+        $this->declareQueue($routingKey);
         $amqpMessage = new AMQPMessage($this->serializer->serialize($message));
         $this->channel->basic_publish(
             $amqpMessage,
             $message->getExchange(),
-            self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey()
+            $routingKey
+        );
+    }
+
+    public function directPublish(AMQPMessage $message): void
+    {
+        $this->connect();
+        $routingKey = self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey();
+        $this->declareQueue($routingKey);
+        $this->channel->basic_publish(
+            $message,
+            $message->getExchange() ?? '',
+            $routingKey
         );
     }
 
@@ -138,7 +152,28 @@ class AmqpTransport
         $this->channel->wait(null, false, $timout);
     }
 
-    private function connect(): void
+    public function getMessageFromQueue(string $queue, bool $noAck): ?AMQPMessage
+    {
+        return $this->channel->basic_get($queue, $noAck);
+    }
+
+    public function getConnectionSettings(): AmqpConnectionSettings
+    {
+        return $this->connectionSettings;
+    }
+
+    public function ack(AMQPMessage $message): void
+    {
+        $this->channel->basic_ack($message->getDeliveryTag());
+    }
+
+    public function countMessagesInQueue(string $queue): int
+    {
+        $result = $this->channel->queue_declare($queue, false, true, false, false);
+        return (int)($result[1] ?? 0);
+    }
+
+    public function connect(): void
     {
         if ($this->connection === null) {
             $this->connection = new AMQPStreamConnection(
@@ -327,13 +362,5 @@ class AmqpTransport
 
         $this->declareQueue($delayQueueName, $arguments);
         return $delayQueueName;
-    }
-
-    /**
-     * @param AMQPMessage $message
-     */
-    private function ack(AMQPMessage $message): void
-    {
-        $this->channel->basic_ack($message->delivery_info['delivery_tag']);
     }
 }
