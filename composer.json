@@ -4,15 +4,15 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "^7.4|8.0.*",
+        "php": "^7.4|8.0.*|8.1.*",
         "ext-json": "*",
         "jtl/php-generic-collection": "^0.3",
         "nikic/php-parser": "^4.2",
-        "psr/container": "^1.0",
+        "psr/container": "^2.0",
         "psr/event-dispatcher": "^1.0",
-        "psr/log": "^1.1",
+        "psr/log": "^3.0",
         "ramsey/uuid": "^4.0",
-        "symfony/config": "^5.0",
+        "symfony/config": "^6.0",
         "ext-pcntl": "*"
     },
     "suggest" : {
@@ -22,7 +22,7 @@
         "monolog/monolog": "Required when using AmqpEmitter / Consumer"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.15",
+        "friendsofphp/php-cs-fixer": "^3.4",
         "mockery/mockery": "^1.2",
         "php-amqplib/php-amqplib": "^3.0",
         "phpstan/phpstan": "^0.12.63",
