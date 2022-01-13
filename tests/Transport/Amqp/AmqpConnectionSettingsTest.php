@@ -21,7 +21,7 @@ class AmqpConnectionSettingsTest extends TestCase
     public function testCanBeCreated(): void
     {
         $host = uniqid('host', true);
-        $port = uniqid('port', true);
+        $port = random_int(1, 100);
         $httpPort = uniqid('httpPort', true);
         $user = uniqid('user', true);
         $password = uniqid('password', true);
