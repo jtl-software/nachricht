@@ -2,6 +2,6 @@ parameters:
     level: 8
     paths:
         - src
-    excludes_analyse:
+    excludePaths:
         - src/Listener/Cache/ListenerCacheCreator.php
         - src/Listener/Cache/ListenerDetector.php

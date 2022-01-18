@@ -140,7 +140,7 @@ class AmqpTransportTest extends TestCase
         $this->exchange = '';
 
         $this->host = uniqid('host', true);
-        $this->port = uniqid('port', true);
+        $this->port = random_int(100, 1000);
         $this->user = uniqid('user', true);
         $this->password = uniqid('password', true);
         $this->vhost = uniqid('vhost', true);

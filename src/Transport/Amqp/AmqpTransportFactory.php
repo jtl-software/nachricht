@@ -30,7 +30,7 @@ class AmqpTransportFactory
         return new AmqpTransport(
             new AmqpConnectionSettings(
                 $connectionSettings['host'],
-                $connectionSettings['port'],
+                (int)$connectionSettings['port'],
                 $connectionSettings['httpPort'],
                 $connectionSettings['user'],
                 $connectionSettings['password'],

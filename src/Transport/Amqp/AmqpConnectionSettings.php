@@ -11,7 +11,7 @@ namespace JTL\Nachricht\Transport\Amqp;
 class AmqpConnectionSettings
 {
     private string $host;
-    private string $port;
+    private int $port;
     private string $user;
     private string $password;
     private string $vhost;
@@ -19,7 +19,7 @@ class AmqpConnectionSettings
 
     public function __construct(
         string $host,
-        string $port,
+        int $port,
         string $httpPort,
         string $user,
         string $password,
@@ -38,7 +38,7 @@ class AmqpConnectionSettings
         return $this->host;
     }
 
-    public function getPort(): string
+    public function getPort(): int
     {
         return $this->port;
     }
