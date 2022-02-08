@@ -237,9 +237,11 @@ class AmqpTransport
                     ));
                     $this->handleUnprocessableMessage($message);
                 } else {
+                    $this->logger->info('Handle message of type ' . get_class($event) . " which is created at {$event->getCreatedAt()->format('c')}");
                     if ($this->listenerProvider->eventHasListeners($event)) {
                         try {
                             $handler($event);
+                            $this->logger->debug('Handled message of type ' . get_class($event) . "successful");
                         } catch (Exception|Throwable $exception) {
                             $this->logError($exception->__toString());
                             $this->handleFailedMessage($message, $event, $exception);
