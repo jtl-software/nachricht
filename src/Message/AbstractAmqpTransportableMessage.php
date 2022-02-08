@@ -40,9 +40,12 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     private string $__eventId;
 
-    public function __construct(string $messageId = null)
+    private \DateTimeImmutable $createdAt;
+
+    public function __construct(string $messageId = null, \DateTimeImmutable $createdAt = null)
     {
         $this->__eventId = $messageId ?? Uuid::uuid4()->toString();
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
     }
 
     public static function getRoutingKey(): string
@@ -93,5 +96,10 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
     public function __wakeup()
     {
         ++$this->__receiveCount;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
     }
 }
