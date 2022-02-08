@@ -25,4 +25,6 @@ interface AmqpTransportableMessage extends Message
     public function setLastError(string $errorMessage): void;
 
     public function isDeadLetter(): bool;
+
+    public function getCreatedAt(): \DateTimeImmutable;
 }

@@ -163,7 +163,8 @@ class AmqpTransportTest extends TestCase
         $this->message = Mockery::mock(AmqpTransportableMessage::class, [
             'getRoutingKey' => $this->routingKey,
             'getExchange' => $this->exchange,
-            'getMaxRetryCount' => 3
+            'getMaxRetryCount' => 3,
+            'getCreatedAt' => new \DateTimeImmutable()
         ]);
 
         $this->subscriptionSettings = Mockery::mock(SubscriptionSettings::class, [
