@@ -91,4 +91,21 @@ class AbstractMessageTest extends TestCase
         $message->setReceiveCount($receiveCount);
         $this->assertEquals($receiveCount, $message->getReceiveCount());
     }
+
+    public function testCanBeCreatedWithCreatedAt(): void
+    {
+        $createdAt = new \DateTimeImmutable();
+        $sut = new TestAmqpMessage(uniqid(), $createdAt);
+
+        self::assertSame($createdAt, $sut->getCreatedAt());
+    }
+
+    public function testCanBeCreatedWithoutCreatedAt(): void
+    {
+        $before = new \DateTimeImmutable();
+        $sut = new TestAmqpMessage(uniqid());
+        $after = new \DateTimeImmutable();
+
+        self::assertTrue($sut->getCreatedAt() > $before && $sut->getCreatedAt() < $after);
+    }
 }
