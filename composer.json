@@ -6,14 +6,14 @@
     "require": {
         "php": "^7.4|8.0.*",
         "ext-json": "*",
-        "jtl/php-generic-collection": "^0.3",
+        "ext-pcntl": "*",
+        "jtl/php-generic-collection": "^0.5",
         "nikic/php-parser": "^4.2",
         "psr/container": "^1.0",
         "psr/event-dispatcher": "^1.0",
         "psr/log": "^1.1",
         "ramsey/uuid": "^4.0",
-        "symfony/config": "^5.0",
-        "ext-pcntl": "*"
+        "symfony/config": "^5.0"
     },
     "suggest" : {
         "symfony/dependency-injection": "Recommended DI-Container",
