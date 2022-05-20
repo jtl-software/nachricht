@@ -29,17 +29,17 @@ class ListenerCacheCreatorTest extends TestCase
         @unlink($this->cacheFile);
     }
 
-    public function testWriteCacheFile()
+    public function testWriteCacheFile(): void
     {
         $sut = new MessageCacheCreator();
-        $sut->create($this->cacheFile, $this->lookupPathList, false);
+        $sut->create($this->cacheFile, $this->lookupPathList, []);
         $this->assertFileExists($this->cacheFile);
     }
 
-    public function testCanCreateMessageCache()
+    public function testCanCreateMessageCache(): void
     {
         $sut = new MessageCacheCreator();
-        $cache = $sut->create($this->cacheFile, $this->lookupPathList, false);
+        $cache = $sut->create($this->cacheFile, $this->lookupPathList, []);
         $this->assertCount(1, $cache->getMessageClassList());
         $this->assertEquals(
             'JTL\Nachricht\Message\Cache\Fixtures\MessageCacheLookupPath\Foo',

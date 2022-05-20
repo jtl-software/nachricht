@@ -13,6 +13,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use Symfony\Component\Config\ConfigCache;
+use Symfony\Component\Config\ResourceCheckerConfigCache;
 
 class MessageCacheCreator
 {
@@ -20,41 +21,44 @@ class MessageCacheCreator
      * @param string $cacheFile
      * @param array<string> $lookupPathList
      * @param bool $isDevelopment
+     * @param array<string> $excludePathList
      * @return MessageCache
      */
-    public function create(string $cacheFile, array $lookupPathList, bool $isDevelopment): MessageCache
+    public function create(string $cacheFile, array $lookupPathList, bool $isDevelopment, array $excludePathList = []): MessageCache
     {
-        $configCache = new ConfigCache(
+        $fileList = $this->loadPhpFilesFromPathList($lookupPathList, $excludePathList);
+        
+        $configCache = new ResourceCheckerConfigCache(
             $cacheFile,
-            $isDevelopment
+            [new MessageCacheResourceChecker($fileList, $isDevelopment)]
         );
-
+        
         $cacheFileLoader = new MessageCacheFileLoader();
 
         if (!$configCache->isFresh()) {
-            $this->rebuildCache($lookupPathList, $configCache);
+            $this->rebuildCache($fileList, $configCache);
         }
 
-        return new MessageCache($cacheFileLoader->load($cacheFile));
+        $a = $cacheFileLoader->load($cacheFile);
+
+        return new MessageCache($a);
     }
 
 
     /**
-     * @param array<string> $lookupPathList
-     * @param ConfigCache $configCache
+     * @param array<string> $files
+     * @param ResourceCheckerConfigCache $configCache
      * @return void
      */
-    private function rebuildCache(array $lookupPathList, ConfigCache $configCache): void
+    private function rebuildCache(array $files, ResourceCheckerConfigCache $configCache): void
     {
         $messageMap = [];
-
+        
         $parserFactory = new ParserFactory();
         $nameResolver = new NameResolver();
 
         $parser = $parserFactory->create(ParserFactory::ONLY_PHP7);
-
-        $files = $this->loadPhpFilesFromPathList($lookupPathList);
-
+        
         foreach ($files as $file) {
             $listenerDetector = new ListenerDetector();
             $messageRoutingKeyExtractor = new AmqpMessageRoutingKeyExtractor();
@@ -69,11 +73,13 @@ class MessageCacheCreator
             if ($phpCode === false) {
                 continue;
             }
+            
             $ast = $parser->parse($phpCode);
 
             if ($ast === null) {
                 continue;
             }
+
             $nodeTraverser->traverse($ast);
 
             if ($listenerDetector->isClassListener() && $listenerDetector->getListenerClass() !== null) {
@@ -94,19 +100,23 @@ class MessageCacheCreator
         }
 
         $map = var_export($messageMap, true);
-        $configCache->write("<?php\nreturn {$map};");
+        
+        $hash = (new MessageCacheHashCalculator())->calculateHash($files);
+        
+        $configCache->write("<?php\nreturn {$map};", [new MessageCacheResource($hash)]);
     }
 
     /**
      * @param array<string> $lookupPathList
+     * @param array<string> $excludePathList
      * @return array<string>
      */
-    private function loadPhpFilesFromPathList(array $lookupPathList): array
+    private function loadPhpFilesFromPathList(array $lookupPathList, array $excludePathList): array
     {
         $files = [];
 
         foreach ($lookupPathList as $lookupPath) {
-            $files = array_merge($files, $this->recursivePhpFileSearch($lookupPath));
+            $files = array_merge($files, $this->recursivePhpFileSearch($lookupPath, $excludePathList));
         }
 
         return $files;
@@ -114,15 +124,28 @@ class MessageCacheCreator
 
     /**
      * @param string $path
+     * @param array<string> $excludePathList
      * @return array<string>
      */
-    private function recursivePhpFileSearch(string $path): array
+    private function recursivePhpFileSearch(string $path, array $excludePathList): array
     {
         $pattern = $path . '/*.php';
         $files = glob($pattern);
 
         if ($files === false) {
             return [];
+        }
+        
+        if (count($excludePathList) > 0) {
+            $files = array_filter($files, function (string $file) use ($excludePathList) {
+                foreach ($excludePathList as $excludePath) {
+                    if (str_contains($file, $excludePath)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
         }
 
         $directoryList = glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT);
@@ -131,7 +154,7 @@ class MessageCacheCreator
         }
 
         foreach ($directoryList as $directory) {
-            $files = array_merge($files, $this->recursivePhpFileSearch($directory));
+            $files = array_merge($files, $this->recursivePhpFileSearch($directory, $excludePathList));
         }
 
         return $files;
