@@ -46,11 +46,11 @@ class MessageCacheCreator
 
 
     /**
-     * @param array<string> $files
+     * @param array<string> $fileList
      * @param ResourceCheckerConfigCache $configCache
      * @return void
      */
-    private function rebuildCache(array $files, ResourceCheckerConfigCache $configCache): void
+    private function rebuildCache(array $fileList, ResourceCheckerConfigCache $configCache): void
     {
         $messageMap = [];
         
@@ -59,7 +59,7 @@ class MessageCacheCreator
 
         $parser = $parserFactory->create(ParserFactory::ONLY_PHP7);
         
-        foreach ($files as $file) {
+        foreach ($fileList as $file) {
             $listenerDetector = new ListenerDetector();
             $messageRoutingKeyExtractor = new AmqpMessageRoutingKeyExtractor();
 
@@ -101,7 +101,7 @@ class MessageCacheCreator
 
         $map = var_export($messageMap, true);
         
-        $hash = (new MessageCacheHashCalculator())->calculateHash($files);
+        $hash = (new MessageCacheHashCalculator())->calculateHash($fileList);
         
         $configCache->write("<?php\nreturn {$map};", [new MessageCacheResource($hash)]);
     }
@@ -129,23 +129,18 @@ class MessageCacheCreator
      */
     private function recursivePhpFileSearch(string $path, array $excludePathList): array
     {
+        foreach ($excludePathList as $excludePath) {
+            if (str_contains($path, $excludePath)) {
+                return [];
+            }
+        }
+
         $pattern = $path . '/*.php';
+
         $files = glob($pattern);
 
         if ($files === false) {
             return [];
-        }
-        
-        if (count($excludePathList) > 0) {
-            $files = array_filter($files, function (string $file) use ($excludePathList) {
-                foreach ($excludePathList as $excludePath) {
-                    if (str_contains($file, $excludePath)) {
-                        return false;
-                    }
-                }
-                
-                return true;
-            });
         }
 
         $directoryList = glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT);

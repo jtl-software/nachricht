@@ -32,14 +32,14 @@ class ListenerCacheCreatorTest extends TestCase
     public function testWriteCacheFile(): void
     {
         $sut = new MessageCacheCreator();
-        $sut->create($this->cacheFile, $this->lookupPathList, []);
+        $sut->create($this->cacheFile, $this->lookupPathList, true, []);
         $this->assertFileExists($this->cacheFile);
     }
 
     public function testCanCreateMessageCache(): void
     {
         $sut = new MessageCacheCreator();
-        $cache = $sut->create($this->cacheFile, $this->lookupPathList, []);
+        $cache = $sut->create($this->cacheFile, $this->lookupPathList, true, []);
         $this->assertCount(1, $cache->getMessageClassList());
         $this->assertEquals(
             'JTL\Nachricht\Message\Cache\Fixtures\MessageCacheLookupPath\Foo',
