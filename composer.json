@@ -13,7 +13,7 @@
         "psr/event-dispatcher": "^1.0",
         "psr/log": "^3.0",
         "ramsey/uuid": "^4.0",
-        "symfony/config": "^6.0"
+        "symfony/config": "^5.0"
     },
     "suggest" : {
         "symfony/dependency-injection": "Recommended DI-Container",
