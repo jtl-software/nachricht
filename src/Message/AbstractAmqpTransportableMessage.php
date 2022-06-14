@@ -90,7 +90,11 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     public function isDeadLetter(): bool
     {
-        return $this->__receiveCount >= static::DEFAULT_RETRY_COUNT;
+        return $this->__receiveCount >= $this->getRetryCount();
+    }
+
+    public function getRetryCount():int {
+        return static::DEFAULT_RETRY_COUNT;
     }
 
     public function __wakeup()

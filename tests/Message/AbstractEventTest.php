@@ -108,4 +108,10 @@ class AbstractMessageTest extends TestCase
 
         self::assertTrue($sut->getCreatedAt() > $before && $sut->getCreatedAt() < $after);
     }
+
+    public function testCanGetRetryCount(): void
+    {
+        $sut = new TestAmqpMessage(uniqid());
+        self::assertSame(TestAmqpMessage::DEFAULT_RETRY_COUNT ,$sut->getRetryCount());
+    }
 }

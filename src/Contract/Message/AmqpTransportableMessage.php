@@ -26,5 +26,7 @@ interface AmqpTransportableMessage extends Message
 
     public function isDeadLetter(): bool;
 
+    public function getRetryCount(): int;
+
     public function getCreatedAt(): \DateTimeImmutable;
 }
