@@ -93,7 +93,8 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
         return $this->__receiveCount >= $this->getRetryCount();
     }
 
-    public function getRetryCount():int {
+    public function getRetryCount():int
+    {
         return static::DEFAULT_RETRY_COUNT;
     }
 

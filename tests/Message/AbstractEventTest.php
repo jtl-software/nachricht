@@ -112,6 +112,6 @@ class AbstractMessageTest extends TestCase
     public function testCanGetRetryCount(): void
     {
         $sut = new TestAmqpMessage(uniqid());
-        self::assertSame(TestAmqpMessage::DEFAULT_RETRY_COUNT ,$sut->getRetryCount());
+        self::assertSame(TestAmqpMessage::DEFAULT_RETRY_COUNT, $sut->getRetryCount());
     }
 }
