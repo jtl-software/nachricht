@@ -82,15 +82,32 @@ class AmqpTransport
         }
     }
 
-    /**
-     * @param AmqpTransportableMessage $message
-     */
-    public function publish(AmqpTransportableMessage $message): void
+    public function publish(AmqpTransportableMessage $message, int $delay = 0): void
     {
         $this->connect();
         $routingKey = self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey();
         $this->declareQueue($routingKey);
-        $amqpMessage = new AMQPMessage($this->serializer->serialize($message));
+
+        if ($delay > 0) {
+            $messageDelay = $delay * 1000;
+            $amqpMessage = new AMQPMessage(
+                $this->serializer->serialize($message),
+                [
+                    'delivery_mode' => 2,
+                    'application_headers' => new AMQPTable([
+                        'x-delay' => $messageDelay,
+                    ]),
+                ]
+            );
+            $message->setExchange('delayed_exchange');
+        } else {
+            $amqpMessage = new AMQPMessage(
+                $this->serializer->serialize($message),
+                [
+                    'delivery_mode' => 2,
+                ]
+            );
+        }
         $this->channel->basic_publish(
             $amqpMessage,
             $message->getExchange(),
@@ -118,6 +135,29 @@ class AmqpTransport
     public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): AmqpTransport
     {
         $this->connect();
+
+        $this->channel->exchange_declare(
+            'delayed_exchange',
+            'x-delayed-message',
+            false,
+            true,
+            false,
+            false,
+            false,
+            new AMQPTable([
+                'x-delayed-type' => 'direct',
+            ])
+        );
+        $this->channel->exchange_declare(
+            'direct_exchange',
+            'direct',
+            false,
+            true,
+            false,
+            false,
+            false
+        );
+
         foreach ($subscriptionOptions->getQueueNameList() as $queue) {
             $this->declareQueue($queue);
             $this->channel->basic_qos(0, 1, false);
@@ -132,6 +172,8 @@ class AmqpTransport
             );
 
             $this->consumers[] = $consumerTag;
+            $this->channel->queue_bind($queue, 'direct_exchange', $queue);
+            $this->channel->queue_bind($queue, 'delayed_exchange', $queue);
         }
 
         return $this;
@@ -230,11 +272,13 @@ class AmqpTransport
             try {
                 $event = $serializer->deserialize($message->getBody());
                 if (!$event instanceof AmqpTransportableMessage) {
-                    $this->logError(sprintf(
-                        'Event class "%s"  need to implement %s',
-                        get_class($event),
-                        AmqpTransportableMessage::class
-                    ));
+                    $this->logError(
+                        sprintf(
+                            'Event class "%s"  need to implement %s',
+                            get_class($event),
+                            AmqpTransportableMessage::class
+                        )
+                    );
                     $this->handleUnprocessableMessage($message);
                 } else {
                     if ($this->listenerProvider->eventHasListeners($event)) {
@@ -306,7 +350,7 @@ class AmqpTransport
         if ($message->isDeadLetter()) {
             $this->publishMessageToDeadLetterQueue($amqpMessage, $message);
         } else {
-            $this->publishMessageToDelayQueue($amqpMessage, $message);
+            $this->publish($message, $message->getRetryDelay());
         }
     }
 
@@ -331,37 +375,5 @@ class AmqpTransport
         $this->declareQueue($deadLetterQueueName);
 
         return $deadLetterQueueName;
-    }
-
-    /**
-     * @param AMQPMessage $amqpMessage
-     * @param AmqpTransportableMessage $message
-     */
-    private function publishMessageToDelayQueue(AMQPMessage $amqpMessage, AmqpTransportableMessage $message): void
-    {
-        $delayQueueName = $this->declareDelayQueue($message->getRoutingKey());
-        $amqpMessage->setBody($this->serializer->serialize($message));
-        $this->channel->basic_publish($amqpMessage, '', $delayQueueName);
-    }
-
-    /**
-     * @param string $queueName
-     * @param int $delay
-     * @return string
-     */
-    private function declareDelayQueue(string $queueName, int $delay = 1000): string
-    {
-        $arguments = new AMQPTable(
-            [
-                'x-message-ttl' => $delay,
-                'x-dead-letter-exchange' => '',
-                'x-dead-letter-routing-key' => self::MESSAGE_QUEUE_PREFIX . $queueName
-            ]
-        );
-
-        $delayQueueName = self::DELAY_QUEUE_PREFIX . $queueName;
-
-        $this->declareQueue($delayQueueName, $arguments);
-        return $delayQueueName;
     }
 }

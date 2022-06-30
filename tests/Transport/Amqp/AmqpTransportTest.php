@@ -243,6 +243,30 @@ class AmqpTransportTest extends TestCase
                 Mockery::type(Closure::class)
             );
 
+        $this->channel->shouldReceive('exchange_declare')
+            ->once()
+            ->with('delayed_exchange', 'x-delayed-message', Mockery::andAnyOtherArgs());
+
+        $this->channel->shouldReceive('exchange_declare')
+            ->once()
+            ->with('direct_exchange', 'direct', Mockery::andAnyOtherArgs());
+
+        $this->channel->shouldReceive('queue_bind')
+            ->once()
+            ->with(
+                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey,
+                'direct_exchange',
+                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey
+            );
+
+        $this->channel->shouldReceive('queue_bind')
+            ->once()
+            ->with(
+                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey,
+                'delayed_exchange',
+                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey
+            );
+
         $handler = function (Message $e) {
         };
 
@@ -383,9 +407,12 @@ class AmqpTransportTest extends TestCase
             ->andReturn($this->message);
 
         $this->message->shouldReceive('setLastError');
+        $this->message->shouldReceive('setExchange')->once()->with('delayed_exchange');
+        $this->message->shouldReceive('getExchange')->once()->andReturn('delayed_exchange');
+        $this->message->shouldReceive('getRetryDelay')->once()->andReturn(1);
         $this->message->shouldReceive('isDeadLetter')->once()->andReturn(false);
 
-        $this->queueDeclareDelay();
+        $this->queueDeclareMessage();
         $this->serializer->shouldReceive('serialize')->with($this->message)->andReturn($messageBody);
         $this->amqpMessage->shouldReceive('setBody')->with($messageBody);
 
@@ -398,7 +425,7 @@ class AmqpTransportTest extends TestCase
             ->andReturnTrue();
 
         $this->channel->shouldReceive('basic_publish')
-            ->with($this->amqpMessage, '', AmqpTransport::DELAY_QUEUE_PREFIX . $this->routingKey);
+            ->with(Mockery::any(), 'delayed_exchange', AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey);
 
         $callback($this->amqpMessage);
 
@@ -503,14 +530,6 @@ class AmqpTransportTest extends TestCase
     private function queueDeclareMessage(): void
     {
         $this->declareQueue(AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey, null);
-    }
-
-    private function queueDeclareDelay(): void
-    {
-        $this->declareQueue(
-            AmqpTransport::DELAY_QUEUE_PREFIX . $this->routingKey,
-            Mockery::type(AMQPTable::class)
-        );
     }
 
     private function queueDeclareDeadLetter(): void

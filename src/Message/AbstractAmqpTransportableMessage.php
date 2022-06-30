@@ -42,8 +42,17 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     private \DateTimeImmutable $createdAt;
 
-    public function __construct(string $messageId = null, \DateTimeImmutable $createdAt = null)
-    {
+    public const RETRY_DELAY = 1;
+    public const ENQUEUE_DELAY = 0;
+
+    private string $exchange = 'direct_exchange';
+
+    public function __construct(
+        string $messageId = null,
+        \DateTimeImmutable $createdAt = null,
+        private int $delay = self::ENQUEUE_DELAY,
+        private int $retryDelay = self::RETRY_DELAY
+    ) {
         $this->__eventId = $messageId ?? Uuid::uuid4()->toString();
         $this->createdAt = $createdAt ?? new \DateTimeImmutable();
     }
@@ -53,9 +62,14 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
         return self::getDefaultRoutingKey();
     }
 
-    public static function getExchange(): string
+    public function getExchange(): string
     {
-        return '';
+        return $this->exchange;
+    }
+
+    public function setExchange(string $exchange): void
+    {
+        $this->exchange = $exchange;
     }
 
     private static function getDefaultRoutingKey(): string
@@ -93,7 +107,7 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
         return $this->__receiveCount >= $this->getRetryCount();
     }
 
-    public function getRetryCount():int
+    public function getRetryCount(): int
     {
         return static::DEFAULT_RETRY_COUNT;
     }
@@ -106,5 +120,15 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getRetryDelay(): int
+    {
+        return $this->retryDelay;
+    }
+
+    public function getDelay(): int
+    {
+        return $this->delay;
     }
 }

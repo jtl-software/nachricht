@@ -12,19 +12,26 @@ services:
   JTL\Nachricht\TestListener:
     public: true
 
+  Psr\Container\ContainerInterface:
+    alias: 'service_container'
+
+  JTL\Nachricht\Message\Cache\MessageCacheCreator: ~
+  JTL\Nachricht\Transport\Amqp\AmqpTransportFactory: ~
+
   JTL\Nachricht\Transport\Amqp\AmqpTransport:
     public: true
-    factory: ['JTL\Nachricht\Transport\Amqp\AmqpTransportFactory', 'createTransport']
+    factory: ['@JTL\Nachricht\Transport\Amqp\AmqpTransportFactory', 'createTransport']
     arguments:
       - host: 'localhost'
         port: '5672'
+        httpPort: '15672'
         user: 'guest'
         password: 'guest'
       - '@JTL\Nachricht\Contract\Serializer\MessageSerializer'
       - '@JTL\Nachricht\Listener\ListenerProvider'
 
   JTL\Nachricht\Message\Cache\MessageCache:
-    factory: ['JTL\Nachricht\Message\Cache\MessageCacheCreator', 'create']
+    factory: ['@JTL\Nachricht\Message\Cache\MessageCacheCreator', 'create']
     arguments:
       $cacheFile: !php/const CACHE_PATH
       $lookupPathList:

@@ -28,7 +28,7 @@ class AmqpEmitter implements Emitter
     public function emit(Message ...$messageList): void
     {
         foreach ($messageList as $message) {
-            $this->transport->publish($message);
+            $this->transport->publish($message, $message->getDelay());
         }
     }
 }
