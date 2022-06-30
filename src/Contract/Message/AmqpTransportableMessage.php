@@ -18,7 +18,9 @@ interface AmqpTransportableMessage extends Message
 {
     public static function getRoutingKey(): string;
 
-    public static function getExchange(): string;
+    public function getExchange(): string;
+
+    public function setExchange(string $exchange): void;
 
     public function getMessageId(): string;
 
@@ -29,4 +31,8 @@ interface AmqpTransportableMessage extends Message
     public function getRetryCount(): int;
 
     public function getCreatedAt(): \DateTimeImmutable;
+
+    public function getRetryDelay(): int;
+
+    public function getDelay(): int;
 }

@@ -1,3 +1,4 @@
 /vendor/
 cache.php
+cache.php.meta
 Amqp/tmp/

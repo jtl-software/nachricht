@@ -80,7 +80,7 @@ class AbstractMessageTest extends TestCase
     public function testGetExchange(): void
     {
         $message = new TestAmqpMessage();
-        $this->assertEquals('', $message->getExchange());
+        $this->assertEquals('direct_exchange', $message->getExchange());
     }
 
     public function testCanSetReceiveCount(): void
@@ -113,5 +113,11 @@ class AbstractMessageTest extends TestCase
     {
         $sut = new TestAmqpMessage(uniqid());
         self::assertSame(TestAmqpMessage::DEFAULT_RETRY_COUNT, $sut->getRetryCount());
+    }
+
+    public function testCanGetRetryDelay(): void
+    {
+        $sut = new TestAmqpMessage(uniqid());
+        self::assertSame(TestAmqpMessage::RETRY_DELAY, $sut->getRetryDelay());
     }
 }

@@ -2,7 +2,7 @@ version: "3"
 services:
 
   nachricht-queue:
-    image: rabbitmq:management-alpine
+    build: docker/rabbitmq
     container_name: nachricht-queue
     ports:
       - "15672:15672"
