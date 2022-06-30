@@ -39,7 +39,6 @@ abstract class AbstractVisitor extends NodeVisitorAbstract
      */
     protected function getClassName(Class_ $class): ?string
     {
-        /** @phpstan-ignore-next-line */
         if (!isset($class->namespacedName->parts)) {
             return null;
         }
