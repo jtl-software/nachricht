@@ -2,7 +2,7 @@
 
 # Nachricht
 
-Nachricht is an message dispatcher which focuses on distributing workloads.
+Nachricht is a message dispatcher which focuses on distributing workloads.
 
 ## Features
 
@@ -14,7 +14,10 @@ Nachricht is an message dispatcher which focuses on distributing workloads.
 ## Requirements
 A PSR-11 compatible container (we recommend the [Symfony DependencyInjection component](https://symfony.com/doc/current/components/dependency_injection.html))
 is required. The instances of listeners will be obtained from the container
-via `$container->get($listenerClass)`.
+via `$container->get($listenerClass)`.  
+
+The RabbitMQ [delayed message exchange plugin](https://github.com/rabbitmq/rabbitmq-delayed-message-exchange) has to be installed
+before using Nachricht.
 
 ## Usage
 
@@ -68,6 +71,13 @@ Output
 # php examples/DirectEmit/DirectEmit.php
 FooListener called: Test 
 ```
+
+## Enqueue and retry delay  
+
+You can specify a delay before the message will be enqueued by overriding the `getDelay(): int` method.  
+Additionally, you can specify a separate delay in case of an error by overriding the `getRetryDelay(): int` method. 
+Both of these delays are also part of the `AbstractAmqpTransportableMessage` constructor. 
+Examples can be found in the `DelayedDummyAmqpMessage` and `DummyRetryDelayAmqpMessage` classes.
 
 You can find more examples in the `example` directory.
 
