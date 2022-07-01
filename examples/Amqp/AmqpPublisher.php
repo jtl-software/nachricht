@@ -8,7 +8,8 @@
 
 use JTL\Nachricht\Emitter\AmqpEmitter;
 use JTL\Nachricht\Examples\Amqp\Message\CreateFileAmqpMessage;
-use JTL\Nachricht\Examples\Amqp\Message\Dummy2AmqpMessage;
+use JTL\Nachricht\Examples\Amqp\Message\DelayedDummyAmqpMessage;
+use JTL\Nachricht\Examples\Amqp\Message\DummyRetryDelayAmqpMessage;
 use JTL\Nachricht\Examples\Amqp\Message\DummyAmqpMessage;
 use JTL\Nachricht\Examples\Amqp\Message\MessageWithoutListener;
 
@@ -20,7 +21,8 @@ $rmqEmitter = $containerBuilder->get(AmqpEmitter::class);
 $message = [];
 foreach (range(1, 10) as $i) {
     $message[] = new DummyAmqpMessage('Hello world');
-    $message[] = new Dummy2AmqpMessage('Hello world');
+    $message[] = new DummyRetryDelayAmqpMessage('Hello world', 4);
+    $message[] = new DelayedDummyAmqpMessage('Hello world', 7);
 }
 #foreach (range(1, 100) as $i) {
 #    $message[] = new CreateFileAmqpMessage($i);

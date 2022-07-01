@@ -11,24 +11,13 @@ namespace JTL\Nachricht\Examples\Amqp\Message;
 
 use JTL\Nachricht\Message\AbstractAmqpTransportableMessage;
 
-class Dummy2AmqpMessage extends AbstractAmqpTransportableMessage
+class DummyRetryDelayAmqpMessage extends AbstractAmqpTransportableMessage
 {
-    public function getRetryDelay(): int
+    public function __construct(private string $data, int $retryDelay)
     {
-        return 4;
+        parent::__construct(null, null, self::ENQUEUE_DELAY, $retryDelay);
     }
 
-    private $data;
-
-    public function __construct(string $data)
-    {
-        parent::__construct();
-        $this->data = $data;
-    }
-
-    /**
-     * @return string
-     */
     public function getData(): string
     {
         return $this->data;
