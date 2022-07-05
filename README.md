@@ -16,8 +16,8 @@ A PSR-11 compatible container (we recommend the [Symfony DependencyInjection com
 is required. The instances of listeners will be obtained from the container
 via `$container->get($listenerClass)`.  
 
-The RabbitMQ [delayed message exchange plugin](https://github.com/rabbitmq/rabbitmq-delayed-message-exchange) has to be installed
-before using Nachricht.
+The RabbitMQ [delayed message exchange plugin](https://github.com/rabbitmq/rabbitmq-delayed-message-exchange) may be installed
+before using Nachricht to make sure you can work with message delay.
 
 ## Usage
 
@@ -72,12 +72,20 @@ Output
 FooListener called: Test 
 ```
 
-## Enqueue and retry delay  
+## Emit delayed messages
 
-You can specify a delay before the message will be enqueued by overriding the `getDelay(): int` method.  
-Additionally, you can specify a separate delay in case of an error by overriding the `getRetryDelay(): int` method. 
-Both of these delays are also part of the `AbstractAmqpTransportableMessage` constructor. 
-Examples can be found in the `DelayedDummyAmqpMessage` and `DummyRetryDelayAmqpMessage` classes.
+A delay can be used to make a message invisible for the consumer until a defined time is reached. There are two types 
+of delay available 
+
+On message construct: delay a message when it is getting emitted. 
+You can specify such a delay (in seconds) when constructing a new message instance.
+```php
+$event = new DelayedDummyAmqpMessage(data: 'Test', delay: 3);
+$emitter->emit($event); 
+```
+
+To specify a retry delay overwrite method `getRetryDelay(): int` method (default retry delay is set to 3 seconds).
+Such delay will be used every time a Listener facing an Error when cause jtl/nachricht to re-queue the message
 
 You can find more examples in the `example` directory.
 
