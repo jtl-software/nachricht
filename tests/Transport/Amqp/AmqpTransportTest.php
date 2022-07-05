@@ -179,7 +179,12 @@ class AmqpTransportTest extends TestCase
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
         $this->loggerMock = $this->createMock(LoggerInterface::class);
 
-        $this->transport = new AmqpTransport($this->connectionSettings, $this->serializer, $this->listenerProvider, $this->loggerMock);
+        $this->transport = new AmqpTransport(
+            $this->connectionSettings,
+            $this->serializer,
+            $this->listenerProvider,
+            $this->loggerMock
+        );
     }
 
     public function tearDown(): void
@@ -193,6 +198,10 @@ class AmqpTransportTest extends TestCase
         $serializedMessageData = uniqid('data', true);
 
         $this->queueDeclareMessage();
+
+        $this->channel->shouldReceive('exchange_declare')
+            ->once()
+            ->with('delayed_exchange', 'x-delayed-message', Mockery::andAnyOthers());
 
         $this->serializer->shouldReceive('serialize')
             ->with($this->message)
@@ -246,18 +255,6 @@ class AmqpTransportTest extends TestCase
         $this->channel->shouldReceive('exchange_declare')
             ->once()
             ->with('delayed_exchange', 'x-delayed-message', Mockery::andAnyOtherArgs());
-
-        $this->channel->shouldReceive('exchange_declare')
-            ->once()
-            ->with('direct_exchange', 'direct', Mockery::andAnyOtherArgs());
-
-        $this->channel->shouldReceive('queue_bind')
-            ->once()
-            ->with(
-                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey,
-                'direct_exchange',
-                AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey
-            );
 
         $this->channel->shouldReceive('queue_bind')
             ->once()
@@ -393,6 +390,10 @@ class AmqpTransportTest extends TestCase
         };
         $callback = $this->getSubscriptionCallback($handler);
 
+        $this->channel->shouldReceive('exchange_declare')
+            ->once()
+            ->with('delayed_exchange', 'x-delayed-message', Mockery::andAnyOthers());
+
         $this->amqpMessage->shouldReceive('getBody')
             ->once()
             ->andReturn($messageBody);
@@ -407,8 +408,6 @@ class AmqpTransportTest extends TestCase
             ->andReturn($this->message);
 
         $this->message->shouldReceive('setLastError');
-        $this->message->shouldReceive('setExchange')->once()->with('delayed_exchange');
-        $this->message->shouldReceive('getExchange')->once()->andReturn('delayed_exchange');
         $this->message->shouldReceive('getRetryDelay')->once()->andReturn(1);
         $this->message->shouldReceive('isDeadLetter')->once()->andReturn(false);
 
@@ -486,6 +485,10 @@ class AmqpTransportTest extends TestCase
         $serializedMessageData = uniqid('data', true);
 
         $message = Mockery::mock(AMQPMessage::class);
+
+        $this->channel->shouldReceive('exchange_declare')
+            ->once()
+            ->with('delayed_exchange', 'x-delayed-message', Mockery::andAnyOthers());
 
         $this->channel->shouldReceive('basic_get')
             ->once()
