@@ -108,6 +108,18 @@ class AmqpTransport
         );
     }
 
+    public function directPublish(AMQPMessage $message): void
+    {
+        $this->connect();
+        $routingKey = self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey();
+        $this->declareQueue($routingKey);
+        $this->channel->basic_publish(
+            msg: $message,
+            routing_key: $routingKey
+        );
+    }
+
+
     /**
      * @param SubscriptionSettings $subscriptionOptions
      * @param Closure $handler
