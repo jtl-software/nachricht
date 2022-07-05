@@ -18,9 +18,9 @@ class DummyAmqpMessage extends AbstractAmqpTransportableMessage
      */
     private $data;
 
-    public function __construct(string $data)
+    public function __construct(string $data, int $delay = 0)
     {
-        parent::__construct();
+        parent::__construct(delay: $delay);
         $this->data = $data;
     }
 

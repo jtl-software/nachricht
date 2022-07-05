@@ -14,7 +14,7 @@ use Ramsey\Uuid\Uuid;
 /**
  * AbstractAmqpMessage represents the base class for AmqpMessage.
  *
- * It is recommend to extend these abstraction when working with the
+ * It is recommended to extend this abstraction when working with the
  * AMQP Transport for your Messages.
  *
  * The class will provide some basic functionality such as:
@@ -27,7 +27,7 @@ use Ramsey\Uuid\Uuid;
  *    in your application
  *  - define the routing key (or name of the message queue) - which is static:class
  *
- * If you do not want to rely on these abstraction. All you need is to implement the
+ * If you do not want to rely on this abstraction. All you need is to implement the
  * AmqpMessage interface for your Message implementation.
  */
 abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMessage
@@ -38,38 +38,26 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     private ?string $__lastErrorMessage;
 
-    private string $__eventId;
+    private readonly string $__messageId;
 
-    private \DateTimeImmutable $createdAt;
+    private readonly \DateTimeImmutable $createdAt;
 
     public const RETRY_DELAY = 1;
     public const ENQUEUE_DELAY = 0;
 
-    private string $exchange = 'direct_exchange';
-
     public function __construct(
         string $messageId = null,
         \DateTimeImmutable $createdAt = null,
-        private int $delay = self::ENQUEUE_DELAY,
-        private int $retryDelay = self::RETRY_DELAY
+        private readonly int $delay = self::ENQUEUE_DELAY,
+        private readonly int $retryDelay = self::RETRY_DELAY
     ) {
-        $this->__eventId = $messageId ?? Uuid::uuid4()->toString();
+        $this->__messageId = $messageId ?? Uuid::uuid4()->toString();
         $this->createdAt = $createdAt ?? new \DateTimeImmutable();
     }
 
     public static function getRoutingKey(): string
     {
         return self::getDefaultRoutingKey();
-    }
-
-    public function getExchange(): string
-    {
-        return $this->exchange;
-    }
-
-    public function setExchange(string $exchange): void
-    {
-        $this->exchange = $exchange;
     }
 
     private static function getDefaultRoutingKey(): string
@@ -79,7 +67,7 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     public function getMessageId(): string
     {
-        return $this->__eventId;
+        return $this->__messageId;
     }
 
     public function setLastError(string $errorMessage): void
