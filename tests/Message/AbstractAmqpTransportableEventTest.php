@@ -22,7 +22,7 @@ class TestAmqpMessage extends AbstractAmqpTransportableMessage
  *
  * @covers \JTL\Nachricht\Message\AbstractAmqpTransportableMessage
  */
-class AbstractMessageTest extends TestCase
+class AbstractAmqpTransportableMessageTest extends TestCase
 {
     public function testCanCreateWithMessageId()
     {
@@ -75,12 +75,6 @@ class AbstractMessageTest extends TestCase
     {
         $message = new TestAmqpMessage();
         $this->assertEquals(get_class($message), $message->getRoutingKey());
-    }
-
-    public function testGetExchange(): void
-    {
-        $message = new TestAmqpMessage();
-        $this->assertEquals('direct_exchange', $message->getExchange());
     }
 
     public function testCanSetReceiveCount(): void
