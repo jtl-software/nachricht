@@ -26,7 +26,6 @@ use Throwable;
 class AmqpTransport
 {
     public const MESSAGE_QUEUE_PREFIX = 'msg__';
-    public const DELAY_QUEUE_PREFIX = 'delayed__';
     public const DEAD_LETTER_QUEUE_PREFIX = 'dl__';
     public const MISSING_LISTENER_QUEUE_PREFIX = 'missing_listener__';
     public const FAILURE_QUEUE = 'failure';
@@ -86,43 +85,25 @@ class AmqpTransport
     {
         $this->connect();
         $routingKey = self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey();
+        $exchange = '';
+        $properties = ['delivery_mode' => 2];
+
+        $this->prepareExchanges();
         $this->declareQueue($routingKey);
 
         if ($delay > 0) {
-            $messageDelay = $delay * 1000;
-            $amqpMessage = new AMQPMessage(
-                $this->serializer->serialize($message),
-                [
-                    'delivery_mode' => 2,
-                    'application_headers' => new AMQPTable([
-                        'x-delay' => $messageDelay,
-                    ]),
-                ]
-            );
-            $message->setExchange('delayed_exchange');
-        } else {
-            $amqpMessage = new AMQPMessage(
-                $this->serializer->serialize($message),
-                [
-                    'delivery_mode' => 2,
-                ]
-            );
+            $exchange = 'delayed_exchange';
+            $properties['application_headers'] = new AMQPTable([
+                'x-delay' => $delay * 1000,
+            ]);
         }
-        $this->channel->basic_publish(
-            $amqpMessage,
-            $message->getExchange(),
-            $routingKey
-        );
-    }
 
-    public function directPublish(AMQPMessage $message): void
-    {
-        $this->connect();
-        $routingKey = self::MESSAGE_QUEUE_PREFIX . $message->getRoutingKey();
-        $this->declareQueue($routingKey);
         $this->channel->basic_publish(
-            $message,
-            $message->getExchange() ?? '',
+            new AMQPMessage(
+                $this->serializer->serialize($message),
+                $properties
+            ),
+            $exchange,
             $routingKey
         );
     }
@@ -135,28 +116,7 @@ class AmqpTransport
     public function subscribe(SubscriptionSettings $subscriptionOptions, Closure $handler): AmqpTransport
     {
         $this->connect();
-
-        $this->channel->exchange_declare(
-            'delayed_exchange',
-            'x-delayed-message',
-            false,
-            true,
-            false,
-            false,
-            false,
-            new AMQPTable([
-                'x-delayed-type' => 'direct',
-            ])
-        );
-        $this->channel->exchange_declare(
-            'direct_exchange',
-            'direct',
-            false,
-            true,
-            false,
-            false,
-            false
-        );
+        $this->prepareExchanges();
 
         foreach ($subscriptionOptions->getQueueNameList() as $queue) {
             $this->declareQueue($queue);
@@ -172,7 +132,6 @@ class AmqpTransport
             );
 
             $this->consumers[] = $consumerTag;
-            $this->channel->queue_bind($queue, 'direct_exchange', $queue);
             $this->channel->queue_bind($queue, 'delayed_exchange', $queue);
         }
 
@@ -249,6 +208,21 @@ class AmqpTransport
             );
             $this->declaredQueueList[$queueName] = true;
         }
+    }
+
+    private function prepareExchanges(): void
+    {
+        $this->connect();
+
+        $this->channel->exchange_declare(
+            exchange: 'delayed_exchange',
+            type: 'x-delayed-message',
+            durable: true,
+            auto_delete: false,
+            arguments: new AMQPTable([
+                'x-delayed-type' => 'direct',
+            ])
+        );
     }
 
     /**
