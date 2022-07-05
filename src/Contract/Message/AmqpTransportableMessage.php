@@ -18,10 +18,6 @@ interface AmqpTransportableMessage extends Message
 {
     public static function getRoutingKey(): string;
 
-    public function getExchange(): string;
-
-    public function setExchange(string $exchange): void;
-
     public function getMessageId(): string;
 
     public function setLastError(string $errorMessage): void;

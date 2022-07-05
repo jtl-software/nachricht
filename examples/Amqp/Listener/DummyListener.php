@@ -13,25 +13,21 @@ use Exception;
 use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Examples\Amqp\Message\DelayedDummyAmqpMessage;
 use JTL\Nachricht\Examples\Amqp\Message\DummyAmqpMessage;
-use JTL\Nachricht\Examples\Amqp\Message\DummyRetryDelayAmqpMessage;
+use JTL\Nachricht\Examples\Amqp\Message\CustomRetryDelayAmqpMessage;
 
 class DummyListener implements Listener
 {
     public function listen(DummyAmqpMessage $message): void
     {
-//        throw new Exception(uniqid('message_1', true));
         echo 'Dummy Listener called: ' . $message->getData() . "\n";
     }
 
-    public function listen2(DummyRetryDelayAmqpMessage $message): void
+    public function listen2(CustomRetryDelayAmqpMessage $message): void
     {
-//        throw new Exception(uniqid('message_2', true));
-        echo 'Dummy Listener with retry delay called: ' . $message->getData() . "\n";
-    }
+        echo "Failed Message with Retry Deplay";
 
-    public function listen3(DelayedDummyAmqpMessage $message): void
-    {
-//        throw new Exception(uniqid('message_2', true));
-        echo 'Delayed Dummy Listener called: ' . $message->getData() . "\n";
+        if (random_int(1, 3) >= 2) {
+            throw new Exception("This message is getting delayed during re-queue");
+        }
     }
 }

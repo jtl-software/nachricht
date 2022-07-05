@@ -17,8 +17,7 @@ $subscriptionSettings = new SubscriptionSettings(
         'msg__test_queue',
         'msg__JTL\Nachricht\Examples\Amqp\Message\MessageWithoutListener',
         'msg__JTL\Nachricht\Examples\Amqp\Message\DummyAmqpMessage',
-        'msg__JTL\Nachricht\Examples\Amqp\Message\DelayedDummyAmqpMessage',
-        'msg__JTL\Nachricht\Examples\Amqp\Message\DummyRetryDelayAmqpMessage',
+        'msg__JTL\Nachricht\Examples\Amqp\Message\CustomRetryDelayAmqpMessage',
     )
 );
 
