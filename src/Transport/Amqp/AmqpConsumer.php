@@ -35,8 +35,7 @@ class AmqpConsumer implements Consumer
         private AmqpTransport $transport,
         private AmqpDispatcher $dispatcher,
         LoggerInterface $logger = null
-    )
-    {
+    ) {
         $this->shouldConsume = true;
         if ($logger === null) {
             $this->logger = new EchoLogger();
