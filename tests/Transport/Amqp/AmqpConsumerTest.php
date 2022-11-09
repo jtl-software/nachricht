@@ -11,10 +11,10 @@ namespace JTL\Nachricht\Transport\Amqp;
 use Closure;
 use Exception;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
-use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Dispatcher\AmqpDispatcher;
 use JTL\Nachricht\Transport\SubscriptionSettings;
-use Mockery;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -30,55 +30,28 @@ class MockException extends Exception
  */
 class AmqpConsumerTest extends TestCase
 {
-    /**
-     * @var AmqpTransport|Mockery\MockInterface
-     */
-    private $transport;
-
-    /**
-     * @var AmqpDispatcher|Mockery\MockInterface
-     */
-    private $dispatcher;
-
-    /**
-     * @var AmqpConsumer
-     */
-    private $consumer;
-
-    /**
-     * @var SubscriptionSettings|Mockery\MockInterface
-     */
-    private $subscriptionSettings;
-
-    /**
-     * @var Message|Mockery\MockInterface
-     */
-    private $message;
+    private AmqpTransport&MockObject $transport;
+    private AmqpDispatcher&MockObject $dispatcher;
+    private AmqpConsumer $consumer;
+    private SubscriptionSettings&Stub $subscriptionSettings;
+    private AmqpTransportableMessage&MockObject $event;
 
     public function setUp(): void
     {
-        $this->transport = Mockery::mock(AmqpTransport::class);
-        $this->event = Mockery::mock(AmqpTransportableMessage::class);
-        $this->dispatcher = Mockery::mock(AmqpDispatcher::class);
-        $this->subscriptionSettings = Mockery::mock(SubscriptionSettings::class);
+        $this->transport = $this->createMock(AmqpTransport::class);
+        $this->event = $this->createMock(AmqpTransportableMessage::class);
+        $this->dispatcher = $this->createMock(AmqpDispatcher::class);
+        $this->subscriptionSettings = $this->createStub(SubscriptionSettings::class);
 
         $this->consumer = new AmqpConsumer($this->transport, $this->dispatcher);
     }
 
-    public function tearDown(): void
-    {
-        Mockery::close();
-    }
-
     public function testCanConsume(): void
     {
-        $this->transport->shouldReceive('subscribe')
-            ->with($this->subscriptionSettings, Mockery::type(Closure::class))
-            ->once();
+        $this->transport->expects(self::once())->method('subscribe')
+            ->with($this->subscriptionSettings, self::isInstanceOf(Closure::class));
 
-        $this->transport->shouldReceive('poll')
-            ->once()
-            ->andThrow(new MockException());
+        $this->transport->expects(self::once())->method('poll')->willThrowException(new MockException());
 
         $this->expectException(Exception::class);
 
@@ -94,9 +67,8 @@ class AmqpConsumerTest extends TestCase
 
         $callback = $method->getClosure($this->consumer);
 
-        $this->dispatcher->shouldReceive('dispatch')
-            ->with($this->event)
-            ->once();
+        $this->dispatcher->expects(self::once())->method('dispatch')
+            ->with($this->event);
 
         $callback()($this->event);
 

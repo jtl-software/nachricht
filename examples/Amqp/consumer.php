@@ -18,7 +18,8 @@ $subscriptionSettings = new SubscriptionSettings(
         'msg__JTL\Nachricht\Examples\Amqp\Message\MessageWithoutListener',
         'msg__JTL\Nachricht\Examples\Amqp\Message\DummyAmqpMessage',
         'msg__JTL\Nachricht\Examples\Amqp\Message\CustomRetryDelayAmqpMessage',
-    )
+    ),
+    1
 );
 
 /** @var AmqpConsumer $consumer */
