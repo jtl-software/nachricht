@@ -64,7 +64,7 @@ class AmqpConsumer implements Consumer
         do {
             try {
                 $this->transport->poll($timeout);
-                if (isset($endTime) && $endTime >= new \DateTimeImmutable()) {
+                if (isset($endTime) && $endTime <= new \DateTimeImmutable()) {
                     $this->shouldConsume = false;
                 }
             } catch (AMQPTimeoutException $e) {
