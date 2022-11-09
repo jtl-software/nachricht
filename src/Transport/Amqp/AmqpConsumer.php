@@ -21,24 +21,22 @@ class AmqpConsumer implements Consumer
 {
     private const EXIT_SIGNAL_LIST = [SIGINT, SIGTERM, SIGHUP, SIGQUIT];
 
-    private AmqpTransport $transport;
-
-    private AmqpDispatcher $dispatcher;
-
     private LoggerInterface $logger;
 
     private bool $shouldConsume;
 
     /**
      * AmqpConsumer constructor.
-     * @param AmqpTransport $client
+     * @param AmqpTransport $transport
      * @param AmqpDispatcher $dispatcher
      * @param LoggerInterface $logger
      */
-    public function __construct(AmqpTransport $client, AmqpDispatcher $dispatcher, LoggerInterface $logger = null)
+    public function __construct(
+        private AmqpTransport $transport,
+        private AmqpDispatcher $dispatcher,
+        LoggerInterface $logger = null
+    )
     {
-        $this->transport = $client;
-        $this->dispatcher = $dispatcher;
         $this->shouldConsume = true;
         if ($logger === null) {
             $this->logger = new EchoLogger();
@@ -58,13 +56,21 @@ class AmqpConsumer implements Consumer
         $callback = $this->createCallback();
         $this->transport->subscribe($subscriptionSettings, $callback);
 
-        while ($this->shouldConsume) {
+        $ttl = $subscriptionSettings->getTtl();
+        if ($ttl >= 0) {
+            $endTime = new \DateTimeImmutable("+ {$ttl} SECONDS");
+        }
+
+        do {
             try {
                 $this->transport->poll($timeout);
+                if (isset($endTime) && $endTime >= new \DateTimeImmutable()) {
+                    $this->shouldConsume = false;
+                }
             } catch (AMQPTimeoutException $e) {
                 $this->transport->renewSubscription($subscriptionSettings, $callback);
             }
-        }
+        } while ($this->shouldConsume);
 
         $this->logger->info('Consumer has been shut down');
     }

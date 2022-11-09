@@ -23,8 +23,10 @@ class SubscriptionSettingsTest extends TestCase
     public function testCreate(): void
     {
         $stringCollection = new StringCollection();
-        $settings = new SubscriptionSettings($stringCollection);
+        $ttl = random_int(1, 99);
+        $settings = new SubscriptionSettings($stringCollection, $ttl);
 
         $this->assertSame($stringCollection, $settings->getQueueNameList());
+        $this->assertSame($ttl, $settings->getTtl());
     }
 }

@@ -100,7 +100,7 @@ class AbstractAmqpTransportableMessageTest extends TestCase
         $sut = new TestAmqpMessage(uniqid());
         $after = new \DateTimeImmutable();
 
-        self::assertTrue($sut->getCreatedAt() > $before && $sut->getCreatedAt() < $after);
+        self::assertTrue($sut->getCreatedAt() >= $before && $sut->getCreatedAt() <= $after);
     }
 
     public function testCanGetRetryCount(): void

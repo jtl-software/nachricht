@@ -13,17 +13,12 @@ use JTL\Generic\StringCollection;
 class SubscriptionSettings
 {
     /**
-     * @var StringCollection<string>
-     */
-    private $queueNameList;
-
-    /**
      * SubscriptionSettings constructor.
      * @param StringCollection<string> $queueNameList
+     * @param int $ttl seconds
      */
-    public function __construct(StringCollection $queueNameList)
+    public function __construct(private StringCollection $queueNameList, private int $ttl = -1)
     {
-        $this->queueNameList = $queueNameList;
     }
 
     /**
@@ -32,5 +27,10 @@ class SubscriptionSettings
     public function getQueueNameList(): StringCollection
     {
         return $this->queueNameList;
+    }
+
+    public function getTtl(): int
+    {
+        return $this->ttl;
     }
 }
