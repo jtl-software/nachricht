@@ -349,6 +349,8 @@ class AmqpTransport
         $deadLetterQueueName = $this->declareDeadLetterQueue($message->getRoutingKey());
         $amqpMessage->setBody($this->serializer->serialize($message));
         $this->channel->basic_publish($amqpMessage, '', $deadLetterQueueName);
+
+        $this->logger->info('Pushed deadletter of type '.get_class($amqpMessage). " to {$deadLetterQueueName}");
     }
 
     /**
