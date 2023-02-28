@@ -11,6 +11,7 @@ namespace JTL\Nachricht\Transport\Amqp;
 use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
 use Mockery;
+use PHPUnit\Framework\MockObject\Stub\Stub;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,33 +24,18 @@ use PHPUnit\Framework\TestCase;
  */
 class AmqpTransportFactoryTest extends TestCase
 {
+    private AmqpTransportFactory $factory;
 
-    /**
-     * @var MessageSerializer|Mockery\MockInterface
-     */
-    private $messageSerializer;
-
-    /**
-     * @var AmqpTransportFactory
-     */
-    private $factory;
-
-    /**
-     * @var ListenerProvider|Mockery\LegacyMockInterface|Mockery\MockInterface
-     */
-    private $provider;
+    private \PHPUnit\Framework\MockObject\MockObject&AmqpConnectionFactory $connectionFactory;
 
     public function setUp(): void
     {
-        $this->eventSerializer = Mockery::mock(MessageSerializer::class);
-        $this->factory = new AmqpTransportFactory();
-        $this->provider = Mockery::mock(ListenerProvider::class);
+        $this->connectionFactory = $this->createMock(AmqpConnectionFactory::class);
+        $this->factory = new AmqpTransportFactory($this->connectionFactory);
     }
 
     public function testCreateTransport(): void
     {
-        Mockery::mock(AmqpTransport::class);
-
         $connectionSettings = [
             'host' => 'localhost',
             'port' => (string)random_int(1, 123),
@@ -58,7 +44,11 @@ class AmqpTransportFactoryTest extends TestCase
             'password' => 'guest'
         ];
 
-        $transport = $this->factory->createTransport($connectionSettings, $this->eventSerializer, $this->provider);
+        $transport = $this->factory->createTransport(
+            $connectionSettings,
+            self::createStub(MessageSerializer::class),
+            self::createStub(ListenerProvider::class)
+        );
         $this->assertInstanceOf(AmqpTransport::class, $transport);
     }
 }

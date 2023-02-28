@@ -26,12 +26,13 @@ use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use Mockery;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
-use PhpAmqpLib\Wire\AMQPTable;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
+use function PHPUnit\Framework\once;
 
 /**
  * Class AmqpTransportTest
@@ -133,6 +134,10 @@ class AmqpTransportTest extends TestCase
      */
     private $loggerMock;
     private string $amqpMessageDeliveryTag;
+    /**
+     * @var AmqpConnectionFactory|(AmqpConnectionFactory&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    private \PHPUnit\Framework\MockObject\MockObject|AmqpConnectionFactory $connectionFactory;
 
     public function setUp(): void
     {
@@ -147,19 +152,22 @@ class AmqpTransportTest extends TestCase
 
         $this->queueNameList = StringCollection::from(AmqpTransport::MESSAGE_QUEUE_PREFIX . $this->routingKey);
 
-        $this->connectionSettings = Mockery::mock(AmqpConnectionSettings::class, [
-            'getHost' => $this->host,
-            'getPort' => $this->port,
-            'getUser' => $this->user,
-            'getPassword' => $this->password,
-            'getVhost' => $this->vhost,
-        ]);
+        $this->connectionSettings = new AmqpConnectionSettings(
+            $this->host,
+            $this->port,
+            $this->user,
+            $this->password,
+            $this->vhost,
+            '/',
+            30
+        );
 
         $this->serializer = Mockery::mock(MessageSerializer::class);
         $this->channel = Mockery::mock(AMQPChannel::class);
-        $this->amqpConnection = Mockery::mock('overload:' . AMQPStreamConnection::class, [
-            'channel' => $this->channel
-        ]);
+
+        $this->amqpConnection = self::createMock(AMQPStreamConnection::class);
+        $this->amqpConnection->expects(self::once())->method('channel')->willReturn($this->channel);
+
         $this->message = Mockery::mock(AmqpTransportableMessage::class, [
             'getRoutingKey' => $this->routingKey,
             'getExchange' => $this->exchange,
@@ -171,7 +179,6 @@ class AmqpTransportTest extends TestCase
             'getQueueNameList' => $this->queueNameList
         ]);
 
-        $this->amqpConnection->shouldReceive('close');
 
         $this->amqpMessage = Mockery::mock(AMQPMessage::class);
         $this->amqpMessageDeliveryTag = uniqid('delivery_tag', true);
@@ -179,8 +186,12 @@ class AmqpTransportTest extends TestCase
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
         $this->loggerMock = $this->createMock(LoggerInterface::class);
 
+        $this->connectionFactory = self::createMock(AmqpConnectionFactory::class);
+        $this->connectionFactory->expects(self::once())->method('connect')->willReturn($this->amqpConnection);
+
         $this->transport = new AmqpTransport(
             $this->connectionSettings,
+            $this->connectionFactory,
             $this->serializer,
             $this->listenerProvider,
             $this->loggerMock
@@ -189,7 +200,7 @@ class AmqpTransportTest extends TestCase
 
     public function tearDown(): void
     {
-        $this->transport->__destruct();
+        unset($this->transport);
         Mockery::close();
     }
 

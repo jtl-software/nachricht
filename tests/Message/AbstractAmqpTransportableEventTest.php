@@ -74,7 +74,7 @@ class AbstractAmqpTransportableMessageTest extends TestCase
     public function testGetRoutingKey(): void
     {
         $message = new TestAmqpMessage();
-        $this->assertEquals(get_class($message), $message->getRoutingKey());
+        $this->assertEquals('JTL_Nachricht_Message_TestAmqpMessage', $message->getRoutingKey());
     }
 
     public function testCanSetReceiveCount(): void
