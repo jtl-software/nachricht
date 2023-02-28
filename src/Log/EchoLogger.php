@@ -13,7 +13,6 @@ use Psr\Log\LogLevel;
 
 class EchoLogger implements LoggerInterface
 {
-
     /**
      * @inheritDoc
      */

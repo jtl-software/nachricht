@@ -68,7 +68,6 @@ class AbstractVisitorTest extends TestCase
 
 class TestVisitor extends AbstractVisitor
 {
-
     /**
      * @var bool
      */
