@@ -10,27 +10,16 @@ namespace JTL\Nachricht\Transport\Amqp;
 
 class AmqpConnectionSettings
 {
-    private string $host;
-    private int $port;
-    private string $user;
-    private string $password;
-    private string $vhost;
-    private string $httpPort;
 
     public function __construct(
-        string $host,
-        int $port,
-        string $httpPort,
-        string $user,
-        string $password,
-        string $vhost = '/'
+        private readonly string $host,
+        private readonly int $port,
+        private readonly string $httpPort,
+        private readonly string $user,
+        private readonly string $password,
+        private readonly string $vhost = '/',
+        private readonly float $timeout = 3.0
     ) {
-        $this->host = $host;
-        $this->port = $port;
-        $this->user = $user;
-        $this->password = $password;
-        $this->vhost = $vhost;
-        $this->httpPort = $httpPort;
     }
 
     public function getHost(): string
@@ -61,5 +50,10 @@ class AmqpConnectionSettings
     public function getHttpPort(): string
     {
         return $this->httpPort;
+    }
+
+    public function getTimeout(): float
+    {
+        return $this->timeout;
     }
 }

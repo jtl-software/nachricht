@@ -35,11 +35,6 @@ class AmqpTransport
      */
     private array $declaredQueueList = [];
 
-    private AmqpConnectionSettings $connectionSettings;
-    private MessageSerializer $serializer;
-
-    private ListenerProvider $listenerProvider;
-
     private LoggerInterface $logger;
 
     private ?AMQPStreamConnection $connection = null;
@@ -51,22 +46,19 @@ class AmqpTransport
     private array $consumers = [];
 
     /**
-     * AmqpTransport constructor.
-     *
      * @param AmqpConnectionSettings $connectionSettings
+     * @param AmqpConnectionFactory $connectionFactory
      * @param MessageSerializer $serializer
      * @param ListenerProvider $listenerProvider
      * @param LoggerInterface|null $logger
      */
     public function __construct(
-        AmqpConnectionSettings $connectionSettings,
-        MessageSerializer $serializer,
-        ListenerProvider $listenerProvider,
+        private readonly AmqpConnectionSettings $connectionSettings,
+        private readonly AmqpConnectionFactory $connectionFactory,
+        private readonly MessageSerializer $serializer,
+        private readonly ListenerProvider $listenerProvider,
         LoggerInterface $logger = null
     ) {
-        $this->connectionSettings = $connectionSettings;
-        $this->serializer = $serializer;
-        $this->listenerProvider = $listenerProvider;
         if ($logger === null) {
             $this->logger = new EchoLogger();
         } else {
@@ -189,14 +181,7 @@ class AmqpTransport
     public function connect(): void
     {
         if ($this->connection === null) {
-            $this->connection = new AMQPStreamConnection(
-                $this->connectionSettings->getHost(),
-                $this->connectionSettings->getPort(),
-                $this->connectionSettings->getUser(),
-                $this->connectionSettings->getPassword(),
-                $this->connectionSettings->getVhost()
-            );
-
+            $this->connection = $this->connectionFactory->connect($this->connectionSettings);
             $this->channel = $this->connection->channel();
         }
     }

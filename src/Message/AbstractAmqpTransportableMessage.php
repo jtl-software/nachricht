@@ -62,7 +62,7 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     private static function getDefaultRoutingKey(): string
     {
-        return static::class;
+        return str_replace('\\', '_', static::class);
     }
 
     public function getMessageId(): string

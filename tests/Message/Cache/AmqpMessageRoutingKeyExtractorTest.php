@@ -44,7 +44,7 @@ class AmqpMessageRoutingKeyExtractorTest extends TestCase
 
         $this->assertTrue($extractor->isClassMessage());
         $this->assertSame(TestAmqpMessage::class, $extractor->getMessageClass());
-        $this->assertSame(TestAmqpMessage::class, $extractor->getRoutingKey());
+        $this->assertSame('JTL_Nachricht_Message_Cache_TestAmqpMessage', $extractor->getRoutingKey());
     }
 }
 
