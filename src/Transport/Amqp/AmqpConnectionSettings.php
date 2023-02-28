@@ -10,7 +10,6 @@ namespace JTL\Nachricht\Transport\Amqp;
 
 class AmqpConnectionSettings
 {
-
     public function __construct(
         private readonly string $host,
         private readonly int $port,

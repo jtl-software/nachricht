@@ -17,7 +17,6 @@ class AmqpTransportFactory
 {
     public function __construct(private readonly AmqpConnectionFactory $connectionFactory)
     {
-
     }
 
     /**
@@ -41,7 +40,7 @@ class AmqpTransportFactory
                 $this->getFromSettingsArray('user', $connectionSettings),
                 $this->getFromSettingsArray('password', $connectionSettings),
                 $this->getFromSettingsArray('vhost', $connectionSettings, '/'),
-                $this->getFromSettingsArray('timeout', $connectionSettings, 3.0),
+                (float)$this->getFromSettingsArray('timeout', $connectionSettings, '3.0'),
             ),
             $this->connectionFactory,
             $serializer,
@@ -51,13 +50,14 @@ class AmqpTransportFactory
     }
 
     /**
+     * @param array<string, string> $settings
      * @throws InvalidArgumentException
      */
     private function getFromSettingsArray(
         string $key,
         array $settings,
-        string|int|float|null $default = null
-    ): string|int|float {
+        string $default = null
+    ): string {
         return $settings[$key] ?? $default ?? throw new \InvalidArgumentException("Missing {$key} in amqp connectionSettings");
     }
 }
