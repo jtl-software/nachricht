@@ -36,7 +36,7 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     private int $__receiveCount = 0;
 
-    private ?string $__lastErrorMessage;
+    private ?string $__lastErrorMessage = null;
 
     private readonly string $__messageId;
 
