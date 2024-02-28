@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * This File is part of JTL-Software
  *
@@ -8,7 +10,6 @@
 
 namespace JTL\Nachricht\Message;
 
-use JTL\Nachricht\Message\Cache\TestMessage;
 use PHPUnit\Framework\TestCase;
 
 class TestAmqpMessage extends AbstractAmqpTransportableMessage
@@ -24,30 +25,38 @@ class TestAmqpMessage extends AbstractAmqpTransportableMessage
  */
 class AbstractAmqpTransportableMessageTest extends TestCase
 {
-    public function testCanCreateWithMessageId()
+    public function testCanCreateWithMessageId(): void
     {
         $messageId = uniqid();
         $message = new TestAmqpMessage($messageId);
         $this->assertEquals($messageId, $message->getMessageId());
     }
 
-    public function testCanCreateWithoutMessageId()
+    public function testCanCreateWithoutMessageId(): void
     {
         $message = new TestAmqpMessage();
         $this->assertIsString($message->getMessageId());
         $this->assertTrue(strlen($message->getMessageId()) > 0);
     }
 
-    public function testCanGetAndSetLastErrorMessage()
+    public function testCanGetAndSetLastErrorMessage(): void
     {
         $errorMessage = uniqid();
         $message = new TestAmqpMessage();
+        self::assertNull($message->getLastErrorMessage());
         $message->setLastError($errorMessage);
 
         $this->assertSame($errorMessage, $message->getLastErrorMessage());
     }
 
-    public function testCanCheckIfMessageIsDeadLetterTrue()
+    public function testDefaultErrorMessageIsNull(): void
+    {
+        $message = new TestAmqpMessage();
+        self::assertNull($message->getLastErrorMessage());
+    }
+
+
+    public function testCanCheckIfMessageIsDeadLetterTrue(): void
     {
         $message = new class extends AbstractAmqpTransportableMessage {
             const DEFAULT_RETRY_COUNT = 0;
@@ -55,7 +64,7 @@ class AbstractAmqpTransportableMessageTest extends TestCase
         $this->assertTrue($message->isDeadLetter());
     }
 
-    public function testCanCheckIfMessageIsDeadLetterFalse()
+    public function testCanCheckIfMessageIsDeadLetterFalse(): void
     {
         $message = new class extends AbstractAmqpTransportableMessage {
             const DEFAULT_RETRY_COUNT = 1;
@@ -63,7 +72,7 @@ class AbstractAmqpTransportableMessageTest extends TestCase
         $this->assertFalse($message->isDeadLetter());
     }
 
-    public function testCanIncreaseReceiveCountOnDeserialization()
+    public function testCanIncreaseReceiveCountOnDeserialization(): void
     {
         $message = new TestAmqpMessage();
         $this->assertFalse($message->isDeadLetter());
