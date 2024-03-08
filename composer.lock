@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6fd5d503f7d496be3189dbd1bb12c35f",
+    "content-hash": "b4fbb0e1b6b5adf953619439104e2e30",
     "packages": [
         {
             "name": "brick/math",
@@ -63,25 +63,24 @@
         },
         {
             "name": "jtl/php-generic-collection",
-            "version": "0.5.0",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jtl-software/php-generic-collection.git",
-                "reference": "8b5f9e5b5f695f94541731c9e599110aea2b0d40"
+                "reference": "c647a3737d9b1cf838bcedce61356ea1898bcdd5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jtl-software/php-generic-collection/zipball/8b5f9e5b5f695f94541731c9e599110aea2b0d40",
-                "reference": "8b5f9e5b5f695f94541731c9e599110aea2b0d40",
+                "url": "https://api.github.com/repos/jtl-software/php-generic-collection/zipball/c647a3737d9b1cf838bcedce61356ea1898bcdd5",
+                "reference": "c647a3737d9b1cf838bcedce61356ea1898bcdd5",
                 "shasum": ""
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.5",
-                "infection/infection": "^0.26",
-                "php": "^8.0",
-                "phpstan/phpstan": "^1.2",
-                "phpunit/phpunit": "^9.5",
-                "vimeo/psalm": "^4.13"
+                "friendsofphp/php-cs-fixer": "^3.40",
+                "infection/infection": "^0.27.8",
+                "php": "^8.2",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^10.4"
             },
             "type": "jtl-library",
             "autoload": {
@@ -96,9 +95,9 @@
             "description": "An implementation of a generic collection for PHP",
             "support": {
                 "issues": "https://github.com/jtl-software/php-generic-collection/issues",
-                "source": "https://github.com/jtl-software/php-generic-collection/tree/0.5.0"
+                "source": "https://github.com/jtl-software/php-generic-collection/tree/1.0.0"
             },
-            "time": "2022-02-25T09:55:28+00:00"
+            "time": "2023-11-29T17:32:51+00:00"
         },
         {
             "name": "nikic/php-parser",
