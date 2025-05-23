@@ -65,7 +65,7 @@ class ListenerProviderTest extends TestCase
         }
     }
 
-    public function dataProviderTestHooks(): array
+    public static function dataProviderTestHooks(): array
     {
         return [
             [TestListenerWithBeforeMessageHook::class, ['setup']],
