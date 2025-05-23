@@ -8,7 +8,6 @@
 
 namespace JTL\Nachricht\Message\Cache;
 
-use Mockery;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -19,20 +18,9 @@ use PHPUnit\Framework\TestCase;
  */
 class MessageCacheTest extends TestCase
 {
-    /**
-     * @var array
-     */
-    private $cacheData;
+    private array $cacheData;
+    private MessageCache $messageCache;
 
-    /**
-     * @var MessageCache
-     */
-    private $messageCache;
-
-    public function tearDown(): void
-    {
-        Mockery::close();
-    }
 
     public function setUp(): void
     {
@@ -48,14 +36,14 @@ class MessageCacheTest extends TestCase
             ],
         ];
 
-        $this->eventCache = new MessageCache($this->cacheData);
+        $this->messageCache = new MessageCache($this->cacheData);
     }
 
     public function testGetListenerListForMessage(): void
     {
         $this->assertSame(
             $this->cacheData['TestMessage']['listenerList'],
-            $this->eventCache->getListenerListForMessage('TestMessage')
+            $this->messageCache->getListenerListForMessage('TestMessage')
         );
     }
 
@@ -63,12 +51,12 @@ class MessageCacheTest extends TestCase
     {
         $this->assertSame(
             $this->cacheData['TestMessage']['routingKey'],
-            $this->eventCache->getRoutingKeyForMessage('TestMessage')
+            $this->messageCache->getRoutingKeyForMessage('TestMessage')
         );
     }
 
     public function testGetMessageClassList(): void
     {
-        $this->assertSame(array_keys($this->cacheData), $this->eventCache->getMessageClassList());
+        $this->assertSame(array_keys($this->cacheData), $this->messageCache->getMessageClassList());
     }
 }

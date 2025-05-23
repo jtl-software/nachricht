@@ -6,13 +6,13 @@ jobs:
 
   static-analysis:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.3'
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -25,13 +25,13 @@ jobs:
 
   check-code-style:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.3'
 
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -42,9 +42,9 @@ jobs:
       - name: Check Code Style
         run: composer phpcs-dry
 
-  testing-php81:
+  testing-php:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false

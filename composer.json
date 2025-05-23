@@ -24,9 +24,9 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.50.0",
         "mockery/mockery": "^1.6.7",
-        "php-amqplib/php-amqplib": "^3.6.1",
+        "php-amqplib/php-amqplib": "^3.7.3",
         "phpstan/phpstan": "^1.10.59",
-        "phpunit/phpunit": "^9.6.17"
+        "phpunit/phpunit": "^10.5.10"
     },
     "autoload": {
         "psr-4": {
