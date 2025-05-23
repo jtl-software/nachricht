@@ -10,7 +10,6 @@ namespace JTL\Nachricht\Message\Cache;
 
 use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Contract\Listener\Listener;
-use Mockery;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
@@ -26,56 +25,24 @@ use PHPUnit\Framework\TestCase;
  */
 class ListenerDetectorTest extends TestCase
 {
-    /**
-     * @var ListenerDetector
-     */
-    private $listenerDetector;
-
-    /**
-     * @var Mockery\MockInterface|Class_
-     */
-    private $class;
-
-    /**
-     * @var Mockery\MockInterface|ClassMethod
-     */
-    private $classMethod;
-
-
-    /**
-     * @var Mockery\MockInterface|Name
-     */
-    private $listenerClassName;
-
-    /**
-     * @var Mockery\MockInterface|Name
-     */
-    private $messageClassName;
-
-    /**
-     * @var Mockery\MockInterface|Name
-     */
-    private $interfaceName;
-
-    /**
-     * @var Mockery\MockInterface|Param
-     */
-    private $param;
-
-    /**
-     * @var Mockery\MockInterface|Identifier
-     */
-    private $methodIdentifier;
+    private ListenerDetector $listenerDetector;
+    private Class_ $class;
+    private ClassMethod $classMethod;
+    private Name $listenerClassName;
+    private Name $messageClassName;
+    private Name $interfaceName;
+    private Param $param;
+    private Identifier $methodIdentifier;
 
     public function setUp(): void
     {
-        $this->class = Mockery::mock(Class_::class);
-        $this->classMethod = Mockery::mock(ClassMethod::class);
-        $this->interfaceName = Mockery::mock(Name::class);
-        $this->listenerClassName = Mockery::mock(Name::class);
-        $this->eventClassName = Mockery::mock(Name::class);
-        $this->param = Mockery::mock(Param::class);
-        $this->methodIdentifier = Mockery::mock(Identifier::class);
+        $this->class = $this->createMock(Class_::class);
+        $this->classMethod = $this->createMock(ClassMethod::class);
+        $this->interfaceName = $this->createMock(Name::class);
+        $this->listenerClassName = $this->createMock(Name::class);
+        $this->messageClassName = $this->createMock(Name::class);
+        $this->param = $this->createMock(Param::class);
+        $this->methodIdentifier = $this->createMock(Identifier::class);
         $this->listenerDetector = new ListenerDetector();
     }
 
@@ -84,9 +51,9 @@ class ListenerDetectorTest extends TestCase
         $this->listenerClassName->parts = ['JTL', 'Nachricht', 'Message', 'Cache', 'FooListener'];
         $this->class->namespacedName = $this->listenerClassName;
 
-        $this->eventClassName->parts = ['JTL', 'Nachricht', 'Message', 'Cache', 'TestMessage'];
-        $this->param->type = $this->eventClassName;
-        $this->classMethod->shouldReceive('isPublic')->andReturn(true);
+        $this->messageClassName->parts = ['JTL', 'Nachricht', 'Message', 'Cache', 'TestMessage'];
+        $this->param->type = $this->messageClassName;
+        $this->classMethod->method('isPublic')->willReturn(true);
         $this->classMethod->params[0] = $this->param;
 
         $this->methodIdentifier->name = 'listen';
@@ -106,10 +73,6 @@ class ListenerDetectorTest extends TestCase
         $this->assertTrue($this->listenerDetector->isClassListener());
     }
 
-    public function tearDown(): void
-    {
-        Mockery::close();
-    }
 }
 
 

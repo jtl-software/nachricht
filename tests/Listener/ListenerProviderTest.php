@@ -14,7 +14,6 @@ use JTL\Nachricht\Contract\Hook\AfterMessageHook;
 use JTL\Nachricht\Contract\Hook\BeforeMessageHook;
 use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Message\Cache\MessageCache;
-use Mockery;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 
@@ -26,44 +25,21 @@ use Psr\Container\ContainerInterface;
  */
 class ListenerProviderTest extends TestCase
 {
-    /**
-     * @var Mockery\MockInterface|ContainerInterface
-     */
-    private $container;
-
-    /**
-     * @var ListenerProvider
-     */
-    private $listenerProvider;
-
-    /**
-     * @var Message|Mockery\MockInterface
-     */
-    private $message;
-
-    /**
-     * @var Listener|Mockery\MockInterface
-     */
-    private $listener;
-
-    /**
-     * @var MessageCache|Mockery\MockInterface
-     */
-    private $listenerCache;
+    private ContainerInterface $container;
+    private ListenerProvider $listenerProvider;
+    private Message $message;
+    private Listener $listener;
+    private MessageCache $listenerCache;
 
     public function setUp(): void
     {
-        $this->container = Mockery::mock(ContainerInterface::class);
-        $this->event = Mockery::mock(Message::class);
+        $this->container = $this->createMock(ContainerInterface::class);
+        $this->message = $this->createMock(Message::class);
         $this->listener = new TestListener();
-        $this->listenerCache = Mockery::mock(MessageCache::class);
+        $this->listenerCache = $this->createMock(MessageCache::class);
         $this->listenerProvider = new ListenerProvider($this->container, $this->listenerCache);
     }
 
-    public function tearDown(): void
-    {
-        Mockery::close();
-    }
 
     public function testGetListenersForMessage(): void
     {
@@ -74,18 +50,18 @@ class ListenerProviderTest extends TestCase
             ]
         ];
 
-        $this->listenerCache->shouldReceive('getListenerListForMessage')
-            ->once()
-            ->andReturn($listenerList);
+        $this->listenerCache->expects($this->once())
+            ->method('getListenerListForMessage')
+            ->willReturn($listenerList);
 
-        $this->container->shouldReceive('get')
+        $this->container->expects($this->once())
+            ->method('get')
             ->with('FooListener')
-            ->once()
-            ->andReturn($this->listener);
+            ->willReturn($this->listener);
 
-        foreach ($this->listenerProvider->getListenersForMessage($this->event) as $listenerClosure) {
+        foreach ($this->listenerProvider->getListenersForMessage($this->message) as $listenerClosure) {
             $this->assertTrue(is_callable($listenerClosure));
-            $listenerClosure($this->event);
+            $listenerClosure($this->message);
         }
     }
 

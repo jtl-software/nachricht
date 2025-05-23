@@ -24,19 +24,12 @@ class StubAmqpMessage extends AbstractAmqpTransportableMessage
  */
 class PhpMessageSerializerTest extends TestCase
 {
-    /**
-     * @var PhpMessageSerializer
-     */
-    private $serializer;
-
-    /**
-     * @var StubAmqpMessage
-     */
-    private $message;
+    private PhpMessageSerializer $serializer;
+    private StubAmqpMessage $message;
 
     public function setUp(): void
     {
-        $this->event = new StubAmqpMessage();
+        $this->message = new StubAmqpMessage();
         $this->serializer = new PhpMessageSerializer();
     }
 

@@ -10,7 +10,6 @@ namespace JTL\Nachricht\Dispatcher;
 
 use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Listener\ListenerProvider;
-use Mockery;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 class AmqpDispatcherTest extends TestCase
 {
     /**
-     * @var ListenerProvider|Mockery\MockInterface
+     * @var ListenerProvider|\PHPUnit\Framework\MockObject\MockObject
      */
     private $listenerProvider;
 
@@ -32,20 +31,15 @@ class AmqpDispatcherTest extends TestCase
     private $dispatcher;
 
     /**
-     * @var Message|Mockery\MockInterface
+     * @var Message|\PHPUnit\Framework\MockObject\Stub
      */
-    private $message;
+    private $event;
 
     public function setUp(): void
     {
-        $this->listenerProvider = Mockery::mock(ListenerProvider::class);
-        $this->event = Mockery::mock(Message::class);
+        $this->listenerProvider = $this->createMock(ListenerProvider::class);
+        $this->event = $this->createStub(Message::class);
         $this->dispatcher = new AmqpDispatcher($this->listenerProvider);
-    }
-
-    public function tearDown(): void
-    {
-        Mockery::close();
     }
 
     public function testCanDispatch(): void
@@ -54,10 +48,11 @@ class AmqpDispatcherTest extends TestCase
             $this->assertEquals($this->event, $message);
         };
 
-        $this->listenerProvider->shouldReceive('getListenersForMessage')
+        $this->listenerProvider
+            ->expects($this->once())
+            ->method('getListenersForMessage')
             ->with($this->event)
-            ->once()
-            ->andReturn([$listener]);
+            ->willReturn([$listener]);
 
         $this->dispatcher->dispatch($this->event);
     }
