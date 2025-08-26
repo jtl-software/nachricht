@@ -12,7 +12,7 @@ use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
-use Symfony\Component\Config\ConfigCache;
+use PhpParser\PhpVersion;
 use Symfony\Component\Config\ResourceCheckerConfigCache;
 
 class MessageCacheCreator
@@ -57,7 +57,7 @@ class MessageCacheCreator
         $parserFactory = new ParserFactory();
         $nameResolver = new NameResolver();
 
-        $parser = $parserFactory->create(ParserFactory::ONLY_PHP7);
+        $parser = $parserFactory->createForVersion(PhpVersion::getHostVersion());
         
         foreach ($fileList as $file) {
             $listenerDetector = new ListenerDetector();

@@ -85,11 +85,18 @@ class ListenerDetector extends AbstractVisitor
      */
     private function getArgumentClass(ClassMethod $classMethod): string
     {
-        if (!isset($classMethod->params[0]->type->parts)) {
+        $typeNode = $classMethod->params[0]->type;
+
+        if (isset($typeNode->name) && $typeNode->getParts() !== null) {
+            return $typeNode->toString();
+        }
+
+
+        if (!isset($typeNode->parts)) {
             throw new \RuntimeException('Argument classname is unknown');
         }
 
-        return implode("\\", $classMethod->params[0]->type->parts);
+        return implode("\\", $typeNode->parts);
     }
 
     /**

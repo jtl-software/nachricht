@@ -10,7 +10,7 @@
          displayDetailsOnTestsThatTriggerWarnings="true"
 >
     <php>
-        <ini name="error_reporting" value="-1" />
+        <ini name="error_reporting" value="E_ALL ^E_DEPRECATED"/>
         <env name="SHELL_VERBOSITY" value="-1" />
     </php>
 
