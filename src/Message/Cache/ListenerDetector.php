@@ -11,6 +11,7 @@ namespace JTL\Nachricht\Message\Cache;
 use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Contract\Message\Message;
 use PhpParser\Node;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 
@@ -85,11 +86,18 @@ class ListenerDetector extends AbstractVisitor
      */
     private function getArgumentClass(ClassMethod $classMethod): string
     {
-        if (!isset($classMethod->params[0]->type->parts)) {
+        $typeNode = $classMethod->params[0]->type;
+
+        if (isset($typeNode->name) && $typeNode instanceof Name && $typeNode->getParts() !== null) {
+            return $typeNode->toString();
+        }
+
+
+        if (!isset($typeNode->parts)) {
             throw new \RuntimeException('Argument classname is unknown');
         }
 
-        return implode("\\", $classMethod->params[0]->type->parts);
+        return implode("\\", $typeNode->parts);
     }
 
     /**
