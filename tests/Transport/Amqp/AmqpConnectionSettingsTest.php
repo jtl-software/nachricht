@@ -8,14 +8,14 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class AmqpConnectionSettingsTest
  * @package JTL\Nachricht\Transport\Amqp
- *
- * @covers \JTL\Nachricht\Transport\Amqp\AmqpConnectionSettings
  */
+#[CoversClass(AmqpConnectionSettings::class)]
 class AmqpConnectionSettingsTest extends TestCase
 {
     public function testCanBeCreated(): void

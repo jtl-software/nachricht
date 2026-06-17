@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Message\Cache;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Contract\Listener\Listener;
 use PhpParser\Node\Identifier;
@@ -20,9 +21,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class ListenerDetectorTest
  * @package JTL\Nachricht\Message\Cache
- *
- * @covers \JTL\Nachricht\Message\Cache\ListenerDetector
  */
+#[CoversClass(ListenerDetector::class)]
 class ListenerDetectorTest extends TestCase
 {
     private ListenerDetector $listenerDetector;
@@ -36,13 +36,13 @@ class ListenerDetectorTest extends TestCase
 
     public function setUp(): void
     {
-        $this->class = $this->createMock(Class_::class);
-        $this->classMethod = $this->createMock(ClassMethod::class);
-        $this->interfaceName = $this->createMock(Name::class);
-        $this->listenerClassName = $this->createMock(Name::class);
-        $this->messageClassName = $this->createMock(Name::class);
-        $this->param = $this->createMock(Param::class);
-        $this->methodIdentifier = $this->createMock(Identifier::class);
+        $this->class = $this->createStub(Class_::class);
+        $this->classMethod = $this->createStub(ClassMethod::class);
+        $this->interfaceName = $this->createStub(Name::class);
+        $this->listenerClassName = $this->createStub(Name::class);
+        $this->messageClassName = $this->createStub(Name::class);
+        $this->param = $this->createStub(Param::class);
+        $this->methodIdentifier = $this->createStub(Identifier::class);
         $this->listenerDetector = new ListenerDetector();
     }
 

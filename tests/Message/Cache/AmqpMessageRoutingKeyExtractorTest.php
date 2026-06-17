@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Message\Cache;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use JTL\Nachricht\Message\AbstractAmqpTransportableMessage;
 use Mockery;
 use PhpParser\Node\Name;
@@ -17,9 +18,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class AmqpMessageRoutingKeyExtractorTest
  * @package JTL\Nachricht\Message\Cache
- *
- * @covers \JTL\Nachricht\Message\Cache\AmqpMessageRoutingKeyExtractor
  */
+#[CoversClass(AmqpMessageRoutingKeyExtractor::class)]
 class AmqpMessageRoutingKeyExtractorTest extends TestCase
 {
     public function tearDown(): void

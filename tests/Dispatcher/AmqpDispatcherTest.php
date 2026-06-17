@@ -8,6 +8,9 @@
 
 namespace JTL\Nachricht\Dispatcher;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Listener\ListenerProvider;
 use PHPUnit\Framework\TestCase;
@@ -15,13 +18,12 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class AmqpDispatcherTest
  * @package JTL\Nachricht\Dispatcher
- *
- * @covers \JTL\Nachricht\Dispatcher\AmqpDispatcher
  */
+#[CoversClass(AmqpDispatcher::class)]
 class AmqpDispatcherTest extends TestCase
 {
     /**
-     * @var ListenerProvider|\PHPUnit\Framework\MockObject\MockObject
+     * @var ListenerProvider|MockObject
      */
     private $listenerProvider;
 
@@ -31,7 +33,7 @@ class AmqpDispatcherTest extends TestCase
     private $dispatcher;
 
     /**
-     * @var Message|\PHPUnit\Framework\MockObject\Stub
+     * @var Message|Stub
      */
     private $event;
 

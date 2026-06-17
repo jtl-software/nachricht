@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Transport;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use JTL\Generic\StringCollection;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -15,9 +16,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class SubscriptionSettingsTest
  * @package JTL\Nachricht\Transport
- *
- * @covers \JTL\Nachricht\Transport\SubscriptionSettings
  */
+#[CoversClass(SubscriptionSettings::class)]
 class SubscriptionSettingsTest extends TestCase
 {
     public function testCreate(): void

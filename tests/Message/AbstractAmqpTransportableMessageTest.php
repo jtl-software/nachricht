@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace JTL\Nachricht\Message;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 class TestAmqpMessage extends AbstractAmqpTransportableMessage
@@ -20,9 +22,8 @@ class TestAmqpMessage extends AbstractAmqpTransportableMessage
 /**
  * Class AbstractMessageTest
  * @package JTL\Nachricht\Message
- *
- * @covers \JTL\Nachricht\Message\AbstractAmqpTransportableMessage
  */
+#[CoversClass(AbstractAmqpTransportableMessage::class)]
 class AbstractAmqpTransportableMessageTest extends TestCase
 {
     public function testCanCreateWithMessageId(): void
@@ -97,7 +98,7 @@ class AbstractAmqpTransportableMessageTest extends TestCase
 
     public function testCanBeCreatedWithCreatedAt(): void
     {
-        $createdAt = new \DateTimeImmutable();
+        $createdAt = new DateTimeImmutable();
         $sut = new TestAmqpMessage(uniqid(), $createdAt);
 
         self::assertSame($createdAt, $sut->getCreatedAt());
@@ -105,9 +106,9 @@ class AbstractAmqpTransportableMessageTest extends TestCase
 
     public function testCanBeCreatedWithoutCreatedAt(): void
     {
-        $before = new \DateTimeImmutable();
+        $before = new DateTimeImmutable();
         $sut = new TestAmqpMessage(uniqid());
-        $after = new \DateTimeImmutable();
+        $after = new DateTimeImmutable();
 
         self::assertTrue($sut->getCreatedAt() >= $before && $sut->getCreatedAt() <= $after);
     }

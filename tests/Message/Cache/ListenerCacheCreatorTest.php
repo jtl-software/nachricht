@@ -8,11 +8,10 @@
 
 namespace JTL\Nachricht\Message\Cache;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \JTL\Nachricht\Message\Cache\MessageCacheCreator
- */
+#[CoversClass(MessageCacheCreator::class)]
 class ListenerCacheCreatorTest extends TestCase
 {
     private string $cacheFile;

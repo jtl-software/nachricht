@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Serializer;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use JTL\Nachricht\Message\AbstractAmqpTransportableMessage;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
 use PHPUnit\Framework\TestCase;
@@ -19,9 +20,8 @@ class StubAmqpMessage extends AbstractAmqpTransportableMessage
 /**
  * Class PhpMessageSerializerTest
  * @package JTL\Nachricht\Serializer
- *
- * @covers \JTL\Nachricht\Serializer\PhpMessageSerializer
  */
+#[CoversClass(PhpMessageSerializer::class)]
 class PhpMessageSerializerTest extends TestCase
 {
     private PhpMessageSerializer $serializer;
