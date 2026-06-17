@@ -30,7 +30,7 @@ class AmqpTransportFactory
         array $connectionSettings,
         MessageSerializer $serializer,
         ListenerProvider $listenerProvider,
-        LoggerInterface $logger = null
+        ?LoggerInterface $logger = null
     ): AmqpTransport {
         return new AmqpTransport(
             new AmqpConnectionSettings(
@@ -56,8 +56,8 @@ class AmqpTransportFactory
     private function getFromSettingsArray(
         string $key,
         array $settings,
-        string $default = null
+        ?string $default = null
     ): string {
-        return $settings[$key] ?? $default ?? throw new \InvalidArgumentException("Missing {$key} in amqp connectionSettings");
+        return $settings[$key] ?? $default ?? throw new InvalidArgumentException("Missing {$key} in amqp connectionSettings");
     }
 }

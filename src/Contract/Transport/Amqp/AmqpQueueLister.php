@@ -18,5 +18,5 @@ interface AmqpQueueLister
      *
      * @throws AmqpHttpConnectionFailedException
      */
-    public function listQueues(string $queuePrefix = null): array;
+    public function listQueues(?string $queuePrefix = null): array;
 }

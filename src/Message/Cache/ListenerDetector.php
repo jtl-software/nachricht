@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Message\Cache;
 
+use RuntimeException;
 use JTL\Nachricht\Contract\Listener\Listener;
 use JTL\Nachricht\Contract\Message\Message;
 use PhpParser\Node;
@@ -88,13 +89,13 @@ class ListenerDetector extends AbstractVisitor
     {
         $typeNode = $classMethod->params[0]->type;
 
-        if (isset($typeNode->name) && $typeNode instanceof Name && $typeNode->getParts() !== null) {
+        if (isset($typeNode->name) && $typeNode instanceof Name) {
             return $typeNode->toString();
         }
 
 
         if (!isset($typeNode->parts)) {
-            throw new \RuntimeException('Argument classname is unknown');
+            throw new RuntimeException('Argument classname is unknown');
         }
 
         return implode("\\", $typeNode->parts);

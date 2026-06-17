@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Log;
 
+use Stringable;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
@@ -16,7 +17,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function emergency(string|\Stringable $message, array $context = []): void
+    public function emergency(string|Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::EMERGENCY, $message, $context);
     }
@@ -24,7 +25,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function alert(string|\Stringable $message, array $context = []): void
+    public function alert(string|Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::ALERT, $message, $context);
     }
@@ -32,7 +33,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function critical(string|\Stringable $message, array $context = []): void
+    public function critical(string|Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::CRITICAL, $message, $context);
     }
@@ -40,7 +41,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function error(string|\Stringable $message, array $context = []): void
+    public function error(string|Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::ERROR, $message, $context);
     }
@@ -48,7 +49,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function warning(string|\Stringable $message, array $context = []): void
+    public function warning(string|Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::WARNING, $message, $context);
     }
@@ -56,7 +57,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function notice(string|\Stringable $message, array $context = []): void
+    public function notice(string|Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::NOTICE, $message, $context);
     }
@@ -64,7 +65,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function info(string|\Stringable $message, array $context = []): void
+    public function info(string|Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::INFO, $message, $context);
     }
@@ -72,7 +73,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function debug(string|\Stringable $message, array $context = []): void
+    public function debug(string|Stringable $message, array $context = []): void
     {
         $this->log(LogLevel::DEBUG, $message, $context);
     }
@@ -80,7 +81,7 @@ class EchoLogger implements LoggerInterface
     /**
      * @inheritDoc
      */
-    public function log($level, string|\Stringable $message, array $context = []): void
+    public function log($level, string|Stringable $message, array $context = []): void
     {
         $this->printMessage($level, $message, $context);
 

@@ -15,7 +15,7 @@ use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 
 class AmqpEmitter implements Emitter
 {
-    private AmqpTransport $transport;
+    private readonly AmqpTransport $transport;
 
     public function __construct(AmqpTransport $transport)
     {

@@ -14,6 +14,8 @@
 
 namespace JTL\Nachricht\Contract\Message;
 
+use DateTimeImmutable;
+
 interface AmqpTransportableMessage extends Message
 {
     public static function getRoutingKey(): string;
@@ -26,7 +28,7 @@ interface AmqpTransportableMessage extends Message
 
     public function getRetryCount(): int;
 
-    public function getCreatedAt(): \DateTimeImmutable;
+    public function getCreatedAt(): DateTimeImmutable;
 
     public function getRetryDelay(): int;
 

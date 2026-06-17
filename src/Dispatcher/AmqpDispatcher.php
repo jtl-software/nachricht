@@ -14,11 +14,7 @@ use JTL\Nachricht\Listener\ListenerProvider;
 
 class AmqpDispatcher implements MessageDispatcherInterface
 {
-    /**
-     * @var ListenerProvider
-     */
-    private $listenerProvider;
-
+    private readonly ListenerProvider $listenerProvider;
 
     /**
      * AmqpDispatcher constructor.

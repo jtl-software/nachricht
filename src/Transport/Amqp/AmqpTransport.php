@@ -9,7 +9,6 @@
 namespace JTL\Nachricht\Transport\Amqp;
 
 use Closure;
-use Exception;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
@@ -57,7 +56,7 @@ class AmqpTransport
         private readonly AmqpConnectionFactory $connectionFactory,
         private readonly MessageSerializer $serializer,
         private readonly ListenerProvider $listenerProvider,
-        LoggerInterface $logger = null
+        ?LoggerInterface $logger = null
     ) {
         if ($logger === null) {
             $this->logger = new EchoLogger();
@@ -190,7 +189,7 @@ class AmqpTransport
      * @param string $queueName
      * @param AMQPTable<mixed>|null $arguments
      */
-    private function declareQueue(string $queueName, AMQPTable $arguments = null): void
+    private function declareQueue(string $queueName, ?AMQPTable $arguments = null): void
     {
         if (!$this->queueAlreadyDeclared($queueName)) {
             $this->channel->queue_declare(
@@ -256,7 +255,7 @@ class AmqpTransport
                         try {
                             $handler($event);
                             $this->logger->debug('Handled message of type ' . get_class($event) . "successful");
-                        } catch (Exception|Throwable $exception) {
+                        } catch (Throwable $exception) {
                             $this->logError($exception->__toString());
                             $this->handleFailedMessage($message, $event, $exception);
                         }

@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Serializer;
 
+use Throwable;
 use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Serializer\Exception\DeserializationFailedException;
@@ -32,7 +33,7 @@ class PhpMessageSerializer implements MessageSerializer
     {
         try {
             $result = @unserialize($serializedMessage);
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             throw new DeserializationFailedException($throwable->getMessage());
         }
 

@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Listener;
 
+use Throwable;
 use JTL\Nachricht\Contract\Listener\ListenerProviderInterface;
 use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Contract\Hook\AfterMessageErrorHook;
@@ -18,8 +19,8 @@ use Psr\Container\ContainerInterface;
 
 class ListenerProvider implements ListenerProviderInterface
 {
-    private ContainerInterface $container;
-    private MessageCache $listenerCache;
+    private readonly ContainerInterface $container;
+    private readonly MessageCache $listenerCache;
 
     public function __construct(ContainerInterface $container, MessageCache $listenerCache)
     {
@@ -40,7 +41,7 @@ class ListenerProvider implements ListenerProviderInterface
                     }
 
                     $listenerInstance->{$method}($message);
-                } catch (\Throwable $exception) {
+                } catch (Throwable $exception) {
                     if ($listenerInstance instanceof AfterMessageErrorHook) {
                         $listenerInstance->onError($message, $exception);
                     } else {
