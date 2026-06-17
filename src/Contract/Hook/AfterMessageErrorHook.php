@@ -14,6 +14,7 @@
 
 namespace JTL\Nachricht\Contract\Hook;
 
+use Throwable;
 use JTL\Nachricht\Contract\Message\Message;
 
 /**
@@ -26,8 +27,8 @@ interface AfterMessageErrorHook
 {
     /**
      * @param Message $message
-     * @param \Throwable $throwable
-     * @throws \Throwable
+     * @param Throwable $throwable
+     * @throws Throwable
      */
-    public function onError(Message $message, \Throwable $throwable): void;
+    public function onError(Message $message, Throwable $throwable): void;
 }

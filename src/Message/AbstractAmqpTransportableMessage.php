@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Message;
 
+use DateTimeImmutable;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use Ramsey\Uuid\Uuid;
 
@@ -40,19 +41,19 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
 
     private readonly string $__messageId;
 
-    private readonly \DateTimeImmutable $createdAt;
+    private readonly DateTimeImmutable $createdAt;
 
     public const RETRY_DELAY = 1;
     public const ENQUEUE_DELAY = 0;
 
     public function __construct(
-        string $messageId = null,
-        \DateTimeImmutable $createdAt = null,
+        ?string $messageId = null,
+        ?DateTimeImmutable $createdAt = null,
         private readonly int $delay = self::ENQUEUE_DELAY,
         private readonly int $retryDelay = self::RETRY_DELAY
     ) {
         $this->__messageId = $messageId ?? Uuid::uuid4()->toString();
-        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
+        $this->createdAt = $createdAt ?? new DateTimeImmutable();
     }
 
     public static function getRoutingKey(): string
@@ -105,7 +106,7 @@ abstract class AbstractAmqpTransportableMessage implements AmqpTransportableMess
         ++$this->__receiveCount;
     }
 
-    public function getCreatedAt(): \DateTimeImmutable
+    public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }

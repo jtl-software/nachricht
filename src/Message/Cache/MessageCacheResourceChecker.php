@@ -10,16 +10,16 @@ class MessageCacheResourceChecker implements ResourceCheckerInterface
     /**
      * @param array<string> $fileList
      */
-    public function __construct(private array $fileList, private bool $isDevelopment)
+    public function __construct(private readonly array $fileList, private readonly bool $isDevelopment)
     {
     }
 
-    public function supports(ResourceInterface $metadata)
+    public function supports(ResourceInterface $metadata): bool
     {
         return $metadata instanceof MessageCacheResource;
     }
-    
-    public function isFresh(ResourceInterface $resource, int $timestamp)
+
+    public function isFresh(ResourceInterface $resource, int $timestamp): bool
     {
         if (!$this->isDevelopment) {
             return true;

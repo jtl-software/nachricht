@@ -158,7 +158,7 @@ class MessageCacheCreator
     /**
      * @param string $listenerClass
      * @param array<int, array{eventClass: string, methodName: string}> $listenerList
-     * @param array<string, array{listenerList: array<int, array{listenerClass: string, method: string}>}> $messageMap
+     * @param array<string, array<string, mixed>> $messageMap
      */
     private function mapListenerToMessage(string $listenerClass, array $listenerList, array &$messageMap): void
     {
@@ -173,7 +173,7 @@ class MessageCacheCreator
     /**
      * @param string $messageClass
      * @param string $routingKey
-     * @param array<string, array{listenerList: array<int, array{listenerClass: string, method: string}>}> $messageMap
+     * @param array<string, array<string, mixed>> $messageMap
      */
     private function mapRoutingKeyToMessage(string $messageClass, string $routingKey, array &$messageMap): void
     {

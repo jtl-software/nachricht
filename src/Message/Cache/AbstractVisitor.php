@@ -39,7 +39,7 @@ abstract class AbstractVisitor extends NodeVisitorAbstract
      */
     protected function getClassName(Class_ $class): ?string
     {
-        if (isset($class->namespacedName->name) && $class->namespacedName->getParts() !== null) {
+        if (isset($class->namespacedName->name)) {
             return $class->namespacedName->toString();
         }
 

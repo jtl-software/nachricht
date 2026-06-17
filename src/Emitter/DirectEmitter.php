@@ -15,7 +15,7 @@ use JTL\Nachricht\Listener\ListenerProvider;
 
 class DirectEmitter implements Emitter, MessageDispatcherInterface
 {
-    private ListenerProvider $listenerProvider;
+    private readonly ListenerProvider $listenerProvider;
 
     public function __construct(ListenerProvider $listenerProvider)
     {

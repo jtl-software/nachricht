@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
+use DateTimeImmutable;
 use Closure;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Contract\Transport\Consumer;
@@ -32,9 +33,9 @@ class AmqpConsumer implements Consumer
      * @param LoggerInterface $logger
      */
     public function __construct(
-        private AmqpTransport $transport,
-        private AmqpDispatcher $dispatcher,
-        LoggerInterface $logger = null
+        private readonly AmqpTransport $transport,
+        private readonly AmqpDispatcher $dispatcher,
+        ?LoggerInterface $logger = null
     ) {
         $this->shouldConsume = true;
         if ($logger === null) {
@@ -57,13 +58,13 @@ class AmqpConsumer implements Consumer
 
         $ttl = $subscriptionSettings->getTtl();
         if ($ttl >= 0) {
-            $endTime = new \DateTimeImmutable("+ {$ttl} SECONDS");
+            $endTime = new DateTimeImmutable("+ {$ttl} SECONDS");
         }
 
         do {
             try {
                 $this->transport->poll($timeout);
-                if (isset($endTime) && $endTime <= new \DateTimeImmutable()) {
+                if (isset($endTime) && $endTime <= new DateTimeImmutable()) {
                     $this->shouldConsume = false;
                 }
             } catch (AMQPTimeoutException $e) {

@@ -10,7 +10,7 @@ use JTL\Nachricht\Listener\ListenerProvider;
 
 class CountingAmqpDispatcher extends AmqpDispatcher
 {
-    private MessageCounter $messageCounter;
+    private readonly MessageCounter $messageCounter;
 
     public function __construct(ListenerProvider $listenerProvider, MessageCounter $messageCounter)
     {
@@ -20,6 +20,7 @@ class CountingAmqpDispatcher extends AmqpDispatcher
 
     public function dispatch(object $message): void
     {
+        /** @phpstan-ignore instanceof.alwaysTrue */
         if ($message instanceof Message) {
             $this->messageCounter->countMessage($message);
         }

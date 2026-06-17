@@ -17,7 +17,7 @@ class SubscriptionSettings
      * @param StringCollection<string> $queueNameList
      * @param int $ttl seconds
      */
-    public function __construct(private StringCollection $queueNameList, private int $ttl = -1)
+    public function __construct(private readonly StringCollection $queueNameList, private readonly int $ttl = -1)
     {
     }
 
