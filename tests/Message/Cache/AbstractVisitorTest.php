@@ -8,6 +8,7 @@
 
 namespace JTL\Nachricht\Message\Cache;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use Mockery;
 use PhpParser\Node;
 use PhpParser\Node\Name;
@@ -17,9 +18,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class AbstractVisitorTest
  * @package JTL\Nachricht\Message\Cache
- *
- * @covers \JTL\Nachricht\Message\Cache\AbstractVisitor
  */
+#[CoversClass(AbstractVisitor::class)]
 class AbstractVisitorTest extends TestCase
 {
     public function tearDown(): void
@@ -80,7 +80,7 @@ class TestVisitor extends AbstractVisitor
 
     public function enterNode(Node $node)
     {
-        if ($node instanceof Node\Stmt\Class_) {
+        if ($node instanceof Class_) {
             $this->implementsInterface = $this->classImplementsInterface($node, TestInterface::class);
             $this->className = $this->getClassName($node);
         }

@@ -8,11 +8,13 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use Closure;
 use Exception;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Dispatcher\AmqpDispatcher;
 use JTL\Nachricht\Transport\SubscriptionSettings;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
@@ -25,27 +27,27 @@ class MockException extends Exception
 /**
  * Class AmqpConsumerTest
  * @package JTL\Nachricht\Transport\Amqp
- *
- * @covers \JTL\Nachricht\Transport\Amqp\AmqpConsumer
  */
+#[CoversClass(AmqpConsumer::class)]
 class AmqpConsumerTest extends TestCase
 {
     private AmqpTransport&MockObject $transport;
     private AmqpDispatcher&MockObject $dispatcher;
     private AmqpConsumer $consumer;
     private SubscriptionSettings&Stub $subscriptionSettings;
-    private AmqpTransportableMessage&MockObject $event;
+    private AmqpTransportableMessage&Stub $event;
 
     public function setUp(): void
     {
         $this->transport = $this->createMock(AmqpTransport::class);
-        $this->event = $this->createMock(AmqpTransportableMessage::class);
+        $this->event = $this->createStub(AmqpTransportableMessage::class);
         $this->dispatcher = $this->createMock(AmqpDispatcher::class);
         $this->subscriptionSettings = $this->createStub(SubscriptionSettings::class);
 
         $this->consumer = new AmqpConsumer($this->transport, $this->dispatcher);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testCanConsume(): void
     {
         $this->transport->expects(self::once())->method('subscribe')
@@ -58,6 +60,7 @@ class AmqpConsumerTest extends TestCase
         $this->consumer->consume($this->subscriptionSettings);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testCallback(): void
     {
         $reflection = new ReflectionClass(AmqpConsumer::class);

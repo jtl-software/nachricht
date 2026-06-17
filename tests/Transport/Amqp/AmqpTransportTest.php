@@ -8,6 +8,16 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\MockObject\MockObject;
+use DateTimeImmutable;
+use stdClass;
+use Exception;
+use PHPUnit\Framework\MockObject\Stub;
+use ReflectionException;
+
 /**
  * Overwrite php error_log() function to avoid test output in phpunit
  */
@@ -37,11 +47,10 @@ use function PHPUnit\Framework\once;
 /**
  * Class AmqpTransportTest
  * @package JTL\Nachricht\Transport\Amqp
- *
- * @covers \JTL\Nachricht\Transport\Amqp\AmqpTransport
- * @runTestsInSeparateProcesses
- * @preserveGlobalState disabled
  */
+#[CoversClass(AmqpTransport::class)]
+#[PreserveGlobalState(false)]
+#[RunTestsInSeparateProcesses]
 class AmqpTransportTest extends TestCase
 {
     /**
@@ -130,14 +139,14 @@ class AmqpTransportTest extends TestCase
     private $listenerProvider;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject|LoggerInterface
+     * @var Stub|LoggerInterface
      */
     private $loggerMock;
     private string $amqpMessageDeliveryTag;
     /**
-     * @var AmqpConnectionFactory|(AmqpConnectionFactory&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var AmqpConnectionFactory|AmqpConnectionFactory&MockObject|MockObject
      */
-    private \PHPUnit\Framework\MockObject\MockObject|AmqpConnectionFactory $connectionFactory;
+    private MockObject|AmqpConnectionFactory $connectionFactory;
 
     public function setUp(): void
     {
@@ -172,7 +181,7 @@ class AmqpTransportTest extends TestCase
             'getRoutingKey' => $this->routingKey,
             'getExchange' => $this->exchange,
             'getMaxRetryCount' => 3,
-            'getCreatedAt' => new \DateTimeImmutable()
+            'getCreatedAt' => new DateTimeImmutable()
         ]);
 
         $this->subscriptionSettings = Mockery::mock(SubscriptionSettings::class, [
@@ -184,7 +193,7 @@ class AmqpTransportTest extends TestCase
         $this->amqpMessageDeliveryTag = uniqid('delivery_tag', true);
 
         $this->listenerProvider = Mockery::mock(ListenerProvider::class);
-        $this->loggerMock = $this->createMock(LoggerInterface::class);
+        $this->loggerMock = $this->createStub(LoggerInterface::class);
 
         $this->connectionFactory = self::createMock(AmqpConnectionFactory::class);
         $this->connectionFactory->expects(self::once())->method('connect')->willReturn($this->amqpConnection);
@@ -375,7 +384,7 @@ class AmqpTransportTest extends TestCase
         $this->serializer->shouldReceive('deserialize')
             ->with($messageBody)
             ->once()
-            ->andReturn(new \stdClass());
+            ->andReturn(new stdClass());
 
         $this->queueDeclareFailure();
 
@@ -397,7 +406,7 @@ class AmqpTransportTest extends TestCase
         $messageBody = uniqid('messageBody', true);
 
         $handler = function (Message $e) {
-            throw new \Exception();
+            throw new Exception();
         };
         $callback = $this->getSubscriptionCallback($handler);
 
@@ -447,7 +456,7 @@ class AmqpTransportTest extends TestCase
         $messageBody = uniqid('messageBody', true);
 
         $handler = function (Message $e) {
-            throw new \Exception('error message in exception');
+            throw new Exception('error message in exception');
         };
         $callback = $this->getSubscriptionCallback($handler);
 
@@ -529,7 +538,7 @@ class AmqpTransportTest extends TestCase
     /**
      * @param Closure $handler
      * @return Closure
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     private function getSubscriptionCallback(Closure $handler): Closure
     {

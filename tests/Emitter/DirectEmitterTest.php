@@ -14,13 +14,12 @@
 
 namespace JTL\Nachricht\Emitter;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Listener\ListenerProvider;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \JTL\Nachricht\Emitter\DirectEmitter
- */
+#[CoversClass(DirectEmitter::class)]
 class DirectEmitterTest extends TestCase
 {
     public function testCanEmit()

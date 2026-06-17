@@ -8,6 +8,9 @@
 
 namespace JTL\Nachricht\Transport\Amqp;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use JTL\Nachricht\Contract\Serializer\MessageSerializer;
 use JTL\Nachricht\Listener\ListenerProvider;
 use Mockery;
@@ -17,20 +20,19 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class AmqpTransportFactoryTest
  * @package JTL\Nachricht\Transport\Amqp
- *
- * @covers \JTL\Nachricht\Transport\Amqp\AmqpTransportFactory
- * @runTestsInSeparateProcesses
- * @preserveGlobalState disabled
  */
+#[CoversClass(AmqpTransportFactory::class)]
+#[PreserveGlobalState(false)]
+#[RunTestsInSeparateProcesses]
 class AmqpTransportFactoryTest extends TestCase
 {
     private AmqpTransportFactory $factory;
 
-    private \PHPUnit\Framework\MockObject\MockObject&AmqpConnectionFactory $connectionFactory;
+    private \PHPUnit\Framework\MockObject\Stub&AmqpConnectionFactory $connectionFactory;
 
     public function setUp(): void
     {
-        $this->connectionFactory = $this->createMock(AmqpConnectionFactory::class);
+        $this->connectionFactory = $this->createStub(AmqpConnectionFactory::class);
         $this->factory = new AmqpTransportFactory($this->connectionFactory);
     }
 

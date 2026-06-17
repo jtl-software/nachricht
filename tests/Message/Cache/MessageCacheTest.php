@@ -8,14 +8,14 @@
 
 namespace JTL\Nachricht\Message\Cache;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class MessageCacheTest
  * @package JTL\Nachricht\Message\Cache
- *
- * @covers \JTL\Nachricht\Message\Cache\MessageCache
  */
+#[CoversClass(MessageCache::class)]
 class MessageCacheTest extends TestCase
 {
     private array $cacheData;

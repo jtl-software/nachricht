@@ -14,15 +14,14 @@
 
 namespace JTL\Nachricht\Emitter;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Contract\Message\Message;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \JTL\Nachricht\Emitter\AmqpEmitter
- */
+#[CoversClass(AmqpEmitter::class)]
 class AmqpEmitterTest extends TestCase
 {
     public function testCamEmitMessage(): void
