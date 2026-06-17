@@ -4,16 +4,16 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "8.1.* || 8.2.* || 8.3.* || 8.4.*",
+        "php": "8.3.* || 8.4.* || 8.5.*",
         "ext-json": "*",
         "ext-pcntl": "*",
-        "jtl/php-generic-collection": " ^1.0.0",
-        "nikic/php-parser": "^5.6.0",
+        "jtl/php-generic-collection": " ^1.0.1",
+        "nikic/php-parser": "^5.7",
         "psr/container": "^2.0.2",
         "psr/event-dispatcher": "^1.0",
-        "psr/log": "^3.0",
-        "ramsey/uuid": "^4.7.5",
-        "symfony/config": "^6.4.4"
+        "psr/log": "^3.0.2",
+        "ramsey/uuid": "^4.9.2",
+        "symfony/config": "^7.4.10"
     },
     "suggest" : {
         "symfony/dependency-injection": "Recommended DI-Container",
@@ -22,11 +22,12 @@
         "monolog/monolog": "Required when using AmqpEmitter / Consumer"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.50.0",
-        "mockery/mockery": "^1.6.7",
-        "php-amqplib/php-amqplib": "^3.7.3",
-        "phpstan/phpstan": "^1.10.59",
-        "phpunit/phpunit": "^10.5.10"
+        "friendsofphp/php-cs-fixer": "^3.95.8",
+        "mockery/mockery": "^1.6.12",
+        "php-amqplib/php-amqplib": "^3.7.4",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^12.5.30",
+        "rector/rector": "^2.4"
     },
     "autoload": {
         "psr-4": {
