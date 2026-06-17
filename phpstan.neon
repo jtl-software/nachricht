@@ -3,5 +3,5 @@ parameters:
     paths:
         - src
     excludePaths:
-        - src/Listener/Cache/ListenerCacheCreator.php
-        - src/Listener/Cache/ListenerDetector.php
+        analyse:
+            - src/Message/Cache/ListenerDetector.php
