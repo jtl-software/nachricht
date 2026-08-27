@@ -7,21 +7,34 @@ permissions:
 
 jobs:
 
+  setup:
+
+    runs-on: ubuntu-24.04
+    outputs:
+      php-versions: ${{ steps.versions.outputs.php-versions }}
+
+    steps:
+      # Single source of truth for the PHP-version axis, shared by testbed + benchmark below.
+      # Keep in sync with the testing-php matrix in ci.yaml.
+      - id: versions
+        run: echo 'php-versions=["8.3", "8.4", "8.5"]' >> "$GITHUB_OUTPUT"
+
   testbed:
 
+    needs: setup
     runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        php-version: ["8.3", "8.4", "8.5"]
-        broker: [current-prod, stage-target]
+        php-version: ${{ fromJSON(needs.setup.outputs.php-versions) }}
+        broker: [current-prod, next-target]
         include:
           - broker: current-prod
             rabbitmq_version: 4.2.6-management
             plugin_source: archived
             plugin_version: 4.2.0
-          - broker: stage-target
+          - broker: next-target
             rabbitmq_version: 4.3.3-management
             plugin_source: cloudamqp
             plugin_version: 4.3.1
@@ -76,21 +89,21 @@ jobs:
 
   benchmark:
 
-    needs: testbed
+    needs: [setup, testbed]
     runs-on: ubuntu-24.04
     continue-on-error: true
 
     strategy:
       fail-fast: false
       matrix:
-        php-version: ["8.3", "8.4", "8.5"]
-        broker: [current-prod, stage-target]
+        php-version: ${{ fromJSON(needs.setup.outputs.php-versions) }}
+        broker: [current-prod, next-target]
         include:
           - broker: current-prod
             rabbitmq_version: 4.2.6-management
             plugin_source: archived
             plugin_version: 4.2.0
-          - broker: stage-target
+          - broker: next-target
             rabbitmq_version: 4.3.3-management
             plugin_source: cloudamqp
             plugin_version: 4.3.1
