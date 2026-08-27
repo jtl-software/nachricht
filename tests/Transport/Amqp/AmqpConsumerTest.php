@@ -11,9 +11,12 @@ namespace JTL\Nachricht\Transport\Amqp;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Closure;
 use Exception;
+use JTL\Generic\StringCollection;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
 use JTL\Nachricht\Dispatcher\AmqpDispatcher;
 use JTL\Nachricht\Transport\SubscriptionSettings;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
+use Psr\Log\NullLogger;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub;
@@ -58,6 +61,28 @@ class AmqpConsumerTest extends TestCase
         $this->expectException(Exception::class);
 
         $this->consumer->consume($this->subscriptionSettings);
+    }
+
+    /**
+     * An idle queue makes every poll() time out. The ttl must still be honoured in that case,
+     * otherwise a consumer with a ttl renews its subscription forever and never shuts down.
+     * The once() expectations double as a hang guard: a regression calls poll() again and fails
+     * the expectation instead of looping until the CI job is killed.
+     */
+    #[AllowMockObjectsWithoutExpectations]
+    public function testTtlIsHonouredWhenEveryPollTimesOut(): void
+    {
+        $subscriptionSettings = new SubscriptionSettings(StringCollection::from('some-queue'), ttl: 0);
+
+        $this->transport->expects(self::once())->method('poll')
+            ->willThrowException(new AMQPTimeoutException());
+        $this->transport->expects(self::once())->method('renewSubscription')
+            ->with($subscriptionSettings, self::isInstanceOf(Closure::class));
+
+        // NullLogger: the default EchoLogger writes the shutdown notice to stdout, which trips
+        // beStrictAboutOutputDuringTests.
+        $consumer = new AmqpConsumer($this->transport, $this->dispatcher, new NullLogger());
+        $consumer->consume($subscriptionSettings);
     }
 
     #[AllowMockObjectsWithoutExpectations]

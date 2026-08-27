@@ -18,6 +18,10 @@ on:
         description: "Plugin version tag matching plugin_source (e.g. 4.3.1 for cloudamqp, 4.2.0 for archived)"
         required: false
         type: string
+      benchmark_iterations:
+        description: "Messages per benchmark scenario. Empty keeps the 200 used on every push; raise it (e.g. 5000) for an on-demand soak run."
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -176,6 +180,7 @@ jobs:
           AMQP_TEST_HTTP_PORT: "15672"
           BENCHMARK_BROKER: ${{ matrix.broker.name }}
           BENCHMARK_PHP_VERSION: ${{ matrix.php-version }}
+          BENCHMARK_ITERATIONS: ${{ github.event.inputs.benchmark_iterations }}
         run: composer phpunit-benchmark
 
       - name: Upload benchmark report
@@ -185,3 +190,66 @@ jobs:
           name: benchmark-${{ matrix.broker.name }}-php${{ matrix.php-version }}
           path: build/benchmark-*.json
           if-no-files-found: ignore
+
+  # Deliberately separate from the correctness matrix: a restart cycle costs ~60s, and the
+  # behaviour under test is broker-side, so one PHP version per broker leg is enough. Comparing
+  # both legs is the point - the archived plugin kept scheduled messages in Mnesia, the fork
+  # keeps bodies in Leveled on disk, so their restart behaviour may genuinely differ.
+  broker-restart:
+
+    needs: setup
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        broker: ${{ fromJSON(needs.setup.outputs.broker-configs) }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build testbed broker image (${{ matrix.broker.name }})
+        run: |
+          docker build \
+            --build-arg RABBITMQ_VERSION=${{ matrix.broker.rabbitmq_version }} \
+            --build-arg PLUGIN_SOURCE=${{ matrix.broker.plugin_source }} \
+            --build-arg PLUGIN_VERSION=${{ matrix.broker.plugin_version }} \
+            -t nachricht-testbed-rabbitmq \
+            ./docker/rabbitmq
+
+      - name: Run testbed broker
+        run: |
+          docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 nachricht-testbed-rabbitmq
+
+      - name: Wait for broker to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec rabbitmq rabbitmq-diagnostics check_running >/dev/null 2>&1; then
+              echo "broker ready after ${i} attempt(s)"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "broker never became ready" >&2
+          docker logs rabbitmq
+          exit 1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+
+      - name: Install dependencies
+        run: composer install --no-progress
+
+      - name: Run broker-restart persistence test (${{ matrix.broker.name }})
+        env:
+          AMQP_TEST_HOST: localhost
+          AMQP_TEST_PORT: 5672
+          AMQP_TEST_HTTP_PORT: "15672"
+          AMQP_TEST_BROKER_RESTART_CMD: docker restart rabbitmq
+        run: composer phpunit-broker-restart
+
+      - name: Broker logs
+        if: always()
+        run: docker logs rabbitmq

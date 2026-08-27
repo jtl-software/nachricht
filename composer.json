@@ -57,10 +57,13 @@
             "vendor/bin/phpunit -c phpunit.xml"
         ],
         "phpunit-integration": [
-            "vendor/bin/phpunit -c phpunit.integration.xml --exclude-group benchmark"
+            "vendor/bin/phpunit -c phpunit.integration.xml --exclude-group benchmark --exclude-group broker-restart"
         ],
         "phpunit-benchmark": [
             "vendor/bin/phpunit -c phpunit.integration.xml --group benchmark"
+        ],
+        "phpunit-broker-restart": [
+            "vendor/bin/phpunit -c phpunit.integration.xml --group broker-restart"
         ]
     }
 }
