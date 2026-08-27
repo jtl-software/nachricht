@@ -7,14 +7,17 @@ namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * EA-8268 / EA-7964: publishing a long delay before a short one must not affect delivery order.
  * This is the exact failure mode that killed the earlier waiting-room approach - worth its own
  * dedicated test rather than folding it into the relation matrix.
  */
+#[TestDox('Delayed-message delivery: out-of-order publish must not reorder delivery')]
 final class MixedOrderDeliveryTest extends IntegrationTestCase
 {
+    #[TestDox('a 2s-delay message published after a 10s-delay one is still delivered first')]
     public function testShortDelayIsDeliveredBeforeLongerDelayPublishedFirst(): void
     {
         $routingKey = IntegrationTestMessage::getRoutingKey();

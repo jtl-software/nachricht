@@ -9,6 +9,7 @@ use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestDox;
 use RuntimeException;
 
 /**
@@ -16,6 +17,7 @@ use RuntimeException;
  * regression in the delayed-message path (initial scheduling, app-managed retry, dead-letter)
  * shows up here instead of only during a manual STAGE validation pass.
  */
+#[TestDox('Delayed-message delivery: every delay x outcome combination')]
 final class RelationMatrixTest extends IntegrationTestCase
 {
     /**
@@ -31,6 +33,7 @@ final class RelationMatrixTest extends IntegrationTestCase
     }
 
     #[DataProvider('relationMatrix')]
+    #[TestDox('delivers after a $delaySeconds s delay with outcome "$outcome"')]
     public function testDelayAndOutcomeCombination(int $delaySeconds, string $outcome): void
     {
         $routingKey = IntegrationTestMessage::getRoutingKey();

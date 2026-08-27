@@ -11,13 +11,16 @@ use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessageAlt;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use JTL\Nachricht\Transport\SubscriptionSettings;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * EA-8268: proves two independent routing keys bound to the same delayed_exchange
  * (x-delayed-type: direct) never cross-deliver, under the new plugin fork.
  */
+#[TestDox('Delayed-message delivery: routing keys stay isolated on a shared exchange')]
 final class QueueIsolationTest extends IntegrationTestCase
 {
+    #[TestDox('two routing keys bound to the same delayed exchange never cross-deliver')]
     public function testTwoRoutingKeysDoNotCrossDeliver(): void
     {
         $routingKeyA = IntegrationTestMessage::getRoutingKey();
