@@ -11,6 +11,9 @@
     <testsuites>
         <testsuite name="Nachricht Test Suite">
             <directory>tests</directory>
+            <!-- Talks to a real RabbitMQ broker - run separately via phpunit.integration.xml
+                 (composer phpunit-integration / phpunit-benchmark), never as part of this suite. -->
+            <exclude>tests/Integration</exclude>
         </testsuite>
     </testsuites>
     <logging>

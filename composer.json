@@ -55,6 +55,12 @@
         ],
         "phpunit": [
             "vendor/bin/phpunit -c phpunit.xml"
+        ],
+        "phpunit-integration": [
+            "vendor/bin/phpunit -c phpunit.integration.xml --exclude-group benchmark"
+        ],
+        "phpunit-benchmark": [
+            "vendor/bin/phpunit -c phpunit.integration.xml --group benchmark"
         ]
     }
 }
