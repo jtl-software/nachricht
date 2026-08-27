@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- https://phpunit.de/manual/current/en/appendixes.configuration.html -->
+<!-- Talks to a real RabbitMQ broker (see docker/rabbitmq) - run via `composer phpunit-integration`
+     or `composer phpunit-benchmark`, never as part of the default `composer phpunit` suite. -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.5/phpunit.xsd" backupGlobals="false" colors="true"
+         beStrictAboutOutputDuringTests="true" cacheDirectory=".phpunit.cache/integration">
+    <php>
+        <ini name="error_reporting" value="E_ALL ^E_DEPRECATED"/>
+        <env name="SHELL_VERBOSITY" value="-1"/>
+    </php>
+    <testsuites>
+        <testsuite name="Nachricht RabbitMQ Testbed Suite">
+            <directory>tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <!-- No group filtering here on purpose: composer phpunit-integration passes the CLI flag
+         "exclude-group benchmark", composer phpunit-benchmark passes "group benchmark".
+         Baking either into this config would fight with the other script's CLI flag. -->
+    <logging>
+        <testdoxHtml outputFile="./build/testdox-integration.html"/>
+        <testdoxText outputFile="./build/testdox-integration.txt"/>
+    </logging>
+</phpunit>

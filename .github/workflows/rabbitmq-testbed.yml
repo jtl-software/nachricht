@@ -1,0 +1,144 @@
+name: RabbitMQ Testbed
+
+on: [push]
+
+permissions:
+  contents: read
+
+jobs:
+
+  testbed:
+
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: current-prod
+            rabbitmq_version: 4.2.6-management
+            plugin_source: archived
+            plugin_version: 4.2.0
+          - name: stage-target
+            rabbitmq_version: 4.3.3-management
+            plugin_source: cloudamqp
+            plugin_version: 4.3.1
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build testbed broker image (${{ matrix.name }})
+        run: |
+          docker build \
+            --build-arg RABBITMQ_VERSION=${{ matrix.rabbitmq_version }} \
+            --build-arg PLUGIN_SOURCE=${{ matrix.plugin_source }} \
+            --build-arg PLUGIN_VERSION=${{ matrix.plugin_version }} \
+            -t nachricht-testbed-rabbitmq \
+            ./docker/rabbitmq
+
+      - name: Run testbed broker
+        run: |
+          docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 nachricht-testbed-rabbitmq
+
+      - name: Wait for broker to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec rabbitmq rabbitmq-diagnostics check_running >/dev/null 2>&1; then
+              echo "broker ready after ${i} attempt(s)"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "broker never became ready" >&2
+          docker logs rabbitmq
+          exit 1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+
+      - name: Install dependencies
+        run: composer install --no-progress
+
+      - name: Run RabbitMQ testbed correctness matrix
+        env:
+          AMQP_TEST_HOST: localhost
+          AMQP_TEST_PORT: 5672
+          AMQP_TEST_HTTP_PORT: "15672"
+        run: composer phpunit-integration
+
+      - name: Broker logs
+        if: always()
+        run: docker logs rabbitmq
+
+  benchmark:
+
+    needs: testbed
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: current-prod
+            rabbitmq_version: 4.2.6-management
+            plugin_source: archived
+            plugin_version: 4.2.0
+          - name: stage-target
+            rabbitmq_version: 4.3.3-management
+            plugin_source: cloudamqp
+            plugin_version: 4.3.1
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build testbed broker image (${{ matrix.name }})
+        run: |
+          docker build \
+            --build-arg RABBITMQ_VERSION=${{ matrix.rabbitmq_version }} \
+            --build-arg PLUGIN_SOURCE=${{ matrix.plugin_source }} \
+            --build-arg PLUGIN_VERSION=${{ matrix.plugin_version }} \
+            -t nachricht-testbed-rabbitmq \
+            ./docker/rabbitmq
+
+      - name: Run testbed broker
+        run: |
+          docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 nachricht-testbed-rabbitmq
+
+      - name: Wait for broker to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec rabbitmq rabbitmq-diagnostics check_running >/dev/null 2>&1; then
+              echo "broker ready after ${i} attempt(s)"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "broker never became ready" >&2
+          docker logs rabbitmq
+          exit 1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+
+      - name: Install dependencies
+        run: composer install --no-progress
+
+      - name: Run publish/consume benchmark (${{ matrix.name }})
+        env:
+          AMQP_TEST_HOST: localhost
+          AMQP_TEST_PORT: 5672
+          AMQP_TEST_HTTP_PORT: "15672"
+        run: composer phpunit-benchmark
+
+      - name: Upload benchmark report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-${{ matrix.name }}
+          path: build/benchmark-*.json
+          if-no-files-found: ignore
