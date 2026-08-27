@@ -14,12 +14,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        php-version: ["8.3", "8.4", "8.5"]
+        broker: [current-prod, stage-target]
         include:
-          - name: current-prod
+          - broker: current-prod
             rabbitmq_version: 4.2.6-management
             plugin_source: archived
             plugin_version: 4.2.0
-          - name: stage-target
+          - broker: stage-target
             rabbitmq_version: 4.3.3-management
             plugin_source: cloudamqp
             plugin_version: 4.3.1
@@ -27,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Build testbed broker image (${{ matrix.name }})
+      - name: Build testbed broker image (${{ matrix.broker }})
         run: |
           docker build \
             --build-arg RABBITMQ_VERSION=${{ matrix.rabbitmq_version }} \
@@ -56,7 +58,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "${{ matrix.php-version }}"
 
       - name: Install dependencies
         run: composer install --no-progress
@@ -81,12 +83,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        php-version: ["8.3", "8.4", "8.5"]
+        broker: [current-prod, stage-target]
         include:
-          - name: current-prod
+          - broker: current-prod
             rabbitmq_version: 4.2.6-management
             plugin_source: archived
             plugin_version: 4.2.0
-          - name: stage-target
+          - broker: stage-target
             rabbitmq_version: 4.3.3-management
             plugin_source: cloudamqp
             plugin_version: 4.3.1
@@ -94,7 +98,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Build testbed broker image (${{ matrix.name }})
+      - name: Build testbed broker image (${{ matrix.broker }})
         run: |
           docker build \
             --build-arg RABBITMQ_VERSION=${{ matrix.rabbitmq_version }} \
@@ -123,12 +127,12 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "${{ matrix.php-version }}"
 
       - name: Install dependencies
         run: composer install --no-progress
 
-      - name: Run publish/consume benchmark (${{ matrix.name }})
+      - name: Run publish/consume benchmark (${{ matrix.broker }}, PHP ${{ matrix.php-version }})
         env:
           AMQP_TEST_HOST: localhost
           AMQP_TEST_PORT: 5672
@@ -139,6 +143,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-${{ matrix.name }}
+          name: benchmark-${{ matrix.broker }}-php${{ matrix.php-version }}
           path: build/benchmark-*.json
           if-no-files-found: ignore
