@@ -4,7 +4,7 @@
      or `composer phpunit-benchmark`, never as part of the default `composer phpunit` suite. -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.5/phpunit.xsd" backupGlobals="false" colors="true"
-         beStrictAboutOutputDuringTests="true" cacheDirectory=".phpunit.cache/integration">
+         beStrictAboutOutputDuringTests="true" cacheDirectory=".phpunit.cache/integration" testdox="true">
     <php>
         <ini name="error_reporting" value="E_ALL ^E_DEPRECATED"/>
         <env name="SHELL_VERBOSITY" value="-1"/>

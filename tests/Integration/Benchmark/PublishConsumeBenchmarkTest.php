@@ -9,6 +9,7 @@ use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * EA-8268: measures publish -> consume latency to compare the CloudAMQP fork's Khepri/Leveled
@@ -17,15 +18,18 @@ use PHPUnit\Framework\Attributes\Group;
  * no established baseline to regress against. Only real errors fail this test.
  */
 #[Group('benchmark')]
+#[TestDox('Publish/consume latency benchmark (informational, non-blocking)')]
 final class PublishConsumeBenchmarkTest extends IntegrationTestCase
 {
     private const ITERATIONS = 200;
 
+    #[TestDox('measures latency for 200 undelayed publish/consume round trips')]
     public function testUndelayedPublishConsumeLatency(): void
     {
         $this->runBenchmark('undelayed', delaySeconds: 0);
     }
 
+    #[TestDox('measures latency for 200 round trips through the delayed exchange (2s delay)')]
     public function testDelayedPublishConsumeLatency(): void
     {
         $this->runBenchmark('delayed-2s', delaySeconds: 2);
