@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\CompetingConsumersTestMessage;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -28,11 +28,11 @@ final class CompetingConsumersTest extends IntegrationTestCase
     #[TestDox('every message is delivered exactly once across two consumers')]
     public function testEachMessageIsDeliveredExactlyOnce(): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = CompetingConsumersTestMessage::getRoutingKey();
         $queueName = AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey;
         $this->purgeQueuesFor($routingKey);
 
-        $listenerProvider = $this->createListenerProvider([IntegrationTestMessage::class]);
+        $listenerProvider = $this->createListenerProvider([CompetingConsumersTestMessage::class]);
         $first = $this->createTransportWithProvider($listenerProvider);
         // A second, independent connection - createTransportWithProvider only tracks the last
         // instance for teardown, so this one is closed explicitly at the end of the test.
@@ -46,20 +46,20 @@ final class CompetingConsumersTest extends IntegrationTestCase
         $this->subscribe(
             $first,
             $this->subscriptionFor($routingKey),
-            function (IntegrationTestMessage $message) use (&$receivedByFirst): void {
+            function (CompetingConsumersTestMessage $message) use (&$receivedByFirst): void {
                 $receivedByFirst[] = $message->getPayload();
             },
         );
         $this->subscribe(
             $second,
             $this->subscriptionFor($routingKey),
-            function (IntegrationTestMessage $message) use (&$receivedBySecond): void {
+            function (CompetingConsumersTestMessage $message) use (&$receivedBySecond): void {
                 $receivedBySecond[] = $message->getPayload();
             },
         );
 
         for ($i = 0; $i < self::MESSAGE_COUNT; ++$i) {
-            $first->publish(new IntegrationTestMessage(payload: "message-{$i}"));
+            $first->publish(new CompetingConsumersTestMessage(payload: "message-{$i}"));
         }
 
         $this->pollBothFor($first, $second, 8.0);
@@ -72,10 +72,7 @@ final class CompetingConsumersTest extends IntegrationTestCase
 
         self::assertSame($expected, $all, 'messages were lost or delivered more than once');
 
-        $counters = $this->managementClient()->queueCounters($queueName);
-        self::assertNotNull($counters);
-        self::assertSame(0, $counters['ready']);
-        self::assertSame(0, $counters['unacknowledged'], 'a message was left unacknowledged');
+        $this->assertQueueCountersEventually($queueName, 0, 0, 'a message was left ready or unacknowledged');
 
         unset($second);
         gc_collect_cycles();

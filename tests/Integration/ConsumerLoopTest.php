@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\ConsumerLoopTestMessage;
 use JTL\Nachricht\Integration\Fixtures\RecordingListener;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -23,20 +23,20 @@ final class ConsumerLoopTest extends IntegrationTestCase
     #[TestDox('dispatches to the listener resolved from the container and shuts down on its ttl')]
     public function testConsumerDispatchesToListenerAndHonoursTtl(): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = ConsumerLoopTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
 
         $listener = new RecordingListener();
         $listenerProvider = $this->createListenerProvider(
-            [IntegrationTestMessage::class],
-            [IntegrationTestMessage::class => $listener],
+            [ConsumerLoopTestMessage::class],
+            [ConsumerLoopTestMessage::class => $listener],
         );
         $transport = $this->createTransportWithProvider($listenerProvider);
 
         // delay=0 goes to the default exchange with the queue name as routing key, and publish()
         // declares that queue first - so unlike a delayed message this is safely queued even
         // before any consumer exists.
-        $this->createEmitter($transport)->emit(new IntegrationTestMessage(payload: 'via-consumer'));
+        $this->createEmitter($transport)->emit(new ConsumerLoopTestMessage(payload: 'via-consumer'));
 
         $consumer = $this->createConsumer($transport, $listenerProvider);
 
@@ -51,15 +51,11 @@ final class ConsumerLoopTest extends IntegrationTestCase
         self::assertSame(['via-consumer'], $listener->payloads());
         self::assertLessThan(30.0, $elapsed, 'consumer did not shut down on its ttl while the queue was idle');
 
-        $counters = $this->managementClient()->queueCounters(
+        $this->assertQueueCountersEventually(
             AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey,
-        );
-        self::assertNotNull($counters);
-        self::assertSame(0, $counters['ready'], 'message left unconsumed in the queue');
-        self::assertSame(
             0,
-            $counters['unacknowledged'],
-            'message left in UNACKED state after the consumer shut down',
+            0,
+            'the consumer left messages ready or unacknowledged after shutting down',
         );
     }
 }

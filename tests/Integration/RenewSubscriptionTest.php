@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\RenewSubscriptionTestMessage;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PHPUnit\Framework\Attributes\TestDox;
 
@@ -29,16 +29,16 @@ final class RenewSubscriptionTest extends IntegrationTestCase
     #[TestDox('leaves exactly one consumer registered and still delivers exactly once')]
     public function testRepeatedRenewalsLeaveNoStaleConsumers(): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = RenewSubscriptionTestMessage::getRoutingKey();
         $queueName = AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey;
         $this->purgeQueuesFor($routingKey);
 
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
+        $transport = $this->createTransport([RenewSubscriptionTestMessage::class]);
         $subscription = $this->subscriptionFor($routingKey);
 
         /** @var array<int, string> $received */
         $received = [];
-        $handler = function (IntegrationTestMessage $message) use (&$received): void {
+        $handler = function (RenewSubscriptionTestMessage $message) use (&$received): void {
             $received[] = $message->getPayload();
         };
 
@@ -47,22 +47,17 @@ final class RenewSubscriptionTest extends IntegrationTestCase
             $transport->renewSubscription($subscription, $handler);
         }
 
-        $consumerCount = $this->managementClient()->consumerCount($queueName);
-        self::assertNotNull($consumerCount);
-        self::assertSame(
+        $this->assertConsumerCountEventually(
+            $queueName,
             1,
-            $consumerCount,
-            sprintf('after %d renewals the broker still sees %d consumers - basic_cancel did not take effect', self::RENEWALS, $consumerCount),
+            sprintf('after %d renewals basic_cancel did not take effect', self::RENEWALS),
         );
 
-        $transport->publish(new IntegrationTestMessage(payload: 'after-renewals'));
+        $transport->publish(new RenewSubscriptionTestMessage(payload: 'after-renewals'));
         $this->pollFor($transport, 5.0);
 
         self::assertSame(['after-renewals'], $received, 'message was not delivered exactly once after renewals');
 
-        $counters = $this->managementClient()->queueCounters($queueName);
-        self::assertNotNull($counters);
-        self::assertSame(0, $counters['ready']);
-        self::assertSame(0, $counters['unacknowledged'], 'renewal cycle left a message in UNACKED state');
+        $this->assertQueueCountersEventually($queueName, 0, 0, 'renewal cycle left messages behind');
     }
 }

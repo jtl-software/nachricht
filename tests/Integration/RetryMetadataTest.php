@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\RetryMetadataTestMessage;
 use JTL\Nachricht\Serializer\PhpMessageSerializer;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -25,18 +25,18 @@ final class RetryMetadataTest extends IntegrationTestCase
     #[TestDox('the dead-lettered message keeps its id and carries the last error and retry count')]
     public function testDeadLetteredMessageCarriesRetryMetadata(): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = RetryMetadataTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
 
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
-        $message = new IntegrationTestMessage(payload: 'always-fails', retryDelay: 1);
+        $transport = $this->createTransport([RetryMetadataTestMessage::class]);
+        $message = new RetryMetadataTestMessage(payload: 'always-fails', retryDelay: 1);
         $originalMessageId = $message->getMessageId();
 
         $seenMessageIds = [];
         $this->subscribe(
             $transport,
             $this->subscriptionFor($routingKey),
-            function (IntegrationTestMessage $received) use (&$seenMessageIds): void {
+            function (RetryMetadataTestMessage $received) use (&$seenMessageIds): void {
                 $seenMessageIds[] = $received->getMessageId();
                 throw new RuntimeException('integration test: permanent failure');
             },
@@ -61,7 +61,7 @@ final class RetryMetadataTest extends IntegrationTestCase
         self::assertNotNull($deadLettered, 'message never reached the dead-letter queue');
 
         $restored = (new PhpMessageSerializer())->deserialize($deadLettered->getBody());
-        self::assertInstanceOf(IntegrationTestMessage::class, $restored);
+        self::assertInstanceOf(RetryMetadataTestMessage::class, $restored);
         self::assertSame($originalMessageId, $restored->getMessageId());
         self::assertSame('always-fails', $restored->getPayload());
         self::assertStringContainsString(

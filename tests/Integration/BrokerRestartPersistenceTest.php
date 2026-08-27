@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\RestartTestMessage;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\TestDox;
 
@@ -37,36 +37,38 @@ final class BrokerRestartPersistenceTest extends IntegrationTestCase
     {
         $restartCommand = $this->requireBrokerRestartCapability();
 
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = RestartTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
 
         // Bind the queue and schedule the message, then drop this connection - the restart
         // kills it anyway, and a fresh transport has to pick the message up afterwards.
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
+        $transport = $this->createTransport([RestartTestMessage::class]);
         $this->subscribe(
             $transport,
             $this->subscriptionFor($routingKey),
-            static function (IntegrationTestMessage $message): void {
+            static function (RestartTestMessage $message): void {
             },
         );
         $transport->publish(
-            new IntegrationTestMessage(payload: 'survives-restart', delay: self::DELAY_SECONDS),
+            new RestartTestMessage(payload: 'survives-restart', delay: self::DELAY_SECONDS),
             self::DELAY_SECONDS,
         );
+        // Release through the base class so the tracked reference goes too - otherwise the dead
+        // connection is closed later, from __destruct(), and throws a broken-pipe error.
         unset($transport);
-        gc_collect_cycles();
+        $this->releaseTransport();
 
         $this->restartBroker($restartCommand);
 
         // Reconnect from scratch, exactly as a restarted consumer process would.
-        $reconnected = $this->createTransport([IntegrationTestMessage::class]);
+        $reconnected = $this->createTransport([RestartTestMessage::class]);
 
         /** @var array<int, string> $received */
         $received = [];
         $this->subscribe(
             $reconnected,
             $this->subscriptionFor($routingKey),
-            function (IntegrationTestMessage $message) use (&$received): void {
+            function (RestartTestMessage $message) use (&$received): void {
                 $received[] = $message->getPayload();
             },
         );

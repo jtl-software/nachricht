@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\FailureQueueTestMessage;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PhpAmqpLib\Message\AMQPMessage;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -28,17 +28,17 @@ final class FailureQueueTest extends IntegrationTestCase
     #[TestDox('a payload that cannot be deserialized is moved to the failure queue')]
     public function testUndeserializablePayloadEndsUpOnTheFailureQueue(): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = FailureQueueTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
         $this->purgeFailureQueue();
 
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
+        $transport = $this->createTransport([FailureQueueTestMessage::class]);
 
         $handlerCalls = 0;
         $this->subscribe(
             $transport,
             $this->subscriptionFor($routingKey),
-            function (IntegrationTestMessage $message) use (&$handlerCalls): void {
+            function (FailureQueueTestMessage $message) use (&$handlerCalls): void {
                 ++$handlerCalls;
             },
         );

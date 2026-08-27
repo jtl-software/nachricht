@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\EmitterTestMessage;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
@@ -21,10 +21,10 @@ final class EmitterDeliveryTest extends IntegrationTestCase
     #[TestDox('takes the delay from the message itself and delivers a batch in delay order')]
     public function testEmitUsesTheDelayCarriedByTheMessage(): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = EmitterTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
 
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
+        $transport = $this->createTransport([EmitterTestMessage::class]);
         $emitter = $this->createEmitter($transport);
 
         /** @var array<int, array{payload: string, at: float}> $received */
@@ -32,7 +32,7 @@ final class EmitterDeliveryTest extends IntegrationTestCase
         $this->subscribe(
             $transport,
             $this->subscriptionFor($routingKey),
-            function (IntegrationTestMessage $message) use (&$received): void {
+            function (EmitterTestMessage $message) use (&$received): void {
                 $received[] = ['payload' => $message->getPayload(), 'at' => microtime(true)];
             },
         );
@@ -40,8 +40,8 @@ final class EmitterDeliveryTest extends IntegrationTestCase
         $publishedAt = microtime(true);
         // One emit() call, two messages, different delays carried on the messages.
         $emitter->emit(
-            new IntegrationTestMessage(payload: 'immediate', delay: 0),
-            new IntegrationTestMessage(payload: 'deferred', delay: 4),
+            new EmitterTestMessage(payload: 'immediate', delay: 0),
+            new EmitterTestMessage(payload: 'deferred', delay: 4),
         );
 
         $this->pollFor($transport, 9.0);

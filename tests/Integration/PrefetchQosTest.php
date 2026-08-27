@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\PrefetchQosTestMessage;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
@@ -26,22 +26,22 @@ final class PrefetchQosTest extends IntegrationTestCase
     #[TestDox('subscribing uses per-consumer prefetch and completes a round trip without channel errors')]
     public function testSubscribeUsesPermittedPerConsumerPrefetch(): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = PrefetchQosTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
 
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
+        $transport = $this->createTransport([PrefetchQosTestMessage::class]);
 
         /** @var array<int, string> $received */
         $received = [];
         $this->subscribe(
             $transport,
             $this->subscriptionFor($routingKey),
-            function (IntegrationTestMessage $message) use (&$received): void {
+            function (PrefetchQosTestMessage $message) use (&$received): void {
                 $received[] = $message->getPayload();
             },
         );
 
-        $transport->publish(new IntegrationTestMessage(payload: 'qos-probe'));
+        $transport->publish(new PrefetchQosTestMessage(payload: 'qos-probe'));
         $this->pollFor($transport, 5.0);
 
         self::assertSame(['qos-probe'], $received, 'round trip failed - the broker may have refused the QoS request');

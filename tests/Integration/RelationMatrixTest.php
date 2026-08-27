@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\RelationMatrixTestMessage;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
@@ -36,11 +36,11 @@ final class RelationMatrixTest extends IntegrationTestCase
     #[TestDox('delivers after a $delaySeconds s delay with outcome "$outcome"')]
     public function testDelayAndOutcomeCombination(int $delaySeconds, string $outcome): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = RelationMatrixTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
 
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
-        $message = new IntegrationTestMessage(
+        $transport = $this->createTransport([RelationMatrixTestMessage::class]);
+        $message = new RelationMatrixTestMessage(
             payload: "delay={$delaySeconds};outcome={$outcome}",
             delay: $delaySeconds,
             retryDelay: 1,
@@ -48,7 +48,7 @@ final class RelationMatrixTest extends IntegrationTestCase
 
         /** @var array<int, array{at: float, payload: string}> $attempts */
         $attempts = [];
-        $handler = function (IntegrationTestMessage $received) use (&$attempts, $outcome): void {
+        $handler = function (RelationMatrixTestMessage $received) use (&$attempts, $outcome): void {
             $attempts[] = ['at' => microtime(true), 'payload' => $received->getPayload()];
 
             if ($outcome === 'dead-letter') {

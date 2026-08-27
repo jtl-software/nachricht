@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration\Benchmark;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\BenchmarkTestMessage;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\TestDox;
 
@@ -63,10 +63,10 @@ final class PublishConsumeBenchmarkTest extends IntegrationTestCase
     private function runBenchmark(string $label, string $description, int $delaySeconds): void
     {
         $iterations = $this->iterations();
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = BenchmarkTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
 
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
+        $transport = $this->createTransport([BenchmarkTestMessage::class]);
 
         /** @var array<int, float> $latencies */
         $latencies = [];
@@ -75,7 +75,7 @@ final class PublishConsumeBenchmarkTest extends IntegrationTestCase
         $firstDeliveryAt = null;
         $lastDeliveryAt = null;
 
-        $handler = function (IntegrationTestMessage $received) use (
+        $handler = function (BenchmarkTestMessage $received) use (
             &$latencies,
             &$publishedAt,
             &$firstDeliveryAt,
@@ -101,7 +101,7 @@ final class PublishConsumeBenchmarkTest extends IntegrationTestCase
         for ($i = 0; $i < $iterations; ++$i) {
             $payload = "iteration-{$i}";
             $publishedAt[$payload] = microtime(true);
-            $transport->publish(new IntegrationTestMessage(payload: $payload, delay: $delaySeconds), $delaySeconds);
+            $transport->publish(new BenchmarkTestMessage(payload: $payload, delay: $delaySeconds), $delaySeconds);
         }
         $publishDuration = microtime(true) - $publishStartedAt;
 
