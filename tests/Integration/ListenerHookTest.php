@@ -7,7 +7,7 @@ namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\HookedListener;
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\HookTestMessage;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
@@ -59,17 +59,17 @@ final class ListenerHookTest extends IntegrationTestCase
 
     private function runThroughConsumer(HookedListener $listener, int $ttl, int $retryDelay = 1): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = HookTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
 
         $listenerProvider = $this->createListenerProvider(
-            [IntegrationTestMessage::class],
-            [IntegrationTestMessage::class => $listener],
+            [HookTestMessage::class],
+            [HookTestMessage::class => $listener],
         );
         $transport = $this->createTransportWithProvider($listenerProvider);
 
         $this->createEmitter($transport)->emit(
-            new IntegrationTestMessage(payload: 'hooked', retryDelay: $retryDelay),
+            new HookTestMessage(payload: 'hooked', retryDelay: $retryDelay),
         );
 
         $this->createConsumer($transport, $listenerProvider)

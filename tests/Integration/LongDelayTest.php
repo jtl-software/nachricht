@@ -6,7 +6,7 @@
 namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
-use JTL\Nachricht\Integration\Fixtures\IntegrationTestMessage;
+use JTL\Nachricht\Integration\Fixtures\LongDelayTestMessage;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use PHPUnit\Framework\Attributes\TestDox;
 
@@ -24,24 +24,24 @@ final class LongDelayTest extends IntegrationTestCase
     #[TestDox('a one-hour delay is accepted, held outside the queue and not delivered early')]
     public function testOneHourDelayIsHeldAndNotDeliveredEarly(): void
     {
-        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $routingKey = LongDelayTestMessage::getRoutingKey();
         $queueName = AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey;
         $this->purgeQueuesFor($routingKey);
 
-        $transport = $this->createTransport([IntegrationTestMessage::class]);
+        $transport = $this->createTransport([LongDelayTestMessage::class]);
 
         /** @var array<int, string> $received */
         $received = [];
         $this->subscribe(
             $transport,
             $this->subscriptionFor($routingKey),
-            function (IntegrationTestMessage $message) use (&$received): void {
+            function (LongDelayTestMessage $message) use (&$received): void {
                 $received[] = $message->getPayload();
             },
         );
 
         $transport->publish(
-            new IntegrationTestMessage(payload: 'in-one-hour', delay: self::ONE_HOUR),
+            new LongDelayTestMessage(payload: 'in-one-hour', delay: self::ONE_HOUR),
             self::ONE_HOUR,
         );
 
@@ -49,13 +49,11 @@ final class LongDelayTest extends IntegrationTestCase
 
         self::assertSame([], $received, 'a message scheduled an hour out was delivered immediately');
 
-        $counters = $this->managementClient()->queueCounters($queueName);
-        self::assertNotNull($counters);
-        self::assertSame(
+        $this->assertQueueCountersEventually(
+            $queueName,
             0,
-            $counters['ready'],
-            'the message should be held by the delayed exchange, not parked as ready in the queue',
+            0,
+            'the message should be held by the delayed exchange, not parked in the queue',
         );
-        self::assertSame(0, $counters['unacknowledged']);
     }
 }

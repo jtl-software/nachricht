@@ -21,6 +21,7 @@ use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use Throwable;
 
 /**
  * Base class for the RabbitMQ testbed integration tests (EA-8268). Every test in this suite
@@ -233,40 +234,132 @@ abstract class IntegrationTestCase extends TestCase
         $this->waitForBroker();
     }
 
-    private function waitForBroker(float $timeoutSeconds = 60.0): void
+    /**
+     * Waits for the broker by completing a real AMQP handshake, not by probing the TCP port: with
+     * a published container port the port answers as soon as the port forwarder is up, well
+     * before the node can serve AMQP, and the first real connection then dies with a broken pipe.
+     */
+    private function waitForBroker(float $timeoutSeconds = 90.0): void
     {
         $settings = $this->connectionSettings();
+        $factory = new AmqpConnectionFactory();
         $deadline = microtime(true) + $timeoutSeconds;
+        $lastError = 'no attempt made';
 
         while (microtime(true) < $deadline) {
-            $socket = @fsockopen($settings->getHost(), $settings->getPort(), $errno, $errstr, 2.0);
-            if ($socket !== false) {
-                fclose($socket);
-                // The port opens slightly before the node finishes booting its vhosts; give it
-                // a moment so the first channel operation does not race the startup.
-                sleep(3);
+            try {
+                $connection = $factory->connect($settings);
+                $channel = $connection->channel();
+                $channel->close();
+                $connection->close();
+
                 return;
+            } catch (Throwable $throwable) {
+                $lastError = $throwable->getMessage();
+                sleep(2);
             }
-            sleep(1);
         }
 
-        self::fail('broker did not accept connections again within ' . $timeoutSeconds . 's');
+        self::fail("broker did not serve AMQP again within {$timeoutSeconds}s (last error: {$lastError})");
     }
 
     /**
-     * AmqpTransport only closes its connection in __destruct(). Several tests in this suite
-     * share one routing key/queue (distinct classes only exist for genuine isolation tests), so
-     * a still-open connection from a previous test would leave a zombie consumer registered on
-     * that queue - RabbitMQ would then round-robin some of the NEXT test's messages to it,
-     * making them vanish from the new test's records with no error anywhere.
-     * unset() alone isn't enough: php-amqplib's channel/connection/callback-closure graph is
-     * cyclic, so refcounting won't collect it immediately - force the cycle collector so the
-     * broker-side disconnect (and consumer cancellation) happens before the next test starts.
+     * Drops the tracked transport and forces its connection to close. Swallows connection errors
+     * on purpose: AmqpTransport::__destruct() calls close(), which throws when the connection is
+     * already gone - true right after a broker restart.
      */
+    protected function releaseTransport(): void
+    {
+        try {
+            unset($this->transport);
+            gc_collect_cycles();
+        } catch (Throwable) {
+            // Connection was already dead; nothing left to close.
+        }
+    }
+
+    /**
+     * Polls $condition until it holds or the timeout expires. The management API's queue
+     * counters are fed by a stats collector and lag behind the AMQP operations that caused
+     * them, so reading them once right after publishing or acking is racy.
+     */
+    protected function pollUntil(callable $condition, float $timeoutSeconds = 20.0): bool
+    {
+        $deadline = microtime(true) + $timeoutSeconds;
+
+        do {
+            if ($condition() === true) {
+                return true;
+            }
+            usleep(500_000);
+        } while (microtime(true) < $deadline);
+
+        return false;
+    }
+
+    /**
+     * Asserts the queue eventually reports the expected ready/unacknowledged counts.
+     */
+    protected function assertQueueCountersEventually(
+        string $queueName,
+        int $expectedReady,
+        int $expectedUnacknowledged,
+        string $message = '',
+    ): void {
+        $observed = null;
+        $matched = $this->pollUntil(function () use ($queueName, $expectedReady, $expectedUnacknowledged, &$observed): bool {
+            $observed = $this->managementClient()->queueCounters($queueName);
+
+            return $observed !== null
+                && $observed['ready'] === $expectedReady
+                && $observed['unacknowledged'] === $expectedUnacknowledged;
+        });
+
+        self::assertTrue($matched, sprintf(
+            '%squeue "%s" reported ready=%s unacknowledged=%s, expected ready=%d unacknowledged=%d',
+            $message === '' ? '' : $message . ': ',
+            $queueName,
+            $observed === null ? 'n/a' : (string)$observed['ready'],
+            $observed === null ? 'n/a' : (string)$observed['unacknowledged'],
+            $expectedReady,
+            $expectedUnacknowledged,
+        ));
+    }
+
+    /**
+     * Asserts the broker eventually reports the expected number of consumers on the queue.
+     */
+    protected function assertConsumerCountEventually(string $queueName, int $expected, string $message = ''): void
+    {
+        $observed = null;
+        $matched = $this->pollUntil(function () use ($queueName, $expected, &$observed): bool {
+            $observed = $this->managementClient()->consumerCount($queueName);
+
+            return $observed === $expected;
+        });
+
+        self::assertTrue($matched, sprintf(
+            '%squeue "%s" reported %s consumers, expected %d',
+            $message === '' ? '' : $message . ': ',
+            $queueName,
+            $observed === null ? 'n/a' : (string)$observed,
+            $expected,
+        ));
+    }
+
     protected function tearDown(): void
     {
-        unset($this->transport);
-        gc_collect_cycles();
+        // AmqpConsumer::consume() installs pcntl signal handlers whose closures are bound to the
+        // consumer, and signal handlers live for the whole process. That keeps the consumer -
+        // and through it the transport and its open connection - alive after the test that
+        // created it has finished, leaving a consumer registered on the broker that then
+        // round-robins away the next test's messages. Harmless in production, where the consumer
+        // is meant to live as long as the process, but it has to be undone between tests.
+        foreach ([SIGINT, SIGTERM, SIGHUP, SIGQUIT] as $signal) {
+            pcntl_signal($signal, SIG_DFL);
+        }
+
+        $this->releaseTransport();
         parent::tearDown();
     }
 }
