@@ -7,6 +7,7 @@ namespace JTL\Nachricht\Integration;
 
 use JTL\Nachricht\Integration\Fixtures\HookedListener;
 use JTL\Nachricht\Integration\Fixtures\IntegrationTestCase;
+use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use JTL\Nachricht\Integration\Fixtures\HookTestMessage;
 use PHPUnit\Framework\Attributes\TestDox;
 
@@ -44,16 +45,39 @@ final class ListenerHookTest extends IntegrationTestCase
     {
         $listener = new HookedListener(throwInHandler: true, swallowErrors: false);
 
-        // retryDelay=1 so the re-queued message comes back well inside the ttl window.
-        $this->runThroughConsumer($listener, ttl: 8, retryDelay: 1);
+        // retryDelay=1 against a 20s ttl: deliberately generous. The retry travels through the
+        // delayed exchange while the consume loop keeps renewing its subscription on every idle
+        // timeout, and a tighter window turned out to be flaky on the older plugin. If a 1s
+        // retry cannot come back within 20s, that is a real defect rather than a slow runner,
+        // so the failure message carries where the message actually ended up.
+        $routingKey = HookTestMessage::getRoutingKey();
+        $this->runThroughConsumer($listener, ttl: 20, retryDelay: 1);
 
         $calls = $listener->calls();
         self::assertSame(['setup', 'handle', 'onError', 'after'], array_slice($calls, 0, 4));
-        self::assertContains('handle', array_slice($calls, 4), 'message was not re-queued after onError re-threw');
+
+        $handleCount = count(array_filter($calls, static fn (string $call): bool => $call === 'handle'));
         self::assertGreaterThanOrEqual(
             2,
-            count(array_filter($calls, static fn (string $call): bool => $call === 'handle')),
-            'listener should have been invoked again for the retry',
+            $handleCount,
+            'the message was not re-queued after onError re-threw. ' . $this->describeQueueState($routingKey),
+        );
+    }
+
+    /**
+     * Turns "the retry never came back" into something actionable: whether the message is still
+     * waiting in the queue, sitting unacknowledged, already dead-lettered, or gone entirely.
+     */
+    private function describeQueueState(string $routingKey): string
+    {
+        $client = $this->managementClient();
+        $main = $client->queueCounters(AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey);
+        $deadLetter = $client->queueCounters(AmqpTransport::DEAD_LETTER_QUEUE_PREFIX . $routingKey);
+
+        return sprintf(
+            'Queue state - main: %s, dead-letter: %s',
+            $main === null ? 'absent' : sprintf('ready=%d unacked=%d', $main['ready'], $main['unacknowledged']),
+            $deadLetter === null ? 'absent' : sprintf('ready=%d unacked=%d', $deadLetter['ready'], $deadLetter['unacknowledged']),
         );
     }
 
