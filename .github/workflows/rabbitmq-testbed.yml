@@ -1,6 +1,23 @@
 name: RabbitMQ Testbed
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      rabbitmq_version:
+        description: "RabbitMQ image tag to test (e.g. 4.4.0-management). Leave empty to run the default current-prod/next-target matrix instead."
+        required: false
+        type: string
+      plugin_source:
+        description: "Plugin source to install for the manual run (only used when rabbitmq_version is set)"
+        required: false
+        type: choice
+        options: [cloudamqp, archived]
+        default: cloudamqp
+      plugin_version:
+        description: "Plugin version tag matching plugin_source (e.g. 4.3.1 for cloudamqp, 4.2.0 for archived)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -12,12 +29,37 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       php-versions: ${{ steps.versions.outputs.php-versions }}
+      broker-configs: ${{ steps.brokers.outputs.broker-configs }}
 
     steps:
       # Single source of truth for the PHP-version axis, shared by testbed + benchmark below.
       # Keep in sync with the testing-php matrix in ci.yaml.
       - id: versions
         run: echo 'php-versions=["8.3", "8.4", "8.5"]' >> "$GITHUB_OUTPUT"
+
+      # Single source of truth for the broker-version axis. A manual workflow_dispatch run with
+      # rabbitmq_version set tests exactly that one version/plugin combination instead of the
+      # default current-prod/next-target pair - e.g. to spot-check a brand new RabbitMQ release
+      # before deciding whether it becomes the next "next-target" leg.
+      - id: brokers
+        env:
+          RABBITMQ_VERSION: ${{ github.event.inputs.rabbitmq_version }}
+          PLUGIN_SOURCE: ${{ github.event.inputs.plugin_source }}
+          PLUGIN_VERSION: ${{ github.event.inputs.plugin_version }}
+        run: |
+          if [ -n "${RABBITMQ_VERSION}" ]; then
+            config=$(jq -nc \
+              --arg rabbitmq_version "${RABBITMQ_VERSION}" \
+              --arg plugin_source "${PLUGIN_SOURCE:-cloudamqp}" \
+              --arg plugin_version "${PLUGIN_VERSION}" \
+              '[{name: "manual", rabbitmq_version: $rabbitmq_version, plugin_source: $plugin_source, plugin_version: $plugin_version}]')
+          else
+            config='[
+              {"name": "current-prod", "rabbitmq_version": "4.2.6-management", "plugin_source": "archived", "plugin_version": "4.2.0"},
+              {"name": "next-target", "rabbitmq_version": "4.3.3-management", "plugin_source": "cloudamqp", "plugin_version": "4.3.1"}
+            ]'
+          fi
+          echo "broker-configs=$(echo "$config" | jq -c .)" >> "$GITHUB_OUTPUT"
 
   testbed:
 
@@ -28,26 +70,17 @@ jobs:
       fail-fast: false
       matrix:
         php-version: ${{ fromJSON(needs.setup.outputs.php-versions) }}
-        broker: [current-prod, next-target]
-        include:
-          - broker: current-prod
-            rabbitmq_version: 4.2.6-management
-            plugin_source: archived
-            plugin_version: 4.2.0
-          - broker: next-target
-            rabbitmq_version: 4.3.3-management
-            plugin_source: cloudamqp
-            plugin_version: 4.3.1
+        broker: ${{ fromJSON(needs.setup.outputs.broker-configs) }}
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Build testbed broker image (${{ matrix.broker }})
+      - name: Build testbed broker image (${{ matrix.broker.name }})
         run: |
           docker build \
-            --build-arg RABBITMQ_VERSION=${{ matrix.rabbitmq_version }} \
-            --build-arg PLUGIN_SOURCE=${{ matrix.plugin_source }} \
-            --build-arg PLUGIN_VERSION=${{ matrix.plugin_version }} \
+            --build-arg RABBITMQ_VERSION=${{ matrix.broker.rabbitmq_version }} \
+            --build-arg PLUGIN_SOURCE=${{ matrix.broker.plugin_source }} \
+            --build-arg PLUGIN_VERSION=${{ matrix.broker.plugin_version }} \
             -t nachricht-testbed-rabbitmq \
             ./docker/rabbitmq
 
@@ -97,26 +130,17 @@ jobs:
       fail-fast: false
       matrix:
         php-version: ${{ fromJSON(needs.setup.outputs.php-versions) }}
-        broker: [current-prod, next-target]
-        include:
-          - broker: current-prod
-            rabbitmq_version: 4.2.6-management
-            plugin_source: archived
-            plugin_version: 4.2.0
-          - broker: next-target
-            rabbitmq_version: 4.3.3-management
-            plugin_source: cloudamqp
-            plugin_version: 4.3.1
+        broker: ${{ fromJSON(needs.setup.outputs.broker-configs) }}
 
     steps:
       - uses: actions/checkout@v7
 
-      - name: Build testbed broker image (${{ matrix.broker }})
+      - name: Build testbed broker image (${{ matrix.broker.name }})
         run: |
           docker build \
-            --build-arg RABBITMQ_VERSION=${{ matrix.rabbitmq_version }} \
-            --build-arg PLUGIN_SOURCE=${{ matrix.plugin_source }} \
-            --build-arg PLUGIN_VERSION=${{ matrix.plugin_version }} \
+            --build-arg RABBITMQ_VERSION=${{ matrix.broker.rabbitmq_version }} \
+            --build-arg PLUGIN_SOURCE=${{ matrix.broker.plugin_source }} \
+            --build-arg PLUGIN_VERSION=${{ matrix.broker.plugin_version }} \
             -t nachricht-testbed-rabbitmq \
             ./docker/rabbitmq
 
@@ -145,7 +169,7 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress
 
-      - name: Run publish/consume benchmark (${{ matrix.broker }}, PHP ${{ matrix.php-version }})
+      - name: Run publish/consume benchmark (${{ matrix.broker.name }}, PHP ${{ matrix.php-version }})
         env:
           AMQP_TEST_HOST: localhost
           AMQP_TEST_PORT: 5672
@@ -156,6 +180,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-${{ matrix.broker }}-php${{ matrix.php-version }}
+          name: benchmark-${{ matrix.broker.name }}-php${{ matrix.php-version }}
           path: build/benchmark-*.json
           if-no-files-found: ignore
