@@ -41,4 +41,37 @@ final class MixedOrderDeliveryTest extends IntegrationTestCase
 
         self::assertSame(['short', 'long'], $deliveryOrder, 'delivery order did not follow delay order');
     }
+
+    #[TestDox('six interleaved delays are all delivered in delay order, not publish order')]
+    public function testManyInterleavedDelaysAreDeliveredInDelayOrder(): void
+    {
+        $routingKey = IntegrationTestMessage::getRoutingKey();
+        $this->purgeQueuesFor($routingKey);
+
+        $transport = $this->createTransport([IntegrationTestMessage::class]);
+
+        /** @var array<int, string> $deliveryOrder */
+        $deliveryOrder = [];
+        $handler = function (IntegrationTestMessage $received) use (&$deliveryOrder): void {
+            $deliveryOrder[] = $received->getPayload();
+        };
+
+        $this->subscribe($transport, $this->subscriptionFor($routingKey), $handler);
+
+        // Publish order is deliberately unsorted; the plugin has to reorder all of them.
+        $publishOrder = [7, 1, 5, 3, 9, 2];
+        foreach ($publishOrder as $delay) {
+            $transport->publish(new IntegrationTestMessage(payload: "d{$delay}", delay: $delay), $delay);
+        }
+
+        $this->pollFor($transport, 14.0);
+
+        $expected = $publishOrder;
+        sort($expected);
+        self::assertSame(
+            array_map(static fn (int $delay): string => "d{$delay}", $expected),
+            $deliveryOrder,
+            'messages were not delivered in ascending delay order',
+        );
+    }
 }

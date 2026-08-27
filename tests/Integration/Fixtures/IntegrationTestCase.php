@@ -8,11 +8,14 @@ namespace JTL\Nachricht\Integration\Fixtures;
 use Closure;
 use JTL\Generic\StringCollection;
 use JTL\Nachricht\Contract\Message\AmqpTransportableMessage;
+use JTL\Nachricht\Dispatcher\AmqpDispatcher;
+use JTL\Nachricht\Emitter\AmqpEmitter;
 use JTL\Nachricht\Listener\ListenerProvider;
 use JTL\Nachricht\Message\Cache\MessageCache;
 use JTL\Nachricht\Serializer\PhpMessageSerializer;
 use JTL\Nachricht\Transport\Amqp\AmqpConnectionFactory;
 use JTL\Nachricht\Transport\Amqp\AmqpConnectionSettings;
+use JTL\Nachricht\Transport\Amqp\AmqpConsumer;
 use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
@@ -30,31 +33,70 @@ use Psr\Log\NullLogger;
  *   AMQP_TEST_HOST      default 'localhost'
  *   AMQP_TEST_PORT      default 5672
  *   AMQP_TEST_HTTP_PORT default 15672 (management API, used only to purge queues between tests)
+ *
+ * Optional:
+ *   AMQP_TEST_BROKER_RESTART_CMD  shell command that restarts the broker; tests needing a
+ *                                 restart skip themselves when it is not set (see restartBroker)
  */
 abstract class IntegrationTestCase extends TestCase
 {
     private ?AmqpTransport $transport = null;
 
     /**
+     * Builds a ListenerProvider whose MessageCache knows the given message classes.
+     *
+     * $listenerMap is optional: pass a listener instance per message class to drive the real
+     * production dispatch path (AmqpDispatcher -> ListenerProvider -> container->get()). Message
+     * classes without an entry get a placeholder, which is enough for the transport-level tests
+     * where AmqpTransport only calls eventHasListeners() and the handler is a plain closure.
+     *
+     * A message class deliberately left out of $messageClassList has no listeners at all, which
+     * is how the missing-listener path gets exercised.
+     *
      * @param array<class-string<AmqpTransportableMessage>> $messageClassList
+     * @param array<class-string<AmqpTransportableMessage>, object> $listenerMap
      */
-    protected function createTransport(array $messageClassList): AmqpTransport
+    protected function createListenerProvider(array $messageClassList, array $listenerMap = []): ListenerProvider
     {
         $listenerCache = [];
+        $services = [];
+
         foreach ($messageClassList as $messageClass) {
+            // ListenerProvider only uses 'listenerClass' as a container key, never as a real
+            // class name - a synthetic id keeps two message classes that share a listener
+            // implementation from colliding in the container.
+            $serviceId = 'listener::' . $messageClass;
             $listenerCache[$messageClass] = [
-                // Content is never resolved (AmqpTransport only calls eventHasListeners()) - a
-                // single non-empty entry is enough to make eventHasListeners() return true.
-                'listenerList' => [['listenerClass' => 'noop', 'method' => 'noop']],
+                'listenerList' => [['listenerClass' => $serviceId, 'method' => 'handle']],
                 'routingKey' => $messageClass::getRoutingKey(),
             ];
+
+            if (isset($listenerMap[$messageClass])) {
+                $services[$serviceId] = $listenerMap[$messageClass];
+            }
         }
 
+        return new ListenerProvider(new ArrayContainer($services), new MessageCache($listenerCache));
+    }
+
+    /**
+     * @param array<class-string<AmqpTransportableMessage>> $messageClassList
+     * @param array<class-string<AmqpTransportableMessage>, object> $listenerMap
+     */
+    protected function createTransport(array $messageClassList, array $listenerMap = []): AmqpTransport
+    {
+        return $this->createTransportWithProvider(
+            $this->createListenerProvider($messageClassList, $listenerMap),
+        );
+    }
+
+    protected function createTransportWithProvider(ListenerProvider $listenerProvider): AmqpTransport
+    {
         $this->transport = new AmqpTransport(
             $this->connectionSettings(),
             new AmqpConnectionFactory(),
             new PhpMessageSerializer(),
-            new ListenerProvider(new NullContainer(), new MessageCache($listenerCache)),
+            $listenerProvider,
             // AmqpTransport defaults to EchoLogger, which prints every debug/info line to
             // stdout - that trips PHPUnit's beStrictAboutOutputDuringTests. Tests assert on
             // their own recorded state, not on log output, so a NullLogger is correct here.
@@ -62,6 +104,26 @@ abstract class IntegrationTestCase extends TestCase
         );
 
         return $this->transport;
+    }
+
+    /**
+     * The publish entry point production actually uses (scx-api injects AmqpEmitter, not
+     * AmqpTransport). Notably emit() takes the delay from $message->getDelay() instead of an
+     * explicit argument, so this is the only way to cover that wiring.
+     */
+    protected function createEmitter(AmqpTransport $transport): AmqpEmitter
+    {
+        return new AmqpEmitter($transport);
+    }
+
+    /**
+     * The consume entry point production actually uses. Wraps the real poll loop, the
+     * renewSubscription-on-timeout behaviour, the ttl shutdown and dispatch through
+     * AmqpDispatcher - none of which the transport-level pollFor() helper touches.
+     */
+    protected function createConsumer(AmqpTransport $transport, ListenerProvider $listenerProvider): AmqpConsumer
+    {
+        return new AmqpConsumer($transport, new AmqpDispatcher($listenerProvider), new NullLogger());
     }
 
     protected function connectionSettings(): AmqpConnectionSettings
@@ -99,10 +161,16 @@ abstract class IntegrationTestCase extends TestCase
         $client->purgeQueue(AmqpTransport::MISSING_LISTENER_QUEUE_PREFIX . $routingKey);
     }
 
-    protected function subscriptionFor(string $routingKey): SubscriptionSettings
+    protected function purgeFailureQueue(): void
+    {
+        $this->managementClient()->purgeQueue(AmqpTransport::FAILURE_QUEUE);
+    }
+
+    protected function subscriptionFor(string $routingKey, int $ttl = -1): SubscriptionSettings
     {
         return new SubscriptionSettings(
             StringCollection::from(AmqpTransport::MESSAGE_QUEUE_PREFIX . $routingKey),
+            $ttl,
         );
     }
 
@@ -138,11 +206,59 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
+     * Skips the calling test unless a restart command is configured, so the suite stays runnable
+     * against a broker the test process is not allowed to control (a shared local dev broker,
+     * for instance). Call this first, before the test publishes anything.
+     */
+    protected function requireBrokerRestartCapability(): string
+    {
+        $command = getenv('AMQP_TEST_BROKER_RESTART_CMD');
+        if ($command === false || $command === '') {
+            self::markTestSkipped('AMQP_TEST_BROKER_RESTART_CMD is not set - cannot restart the broker');
+        }
+
+        return $command;
+    }
+
+    /**
+     * Restarts the broker and waits until it accepts connections again.
+     */
+    protected function restartBroker(string $command): void
+    {
+        exec($command . ' 2>&1', $output, $exitCode);
+        if ($exitCode !== 0) {
+            self::fail("broker restart command failed (exit {$exitCode}): " . implode("\n", $output));
+        }
+
+        $this->waitForBroker();
+    }
+
+    private function waitForBroker(float $timeoutSeconds = 60.0): void
+    {
+        $settings = $this->connectionSettings();
+        $deadline = microtime(true) + $timeoutSeconds;
+
+        while (microtime(true) < $deadline) {
+            $socket = @fsockopen($settings->getHost(), $settings->getPort(), $errno, $errstr, 2.0);
+            if ($socket !== false) {
+                fclose($socket);
+                // The port opens slightly before the node finishes booting its vhosts; give it
+                // a moment so the first channel operation does not race the startup.
+                sleep(3);
+                return;
+            }
+            sleep(1);
+        }
+
+        self::fail('broker did not accept connections again within ' . $timeoutSeconds . 's');
+    }
+
+    /**
      * AmqpTransport only closes its connection in __destruct(). Several tests in this suite
      * share one routing key/queue (distinct classes only exist for genuine isolation tests), so
      * a still-open connection from a previous test would leave a zombie consumer registered on
      * that queue - RabbitMQ would then round-robin some of the NEXT test's messages to it,
-     * making them vanish from the new test's $attempts array with no error anywhere.
+     * making them vanish from the new test's records with no error anywhere.
      * unset() alone isn't enough: php-amqplib's channel/connection/callback-closure graph is
      * cyclic, so refcounting won't collect it immediately - force the cycle collector so the
      * broker-side disconnect (and consumer cancellation) happens before the next test starts.

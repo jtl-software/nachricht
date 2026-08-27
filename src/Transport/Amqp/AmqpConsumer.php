@@ -64,11 +64,15 @@ class AmqpConsumer implements Consumer
         do {
             try {
                 $this->transport->poll($timeout);
-                if (isset($endTime) && $endTime <= new DateTimeImmutable()) {
-                    $this->shouldConsume = false;
-                }
             } catch (AMQPTimeoutException $e) {
                 $this->transport->renewSubscription($subscriptionSettings, $callback);
+            }
+
+            // Checked outside the try/catch on purpose: an idle queue makes every poll() time
+            // out, so evaluating the ttl only after a successful poll meant a consumer with a
+            // ttl never terminated once its queue went quiet - it just renewed forever.
+            if (isset($endTime) && $endTime <= new DateTimeImmutable()) {
+                $this->shouldConsume = false;
             }
         } while ($this->shouldConsume);
 
