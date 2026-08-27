@@ -26,16 +26,25 @@ final class PublishConsumeBenchmarkTest extends IntegrationTestCase
     #[TestDox('measures latency for 200 undelayed publish/consume round trips')]
     public function testUndelayedPublishConsumeLatency(): void
     {
-        $this->runBenchmark('undelayed', delaySeconds: 0);
+        $this->runBenchmark(
+            'undelayed',
+            'Direct publish/consume, no delay - baseline broker+client overhead',
+            delaySeconds: 0,
+        );
     }
 
     #[TestDox('measures latency for 200 round trips through the delayed exchange (2s delay)')]
     public function testDelayedPublishConsumeLatency(): void
     {
-        $this->runBenchmark('delayed-2s', delaySeconds: 2);
+        $this->runBenchmark(
+            'delayed-2s',
+            'Publish/consume via the x-delayed-message exchange, 2s delay - isolates the '
+                . 'delayed-exchange plugin\'s own overhead (Khepri/Leveled vs. the old Mnesia store)',
+            delaySeconds: 2,
+        );
     }
 
-    private function runBenchmark(string $label, int $delaySeconds): void
+    private function runBenchmark(string $label, string $description, int $delaySeconds): void
     {
         $routingKey = IntegrationTestMessage::getRoutingKey();
         $this->purgeQueuesFor($routingKey);
@@ -66,26 +75,39 @@ final class PublishConsumeBenchmarkTest extends IntegrationTestCase
 
         self::assertNotEmpty($latencies, 'no messages were delivered - cannot benchmark');
 
-        $this->writeReport($label, $latencies);
+        $this->writeReport($label, $description, $latencies);
     }
 
     /**
-     * @param array<int, float> $latencies
+     * @param array<int, float> $latencies latency per delivered message, in seconds
      */
-    private function writeReport(string $label, array $latencies): void
+    private function writeReport(string $label, string $description, array $latencies): void
     {
         sort($latencies);
         $count = count($latencies);
-        $percentile = static fn (float $p): float => $latencies[(int)min($count - 1, floor($p * $count))];
+        $toMs = static fn (float $seconds): float => round($seconds * 1000, 2);
+        $percentileMs = static fn (float $p): float => $toMs(
+            $latencies[(int)min($count - 1, floor($p * $count))],
+        );
+
+        // matrix.broker.name / matrix.php-version from the workflow, so a report read on its own
+        // (e.g. from the uploaded artifact) still says which leg produced it.
+        $broker = getenv('BENCHMARK_BROKER') ?: 'unknown';
+        $phpVersion = getenv('BENCHMARK_PHP_VERSION') ?: PHP_VERSION;
 
         $report = [
-            'label' => $label,
+            'scenario' => $label,
+            'description' => $description,
+            'broker' => $broker,
+            'php_version' => $phpVersion,
             'iterations' => self::ITERATIONS,
             'delivered' => $count,
-            'min' => $latencies[0],
-            'p50' => $percentile(0.5),
-            'p95' => $percentile(0.95),
-            'max' => $latencies[$count - 1],
+            'latency_ms' => [
+                'min' => $toMs($latencies[0]),
+                'p50' => $percentileMs(0.5),
+                'p95' => $percentileMs(0.95),
+                'max' => $toMs($latencies[$count - 1]),
+            ],
         ];
 
         $buildDir = dirname(__DIR__, 3) . '/build';
@@ -97,13 +119,20 @@ final class PublishConsumeBenchmarkTest extends IntegrationTestCase
         file_put_contents($path, json_encode($report, JSON_PRETTY_PRINT) . "\n");
 
         fwrite(STDOUT, sprintf(
-            "[benchmark:%s] delivered=%d min=%.3fs p50=%.3fs p95=%.3fs max=%.3fs -> %s\n",
+            "\n[benchmark] %s (broker=%s, php=%s)\n"
+                . "  %s\n"
+                . "  %d/%d messages delivered - latency: min=%.2fms  p50=%.2fms  p95=%.2fms  max=%.2fms\n"
+                . "  full report: %s\n",
             $label,
+            $broker,
+            $phpVersion,
+            $description,
             $count,
-            $report['min'],
-            $report['p50'],
-            $report['p95'],
-            $report['max'],
+            self::ITERATIONS,
+            $report['latency_ms']['min'],
+            $report['latency_ms']['p50'],
+            $report['latency_ms']['p95'],
+            $report['latency_ms']['max'],
             $path,
         ));
     }
