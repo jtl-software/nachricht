@@ -17,6 +17,7 @@ use JTL\Nachricht\Transport\Amqp\AmqpTransport;
 use JTL\Nachricht\Transport\SubscriptionSettings;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 /**
  * Base class for the RabbitMQ testbed integration tests (EA-8268). Every test in this suite
@@ -54,6 +55,10 @@ abstract class IntegrationTestCase extends TestCase
             new AmqpConnectionFactory(),
             new PhpMessageSerializer(),
             new ListenerProvider(new NullContainer(), new MessageCache($listenerCache)),
+            // AmqpTransport defaults to EchoLogger, which prints every debug/info line to
+            // stdout - that trips PHPUnit's beStrictAboutOutputDuringTests. Tests assert on
+            // their own recorded state, not on log output, so a NullLogger is correct here.
+            new NullLogger(),
         );
 
         return $this->transport;
@@ -132,9 +137,20 @@ abstract class IntegrationTestCase extends TestCase
         }
     }
 
+    /**
+     * AmqpTransport only closes its connection in __destruct(). Several tests in this suite
+     * share one routing key/queue (distinct classes only exist for genuine isolation tests), so
+     * a still-open connection from a previous test would leave a zombie consumer registered on
+     * that queue - RabbitMQ would then round-robin some of the NEXT test's messages to it,
+     * making them vanish from the new test's $attempts array with no error anywhere.
+     * unset() alone isn't enough: php-amqplib's channel/connection/callback-closure graph is
+     * cyclic, so refcounting won't collect it immediately - force the cycle collector so the
+     * broker-side disconnect (and consumer cancellation) happens before the next test starts.
+     */
     protected function tearDown(): void
     {
         unset($this->transport);
+        gc_collect_cycles();
         parent::tearDown();
     }
 }
