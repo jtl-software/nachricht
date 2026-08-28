@@ -89,3 +89,31 @@ Such delay will be used every time a Listener facing an Error when cause jtl/nac
 
 You can find more examples in the `example` directory.
 
+## Connection heartbeat (recommended)
+
+A consumer talking to a broker that stops answering has to notice somehow. Historically the
+consumer probed for this by tearing down and re-creating its subscription on every poll timeout.
+That works, but it opens a window: a message that becomes deliverable while the subscription is
+being renewed is counted as delivered by the broker while never reaching the listener, so it
+stays UNACKED forever - not handled, not retried, not dead-lettered.
+
+Configuring a heartbeat detects an unresponsive broker just as quickly, and without that window.
+When a heartbeat is set, the consumer leaves its subscription alone while idling.
+
+```php
+$settings = new AmqpConnectionSettings(
+    host: 'localhost',
+    port: 5672,
+    httpPort: '15672',
+    user: 'guest',
+    password: 'guest',
+    heartbeat: 30, // seconds; 0 (the default) keeps the previous renew-on-idle behaviour
+);
+```
+
+Via `AmqpTransportFactory` the same is available as a `heartbeat` key in the settings array.
+
+Note that php-amqplib requires the socket read/write timeout to be at least twice the heartbeat.
+It is derived automatically, so `timeout` can stay short; override `readWriteTimeout` and
+`channelRpcTimeout` only if you need something specific.
+

@@ -34,6 +34,11 @@ use Throwable;
  *   AMQP_TEST_HOST      default 'localhost'
  *   AMQP_TEST_PORT      default 5672
  *   AMQP_TEST_HTTP_PORT default 15672 (management API, used only to purge queues between tests)
+ *   AMQP_TEST_USER      default 'guest'
+ *   AMQP_TEST_PASSWORD  default 'guest'
+ *   AMQP_TEST_VHOST     default '/' - point the suite at a throwaway vhost when the broker is
+ *                       shared with something else (a local dev environment, for instance)
+ *   AMQP_TEST_HEARTBEAT default 30 - 0 falls back to the legacy renew-on-idle behaviour
  *
  * Optional:
  *   AMQP_TEST_BROKER_RESTART_CMD  shell command that restarts the broker; tests needing a
@@ -135,6 +140,11 @@ abstract class IntegrationTestCase extends TestCase
             httpPort: getenv('AMQP_TEST_HTTP_PORT') ?: '15672',
             user: getenv('AMQP_TEST_USER') ?: 'guest',
             password: getenv('AMQP_TEST_PASSWORD') ?: 'guest',
+            vhost: getenv('AMQP_TEST_VHOST') ?: '/',
+            // Heartbeat on by default: it is the configuration this library recommends, and it
+            // is what stops AmqpConsumer from tearing down its subscription on every idle
+            // timeout. Set AMQP_TEST_HEARTBEAT=0 to exercise the legacy renew-on-idle path.
+            heartbeat: (int)(getenv('AMQP_TEST_HEARTBEAT') !== false ? getenv('AMQP_TEST_HEARTBEAT') : 30),
         );
     }
 
@@ -147,6 +157,7 @@ abstract class IntegrationTestCase extends TestCase
             $settings->getHttpPort(),
             $settings->getUser(),
             $settings->getPassword(),
+            $settings->getVhost(),
         );
     }
 

@@ -15,8 +15,9 @@ class AmqpConnectionFactory
             $connectionSettings->getPassword(),
             $connectionSettings->getVhost(),
             connection_timeout: $connectionSettings->getTimeout(),
-            read_write_timeout: $connectionSettings->getTimeout(),
-            channel_rpc_timeout: $connectionSettings->getTimeout(),
+            read_write_timeout: $connectionSettings->getReadWriteTimeout(),
+            heartbeat: $connectionSettings->getHeartbeat(),
+            channel_rpc_timeout: $connectionSettings->getChannelRpcTimeout(),
         );
     }
 }

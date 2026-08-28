@@ -61,11 +61,15 @@ class AmqpConsumer implements Consumer
             $endTime = new DateTimeImmutable("+ {$ttl} SECONDS");
         }
 
+        $renewOnIdle = $this->shouldRenewSubscriptionOnIdle();
+
         do {
             try {
                 $this->transport->poll($timeout);
             } catch (AMQPTimeoutException $e) {
-                $this->transport->renewSubscription($subscriptionSettings, $callback);
+                if ($renewOnIdle) {
+                    $this->transport->renewSubscription($subscriptionSettings, $callback);
+                }
             }
 
             // Checked outside the try/catch on purpose: an idle queue makes every poll() time
@@ -77,6 +81,27 @@ class AmqpConsumer implements Consumer
         } while ($this->shouldConsume);
 
         $this->logger->info('Consumer has been shut down');
+    }
+
+    /**
+     * A poll timeout only means "nothing arrived". Renewing the subscription in response is a
+     * workaround from EA-3010 for consumers that silently stopped receiving: the cancel/consume
+     * round trip fails loudly on a broker that no longer answers, so the process dies and gets
+     * restarted.
+     *
+     * It has a cost though. A message that becomes deliverable while the subscription is being
+     * renewed is lost to the client: the broker counts it as delivered, the callback never runs,
+     * and it stays UNACKED until the connection goes away - never handled, never retried, never
+     * dead-lettered. On a quiet queue that window opens on every poll timeout.
+     *
+     * A heartbeat detects an unresponsive broker just as quickly and without that window, so it
+     * makes the workaround unnecessary. When one is configured we therefore leave the
+     * subscription alone; without one we keep renewing, because dropping it there would bring
+     * back the silent hang EA-3010 was about.
+     */
+    private function shouldRenewSubscriptionOnIdle(): bool
+    {
+        return $this->transport->getConnectionSettings()->getHeartbeat() === 0;
     }
 
     /**
