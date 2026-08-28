@@ -13,15 +13,27 @@ use InvalidArgumentException;
 class AmqpConnectionSettings
 {
     /**
+     * Matches RabbitMQ's own server-side default, so the negotiated interval is the one the
+     * broker expects anyway.
+     */
+    public const DEFAULT_HEARTBEAT = 60;
+
+    /**
      * $timeout used to feed the connection timeout, the socket read/write timeout and the
      * channel RPC timeout all at once. They are separate now because a heartbeat forces the
      * read/write timeout to be at least twice the heartbeat interval, while the other two want
-     * to stay short. Leaving the new parameters at null keeps the previous behaviour exactly:
-     * every timeout equals $timeout and no heartbeat is negotiated.
+     * to stay short.
      *
-     * @param int $heartbeat Heartbeat interval in seconds, 0 disables it. With a heartbeat the
-     *                       client detects a broker that stopped answering (see AmqpConsumer,
-     *                       which then no longer needs to tear down its subscription to notice).
+     * @param int|null $heartbeat Heartbeat interval in seconds. null (the default) picks
+     *                            DEFAULT_HEARTBEAT, because a connection without a heartbeat
+     *                            cannot tell a silent broker from a quiet one - and detecting
+     *                            that is what lets AmqpConsumer stop tearing down its
+     *                            subscription on every idle poll, which is where deliveries
+     *                            were being lost. Pass 0 to switch it off explicitly and get
+     *                            the previous renew-on-idle behaviour back.
+     * @param float|null $readWriteTimeout Socket read/write timeout. null derives a value that
+     *                            satisfies the heartbeat; php-amqplib rejects anything below
+     *                            twice the interval.
      */
     public function __construct(
         private readonly string $host,
@@ -31,19 +43,20 @@ class AmqpConnectionSettings
         private readonly string $password,
         private readonly string $vhost = '/',
         private readonly float $timeout = 3.0,
-        private readonly int $heartbeat = 0,
+        private readonly ?int $heartbeat = null,
         private readonly ?float $readWriteTimeout = null,
         private readonly ?float $channelRpcTimeout = null,
     ) {
-        if ($this->heartbeat < 0) {
+        if ($this->heartbeat !== null && $this->heartbeat < 0) {
             throw new InvalidArgumentException('heartbeat must not be negative');
         }
 
-        if ($this->heartbeat > 0 && $this->getReadWriteTimeout() < $this->heartbeat * 2) {
+        $heartbeat = $this->getHeartbeat();
+        if ($heartbeat > 0 && $this->getReadWriteTimeout() < $heartbeat * 2) {
             throw new InvalidArgumentException(sprintf(
                 'readWriteTimeout (%.1fs) must be at least twice the heartbeat (%ds)',
                 $this->getReadWriteTimeout(),
-                $this->heartbeat,
+                $heartbeat,
             ));
         }
     }
@@ -88,16 +101,16 @@ class AmqpConnectionSettings
 
     public function getHeartbeat(): int
     {
-        return $this->heartbeat;
+        return $this->heartbeat ?? self::DEFAULT_HEARTBEAT;
     }
 
     /**
      * Socket read/write timeout. Defaults to $timeout, widened to twice the heartbeat when one
-     * is configured, because php-amqplib rejects anything smaller.
+     * is in effect, because php-amqplib rejects anything smaller.
      */
     public function getReadWriteTimeout(): float
     {
-        return $this->readWriteTimeout ?? max($this->timeout, $this->heartbeat * 2.0);
+        return $this->readWriteTimeout ?? max($this->timeout, $this->getHeartbeat() * 2.0);
     }
 
     public function getChannelRpcTimeout(): float

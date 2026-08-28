@@ -38,7 +38,7 @@ use Throwable;
  *   AMQP_TEST_PASSWORD  default 'guest'
  *   AMQP_TEST_VHOST     default '/' - point the suite at a throwaway vhost when the broker is
  *                       shared with something else (a local dev environment, for instance)
- *   AMQP_TEST_HEARTBEAT default 30 - 0 falls back to the legacy renew-on-idle behaviour
+ *   AMQP_TEST_HEARTBEAT unset uses the library default - 0 falls back to renew-on-idle
  *
  * Optional:
  *   AMQP_TEST_BROKER_RESTART_CMD  shell command that restarts the broker; tests needing a
@@ -141,10 +141,9 @@ abstract class IntegrationTestCase extends TestCase
             user: getenv('AMQP_TEST_USER') ?: 'guest',
             password: getenv('AMQP_TEST_PASSWORD') ?: 'guest',
             vhost: getenv('AMQP_TEST_VHOST') ?: '/',
-            // Heartbeat on by default: it is the configuration this library recommends, and it
-            // is what stops AmqpConsumer from tearing down its subscription on every idle
-            // timeout. Set AMQP_TEST_HEARTBEAT=0 to exercise the legacy renew-on-idle path.
-            heartbeat: (int)(getenv('AMQP_TEST_HEARTBEAT') !== false ? getenv('AMQP_TEST_HEARTBEAT') : 30),
+            // Left at the library default (on) unless overridden. AMQP_TEST_HEARTBEAT=0
+            // exercises the legacy renew-on-idle path.
+            heartbeat: getenv('AMQP_TEST_HEARTBEAT') === false ? null : (int)getenv('AMQP_TEST_HEARTBEAT'),
         );
     }
 
