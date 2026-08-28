@@ -15,28 +15,46 @@
 #   BROKER=current-prod bin/testbed test    # 4.2.6 + archived plugin
 #   BROKER=next-target  bin/testbed test    # 4.3.3 + CloudAMQP fork (default)
 #
+# Or point it at any published RabbitMQ version to see whether it still behaves:
+#   RABBITMQ_VERSION=4.3.5 bin/testbed test
+#   RABBITMQ_VERSION=4.3.5 PLUGIN_VERSION=4.3.1 bin/testbed test
+#
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 BROKER="${BROKER:-next-target}"
 
-# Each leg gets its own container and its own default ports, so both can be up at the same time
-# and neither collides with a RabbitMQ you already run on the standard ports.
-case "$BROKER" in
-  next-target)
-    RABBITMQ_VERSION=4.3.3-management; PLUGIN_SOURCE=cloudamqp; PLUGIN_VERSION=4.3.1
-    DEFAULT_AMQP_PORT=5673; DEFAULT_MGMT_PORT=15673
-    ;;
-  current-prod)
-    RABBITMQ_VERSION=4.2.6-management; PLUGIN_SOURCE=archived;  PLUGIN_VERSION=4.2.0
-    DEFAULT_AMQP_PORT=5674; DEFAULT_MGMT_PORT=15674
-    ;;
-  *)
-    echo "unknown BROKER '${BROKER}' (expected next-target or current-prod)" >&2
-    exit 1
-    ;;
-esac
+# Each leg gets its own container and its own default ports, so several can be up at the same
+# time and none collides with a RabbitMQ you already run on the standard ports.
+if [ -n "${RABBITMQ_VERSION:-}" ]; then
+  # Ad-hoc version check: RABBITMQ_VERSION=4.3.5 bin/testbed test
+  # The suite needs the management API, so the tag gets it whether or not you typed it.
+  case "$RABBITMQ_VERSION" in
+    *-management) ;;
+    *) RABBITMQ_VERSION="${RABBITMQ_VERSION}-management" ;;
+  esac
+  PLUGIN_SOURCE="${PLUGIN_SOURCE:-cloudamqp}"
+  PLUGIN_VERSION="${PLUGIN_VERSION:-4.3.1}"
+  BROKER="custom-${RABBITMQ_VERSION%-management}"
+  DEFAULT_AMQP_PORT=5675; DEFAULT_MGMT_PORT=15675
+else
+  case "$BROKER" in
+    next-target)
+      RABBITMQ_VERSION=4.3.3-management; PLUGIN_SOURCE=cloudamqp; PLUGIN_VERSION=4.3.1
+      DEFAULT_AMQP_PORT=5673; DEFAULT_MGMT_PORT=15673
+      ;;
+    current-prod)
+      RABBITMQ_VERSION=4.2.6-management; PLUGIN_SOURCE=archived;  PLUGIN_VERSION=4.2.0
+      DEFAULT_AMQP_PORT=5674; DEFAULT_MGMT_PORT=15674
+      ;;
+    *)
+      echo "unknown BROKER '${BROKER}' (expected next-target or current-prod)" >&2
+      echo "to try any other version: RABBITMQ_VERSION=4.3.5 bin/testbed test" >&2
+      exit 1
+      ;;
+  esac
+fi
 
 AMQP_PORT="${AMQP_PORT:-$DEFAULT_AMQP_PORT}"
 MGMT_PORT="${MGMT_PORT:-$DEFAULT_MGMT_PORT}"
@@ -146,7 +164,7 @@ case "${1:-test}" in
     container_exists && $RUNTIME rm -f "$CONTAINER" >/dev/null && echo "removed ${CONTAINER}" || echo "nothing to remove"
     ;;
   *)
-    sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '3,21p' "$0" | sed 's/^# \{0,1\}//'
     exit 1
     ;;
 esac
