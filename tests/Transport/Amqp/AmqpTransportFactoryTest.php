@@ -53,4 +53,65 @@ class AmqpTransportFactoryTest extends TestCase
         );
         $this->assertInstanceOf(AmqpTransport::class, $transport);
     }
+
+    public function testConnectionSettingsDefaultToNoHeartbeat(): void
+    {
+        $transport = $this->factory->createTransport(
+            ['host' => 'localhost', 'port' => '5672', 'httpPort' => '15672', 'user' => 'guest', 'password' => 'guest'],
+            self::createStub(MessageSerializer::class),
+            self::createStub(ListenerProvider::class),
+        );
+
+        $settings = $transport->getConnectionSettings();
+        $this->assertSame(0, $settings->getHeartbeat());
+        $this->assertSame(3.0, $settings->getReadWriteTimeout());
+    }
+
+    public function testHeartbeatAndTimeoutsCanBeConfigured(): void
+    {
+        $transport = $this->factory->createTransport(
+            [
+                'host' => 'localhost',
+                'port' => '5672',
+                'httpPort' => '15672',
+                'user' => 'guest',
+                'password' => 'guest',
+                'heartbeat' => '30',
+                'channelRpcTimeout' => '5.5',
+            ],
+            self::createStub(MessageSerializer::class),
+            self::createStub(ListenerProvider::class),
+        );
+
+        $settings = $transport->getConnectionSettings();
+        $this->assertSame(30, $settings->getHeartbeat());
+        $this->assertSame(60.0, $settings->getReadWriteTimeout(), 'must be widened for the heartbeat');
+        $this->assertSame(5.5, $settings->getChannelRpcTimeout());
+    }
+
+    /**
+     * An unset env var expands to an empty string in the settings array. That must mean "derive
+     * it", not "zero" - a zero read/write timeout would be rejected once a heartbeat is set.
+     */
+    public function testEmptyOptionalSettingsAreTreatedAsAbsent(): void
+    {
+        $transport = $this->factory->createTransport(
+            [
+                'host' => 'localhost',
+                'port' => '5672',
+                'httpPort' => '15672',
+                'user' => 'guest',
+                'password' => 'guest',
+                'heartbeat' => '15',
+                'readWriteTimeout' => '',
+                'channelRpcTimeout' => '',
+            ],
+            self::createStub(MessageSerializer::class),
+            self::createStub(ListenerProvider::class),
+        );
+
+        $settings = $transport->getConnectionSettings();
+        $this->assertSame(30.0, $settings->getReadWriteTimeout());
+        $this->assertSame(3.0, $settings->getChannelRpcTimeout());
+    }
 }

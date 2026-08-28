@@ -41,6 +41,9 @@ class AmqpTransportFactory
                 $this->getFromSettingsArray('password', $connectionSettings),
                 $this->getFromSettingsArray('vhost', $connectionSettings, '/'),
                 (float)$this->getFromSettingsArray('timeout', $connectionSettings, '3.0'),
+                (int)$this->getFromSettingsArray('heartbeat', $connectionSettings, '0'),
+                $this->getOptionalFloat('readWriteTimeout', $connectionSettings),
+                $this->getOptionalFloat('channelRpcTimeout', $connectionSettings),
             ),
             $this->connectionFactory,
             $serializer,
@@ -59,5 +62,18 @@ class AmqpTransportFactory
         ?string $default = null
     ): string {
         return $settings[$key] ?? $default ?? throw new InvalidArgumentException("Missing {$key} in amqp connectionSettings");
+    }
+
+    /**
+     * Optional numeric setting: absent (or empty, which is what an unset env var expands to)
+     * means "derive it", not "use zero".
+     *
+     * @param array<string, mixed> $settings
+     */
+    private function getOptionalFloat(string $key, array $settings): ?float
+    {
+        $value = $settings[$key] ?? null;
+
+        return ($value === null || $value === '') ? null : (float)$value;
     }
 }

@@ -74,6 +74,7 @@ class AmqpConsumerTest extends TestCase
     {
         $subscriptionSettings = new SubscriptionSettings(StringCollection::from('some-queue'), ttl: 0);
 
+        $this->transport->method('getConnectionSettings')->willReturn($this->settingsWithHeartbeat(0));
         $this->transport->expects(self::once())->method('poll')
             ->willThrowException(new AMQPTimeoutException());
         $this->transport->expects(self::once())->method('renewSubscription')
@@ -83,6 +84,30 @@ class AmqpConsumerTest extends TestCase
         // beStrictAboutOutputDuringTests.
         $consumer = new AmqpConsumer($this->transport, $this->dispatcher, new NullLogger());
         $consumer->consume($subscriptionSettings);
+    }
+
+    /**
+     * With a heartbeat the connection detects an unresponsive broker on its own, so the
+     * subscription must be left alone on an idle timeout - renewing it there is what loses a
+     * delivery that lands during the cancel/consume window and strands it in UNACKED.
+     */
+    #[AllowMockObjectsWithoutExpectations]
+    public function testSubscriptionIsNotRenewedWhenAHeartbeatIsConfigured(): void
+    {
+        $subscriptionSettings = new SubscriptionSettings(StringCollection::from('some-queue'), ttl: 0);
+
+        $this->transport->method('getConnectionSettings')->willReturn($this->settingsWithHeartbeat(30));
+        $this->transport->expects(self::once())->method('poll')
+            ->willThrowException(new AMQPTimeoutException());
+        $this->transport->expects(self::never())->method('renewSubscription');
+
+        $consumer = new AmqpConsumer($this->transport, $this->dispatcher, new NullLogger());
+        $consumer->consume($subscriptionSettings);
+    }
+
+    private function settingsWithHeartbeat(int $heartbeat): AmqpConnectionSettings
+    {
+        return new AmqpConnectionSettings('localhost', 5672, '15672', 'guest', 'guest', heartbeat: $heartbeat);
     }
 
     #[AllowMockObjectsWithoutExpectations]

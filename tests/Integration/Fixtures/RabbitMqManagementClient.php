@@ -18,13 +18,19 @@ final class RabbitMqManagementClient
         private readonly string $httpPort,
         private readonly string $user = 'guest',
         private readonly string $password = 'guest',
+        private readonly string $vhost = '/',
     ) {
+    }
+
+    private function queuePath(string $queueName): string
+    {
+        return '/api/queues/' . rawurlencode($this->vhost) . '/' . rawurlencode($queueName);
     }
 
     public function purgeQueue(string $queueName): void
     {
         // 404 if the queue was never declared yet - that's fine, nothing to purge.
-        $this->request('DELETE', '/api/queues/%2F/' . rawurlencode($queueName) . '/contents');
+        $this->request('DELETE', $this->queuePath($queueName) . '/contents');
     }
 
     /**
@@ -32,7 +38,7 @@ final class RabbitMqManagementClient
      */
     public function queueCounters(string $queueName): ?array
     {
-        $body = $this->request('GET', '/api/queues/%2F/' . rawurlencode($queueName));
+        $body = $this->request('GET', $this->queuePath($queueName));
         if ($body === null) {
             return null;
         }
@@ -54,7 +60,7 @@ final class RabbitMqManagementClient
      */
     public function consumerCount(string $queueName): ?int
     {
-        $body = $this->request('GET', '/api/queues/%2F/' . rawurlencode($queueName));
+        $body = $this->request('GET', $this->queuePath($queueName));
         if ($body === null) {
             return null;
         }
