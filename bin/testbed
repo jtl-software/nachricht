@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+#
+# Run the RabbitMQ integration suite locally against a throwaway broker.
+#
+# Boots the same image CI builds (docker/rabbitmq), on non-default ports so it cannot collide
+# with a RabbitMQ you already have running, and points the suite at it. The broker is left
+# running between commands so re-runs are fast - use `down` when you are finished.
+#
+#   bin/testbed test              # integration suite (starts the broker if needed)
+#   bin/testbed benchmark         # publish/consume benchmark
+#   bin/testbed restart-test      # broker-restart persistence test
+#   bin/testbed up | down | logs | shell
+#
+# Pick the broker leg the same way the CI matrix does:
+#   BROKER=current-prod bin/testbed test    # 4.2.6 + archived plugin
+#   BROKER=next-target  bin/testbed test    # 4.3.3 + CloudAMQP fork (default)
+#
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+BROKER="${BROKER:-next-target}"
+
+# Each leg gets its own container and its own default ports, so both can be up at the same time
+# and neither collides with a RabbitMQ you already run on the standard ports.
+case "$BROKER" in
+  next-target)
+    RABBITMQ_VERSION=4.3.3-management; PLUGIN_SOURCE=cloudamqp; PLUGIN_VERSION=4.3.1
+    DEFAULT_AMQP_PORT=5673; DEFAULT_MGMT_PORT=15673
+    ;;
+  current-prod)
+    RABBITMQ_VERSION=4.2.6-management; PLUGIN_SOURCE=archived;  PLUGIN_VERSION=4.2.0
+    DEFAULT_AMQP_PORT=5674; DEFAULT_MGMT_PORT=15674
+    ;;
+  *)
+    echo "unknown BROKER '${BROKER}' (expected next-target or current-prod)" >&2
+    exit 1
+    ;;
+esac
+
+AMQP_PORT="${AMQP_PORT:-$DEFAULT_AMQP_PORT}"
+MGMT_PORT="${MGMT_PORT:-$DEFAULT_MGMT_PORT}"
+CONTAINER="nachricht-testbed-${BROKER}"
+IMAGE="nachricht-testbed-rabbitmq:${BROKER}"
+
+# Probe for a runtime that actually answers - a docker binary on PATH means nothing if its
+# daemon is not running (a very common state on machines that also have podman).
+if [ -n "${CONTAINER_RUNTIME:-}" ]; then
+  RUNTIME="$CONTAINER_RUNTIME"
+elif docker info >/dev/null 2>&1; then
+  RUNTIME=docker
+elif podman info >/dev/null 2>&1; then
+  RUNTIME=podman
+else
+  echo "no working container runtime found - tried docker and podman." >&2
+  echo "Start one, or set CONTAINER_RUNTIME to the command you want to use." >&2
+  exit 1
+fi
+
+container_running() {
+  [ -n "$($RUNTIME ps --quiet --filter "name=^${CONTAINER}$")" ]
+}
+
+container_exists() {
+  [ -n "$($RUNTIME ps --all --quiet --filter "name=^${CONTAINER}$")" ]
+}
+
+wait_for_broker() {
+  printf 'waiting for the broker'
+  for _ in $(seq 1 60); do
+    if $RUNTIME exec "$CONTAINER" rabbitmq-diagnostics check_running >/dev/null 2>&1; then
+      printf ' ready\n'
+      return 0
+    fi
+    printf '.'
+    sleep 2
+  done
+  printf ' FAILED\n' >&2
+  $RUNTIME logs "$CONTAINER" >&2
+  return 1
+}
+
+up() {
+  if container_running; then
+    echo "broker already running (${BROKER}) on amqp ${AMQP_PORT} / management ${MGMT_PORT}"
+    return 0
+  fi
+
+  container_exists && $RUNTIME rm -f "$CONTAINER" >/dev/null
+
+  echo "building ${IMAGE} ..."
+  $RUNTIME build \
+    --build-arg "RABBITMQ_VERSION=${RABBITMQ_VERSION}" \
+    --build-arg "PLUGIN_SOURCE=${PLUGIN_SOURCE}" \
+    --build-arg "PLUGIN_VERSION=${PLUGIN_VERSION}" \
+    -t "$IMAGE" \
+    ./docker/rabbitmq
+
+  echo "starting ${CONTAINER} (${BROKER}) ..."
+  $RUNTIME run --detach --name "$CONTAINER" \
+    --publish "${AMQP_PORT}:5672" \
+    --publish "${MGMT_PORT}:15672" \
+    "$IMAGE" >/dev/null
+
+  wait_for_broker
+  echo "management ui: http://localhost:${MGMT_PORT} (guest/guest)"
+}
+
+export_env() {
+  export AMQP_TEST_HOST=localhost
+  export AMQP_TEST_PORT="$AMQP_PORT"
+  export AMQP_TEST_HTTP_PORT="$MGMT_PORT"
+  export AMQP_TEST_USER=guest
+  export AMQP_TEST_PASSWORD=guest
+  export AMQP_TEST_VHOST=/
+}
+
+case "${1:-test}" in
+  up)
+    up
+    ;;
+  test)
+    up
+    export_env
+    composer phpunit-integration
+    ;;
+  benchmark)
+    up
+    export_env
+    composer phpunit-benchmark
+    ;;
+  restart-test)
+    up
+    export_env
+    # The suite skips this one unless it is allowed to restart the broker itself.
+    export AMQP_TEST_BROKER_RESTART_CMD="$RUNTIME restart $CONTAINER"
+    composer phpunit-broker-restart
+    ;;
+  logs)
+    $RUNTIME logs --follow "$CONTAINER"
+    ;;
+  shell)
+    $RUNTIME exec -it "$CONTAINER" bash
+    ;;
+  down)
+    container_exists && $RUNTIME rm -f "$CONTAINER" >/dev/null && echo "removed ${CONTAINER}" || echo "nothing to remove"
+    ;;
+  *)
+    sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+    exit 1
+    ;;
+esac

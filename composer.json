@@ -64,6 +64,15 @@
         ],
         "phpunit-broker-restart": [
             "vendor/bin/phpunit -c phpunit.integration.xml --group broker-restart"
+        ],
+        "testbed": [
+            "bin/testbed test"
+        ],
+        "testbed-benchmark": [
+            "bin/testbed benchmark"
+        ],
+        "testbed-down": [
+            "bin/testbed down"
         ]
     }
 }

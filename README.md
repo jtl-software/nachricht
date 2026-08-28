@@ -124,3 +124,36 @@ channel RPC timeouts stay short, so connecting and RPCs still fail fast, but a p
 broker can block longer than before. Lower the heartbeat, or set `readWriteTimeout` explicitly,
 if that matters for your callers.
 
+## Running the tests
+
+The unit suite needs nothing but PHP:
+
+```bash
+composer phpunit
+```
+
+The integration suite talks to a real RabbitMQ with the delayed-message plugin. `bin/testbed`
+boots one for you - the same image CI uses - on ports that will not collide with a broker you
+already run, and points the suite at it:
+
+```bash
+bin/testbed test           # or: composer testbed
+bin/testbed benchmark      # publish/consume latency + throughput
+bin/testbed restart-test   # scheduled messages survive a broker restart
+bin/testbed down           # stop and remove the broker when you are done
+```
+
+The broker stays up between runs, so a second `bin/testbed test` starts immediately.
+
+CI runs the suite against two broker versions; you can pick either locally, and they can be up
+at the same time (each gets its own container and ports):
+
+```bash
+BROKER=next-target  bin/testbed test   # RabbitMQ 4.3.3 + CloudAMQP plugin fork (default)
+BROKER=current-prod bin/testbed test   # RabbitMQ 4.2.6 + archived plugin
+```
+
+Needs docker or podman - whichever actually responds is picked automatically, or set
+`CONTAINER_RUNTIME` to choose. To run against a broker of your own instead, set `AMQP_TEST_HOST`,
+`AMQP_TEST_PORT`, `AMQP_TEST_HTTP_PORT`, `AMQP_TEST_USER`, `AMQP_TEST_PASSWORD` and
+`AMQP_TEST_VHOST` and call `composer phpunit-integration` directly.
