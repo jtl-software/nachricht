@@ -89,16 +89,17 @@ Such delay will be used every time a Listener facing an Error when cause jtl/nac
 
 You can find more examples in the `example` directory.
 
-## Connection heartbeat (recommended)
+## Connection heartbeat
 
-A consumer talking to a broker that stops answering has to notice somehow. Historically the
-consumer probed for this by tearing down and re-creating its subscription on every poll timeout.
-That works, but it opens a window: a message that becomes deliverable while the subscription is
-being renewed is counted as delivered by the broker while never reaching the listener, so it
-stays UNACKED forever - not handled, not retried, not dead-lettered.
+A consumer talking to a broker that stopped answering has to notice somehow. Historically it
+probed for this by tearing down and re-creating its subscription on every poll timeout. That
+works, but it opens a window: a message becoming deliverable while the subscription is being
+renewed is counted as delivered by the broker and never reaches the listener, so it stays
+UNACKED forever - not handled, not retried, not dead-lettered.
 
-Configuring a heartbeat detects an unresponsive broker just as quickly, and without that window.
-When a heartbeat is set, the consumer leaves its subscription alone while idling.
+A heartbeat detects an unresponsive broker just as quickly and without that window, so it is
+**on by default** (60s, matching RabbitMQ's own default). With a heartbeat in effect the consumer
+leaves its subscription alone while idling.
 
 ```php
 $settings = new AmqpConnectionSettings(
@@ -107,13 +108,19 @@ $settings = new AmqpConnectionSettings(
     httpPort: '15672',
     user: 'guest',
     password: 'guest',
-    heartbeat: 30, // seconds; 0 (the default) keeps the previous renew-on-idle behaviour
+    // heartbeat: null  => 60s (default)
+    // heartbeat: 30    => 30s
+    // heartbeat: 0     => off, and the consumer renews its subscription on idle again
 );
 ```
 
-Via `AmqpTransportFactory` the same is available as a `heartbeat` key in the settings array.
+Via `AmqpTransportFactory` the same is available as a `heartbeat` key in the settings array; an
+absent or empty value means "use the default", an explicit `0` switches it off.
 
-Note that php-amqplib requires the socket read/write timeout to be at least twice the heartbeat.
-It is derived automatically, so `timeout` can stay short; override `readWriteTimeout` and
-`channelRpcTimeout` only if you need something specific.
+One consequence worth knowing: php-amqplib requires the socket read/write timeout to be at least
+twice the heartbeat, and it uses that single value for reads *and* writes. With the default
+heartbeat it is therefore derived as 120s, where it used to be `timeout` (3s). The connection and
+channel RPC timeouts stay short, so connecting and RPCs still fail fast, but a publish to a dead
+broker can block longer than before. Lower the heartbeat, or set `readWriteTimeout` explicitly,
+if that matters for your callers.
 

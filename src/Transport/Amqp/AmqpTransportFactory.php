@@ -41,7 +41,7 @@ class AmqpTransportFactory
                 $this->getFromSettingsArray('password', $connectionSettings),
                 $this->getFromSettingsArray('vhost', $connectionSettings, '/'),
                 (float)$this->getFromSettingsArray('timeout', $connectionSettings, '3.0'),
-                (int)$this->getFromSettingsArray('heartbeat', $connectionSettings, '0'),
+                $this->getOptionalInt('heartbeat', $connectionSettings),
                 $this->getOptionalFloat('readWriteTimeout', $connectionSettings),
                 $this->getOptionalFloat('channelRpcTimeout', $connectionSettings),
             ),
@@ -66,7 +66,8 @@ class AmqpTransportFactory
 
     /**
      * Optional numeric setting: absent (or empty, which is what an unset env var expands to)
-     * means "derive it", not "use zero".
+     * means "derive it", not "use zero". An explicit "0" therefore still reaches the settings as
+     * a deliberate zero - which is how a heartbeat gets switched off on purpose.
      *
      * @param array<string, mixed> $settings
      */
@@ -75,5 +76,15 @@ class AmqpTransportFactory
         $value = $settings[$key] ?? null;
 
         return ($value === null || $value === '') ? null : (float)$value;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function getOptionalInt(string $key, array $settings): ?int
+    {
+        $value = $settings[$key] ?? null;
+
+        return ($value === null || $value === '') ? null : (int)$value;
     }
 }

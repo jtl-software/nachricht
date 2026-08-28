@@ -46,15 +46,39 @@ class AmqpConnectionSettingsTest extends TestCase
     }
 
     /**
-     * The three timeouts used to be one value. Callers that do not pass the new parameters must
-     * keep getting exactly what they got before: no heartbeat, every timeout equal to $timeout.
+     * A connection without a heartbeat cannot tell a silent broker from a quiet one, so the
+     * default is on. The read/write timeout follows it, while connection and RPC timeouts stay
+     * short.
      */
-    public function testDefaultsKeepThePreviousSingleTimeoutBehaviour(): void
+    public function testHeartbeatIsOnByDefault(): void
     {
         $settings = new AmqpConnectionSettings('localhost', 5672, '15672', 'guest', 'guest');
 
-        $this->assertSame(0, $settings->getHeartbeat());
+        $this->assertSame(AmqpConnectionSettings::DEFAULT_HEARTBEAT, $settings->getHeartbeat());
         $this->assertSame(3.0, $settings->getTimeout());
+        $this->assertSame(
+            AmqpConnectionSettings::DEFAULT_HEARTBEAT * 2.0,
+            $settings->getReadWriteTimeout(),
+        );
+        $this->assertSame(3.0, $settings->getChannelRpcTimeout());
+    }
+
+    /**
+     * The escape hatch: an explicit zero switches the heartbeat off and restores exactly what
+     * this class did before it knew about heartbeats - every timeout equal to $timeout.
+     */
+    public function testExplicitZeroDisablesTheHeartbeatAndRestoresTheOldTimeouts(): void
+    {
+        $settings = new AmqpConnectionSettings(
+            'localhost',
+            5672,
+            '15672',
+            'guest',
+            'guest',
+            heartbeat: 0,
+        );
+
+        $this->assertSame(0, $settings->getHeartbeat());
         $this->assertSame(3.0, $settings->getReadWriteTimeout());
         $this->assertSame(3.0, $settings->getChannelRpcTimeout());
     }

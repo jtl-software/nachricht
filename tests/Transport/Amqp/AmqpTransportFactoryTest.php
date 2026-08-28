@@ -54,10 +54,30 @@ class AmqpTransportFactoryTest extends TestCase
         $this->assertInstanceOf(AmqpTransport::class, $transport);
     }
 
-    public function testConnectionSettingsDefaultToNoHeartbeat(): void
+    public function testConnectionSettingsDefaultToAHeartbeat(): void
     {
         $transport = $this->factory->createTransport(
             ['host' => 'localhost', 'port' => '5672', 'httpPort' => '15672', 'user' => 'guest', 'password' => 'guest'],
+            self::createStub(MessageSerializer::class),
+            self::createStub(ListenerProvider::class),
+        );
+
+        $settings = $transport->getConnectionSettings();
+        $this->assertSame(AmqpConnectionSettings::DEFAULT_HEARTBEAT, $settings->getHeartbeat());
+        $this->assertSame(AmqpConnectionSettings::DEFAULT_HEARTBEAT * 2.0, $settings->getReadWriteTimeout());
+    }
+
+    public function testHeartbeatCanBeSwitchedOffThroughTheSettingsArray(): void
+    {
+        $transport = $this->factory->createTransport(
+            [
+                'host' => 'localhost',
+                'port' => '5672',
+                'httpPort' => '15672',
+                'user' => 'guest',
+                'password' => 'guest',
+                'heartbeat' => '0',
+            ],
             self::createStub(MessageSerializer::class),
             self::createStub(ListenerProvider::class),
         );
