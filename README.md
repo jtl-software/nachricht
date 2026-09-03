@@ -138,8 +138,9 @@ bin/testbed benchmark                   # publish/consume latency + throughput
 bin/testbed restart-test                # scheduled messages survive a broker restart
 bin/testbed logs | shell | down         # broker stays up between runs; down removes it
 
-BROKER=current-prod bin/testbed test    # RabbitMQ 4.2.6 + archived plugin
-BROKER=next-target  bin/testbed test    # RabbitMQ 4.3.3 + CloudAMQP fork (default)
+BROKER=current-prod  bin/testbed test   # RabbitMQ 4.3.3 + CloudAMQP fork - prod (default)
+BROKER=next-target   bin/testbed test   # newest published release, resolved on the fly
+BROKER=previous-prod bin/testbed test   # RabbitMQ 4.2.6 + archived plugin
 
 RABBITMQ_VERSION=4.3.5 bin/testbed test # try any published version, e.g. before upgrading
 ```

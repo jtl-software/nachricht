@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       rabbitmq_version:
-        description: "RabbitMQ image tag to test (e.g. 4.4.0-management). Leave empty to run the default current-prod/next-target matrix instead."
+        description: "RabbitMQ image tag to test (e.g. 4.4.0-management). Leave empty to run the default matrix: pinned current-prod plus the newest published release."
         required: false
         type: string
       plugin_source:
@@ -41,12 +41,28 @@ jobs:
       - id: versions
         run: echo 'php-versions=["8.3", "8.4", "8.5"]' >> "$GITHUB_OUTPUT"
 
-      # Single source of truth for the broker-version axis. A manual workflow_dispatch run with
-      # rabbitmq_version set tests exactly that one version/plugin combination instead of the
-      # default current-prod/next-target pair - e.g. to spot-check a brand new RabbitMQ release
-      # before deciding whether it becomes the next "next-target" leg.
+      # Single source of truth for the broker-version axis. Two legs always run:
+      #
+      #   current-prod - pinned to the version production actually runs. A failure here is real.
+      #   next-target  - resolved on the fly to the newest published RabbitMQ image plus the
+      #                  newest CloudAMQP plugin release, so a fresh upstream release is picked
+      #                  up without a commit here. Non-blocking: it is an early warning, and a
+      #                  brand new release without a matching plugin build must not redden a
+      #                  push that has nothing to do with it.
+      #
+      # If the newest published version *is* current-prod, or either lookup fails, the second leg
+      # falls back to the previous production version, so two distinct brokers are always tested.
+      #
+      # A manual workflow_dispatch run with rabbitmq_version set tests exactly that one
+      # version/plugin combination instead - e.g. to spot-check a release candidate.
       - id: brokers
         env:
+          CURRENT_VERSION: "4.3.3-management"
+          CURRENT_PLUGIN_SOURCE: cloudamqp
+          CURRENT_PLUGIN_VERSION: "4.3.1"
+          FALLBACK_VERSION: "4.2.6-management"
+          FALLBACK_PLUGIN_SOURCE: archived
+          FALLBACK_PLUGIN_VERSION: "4.2.0"
           RABBITMQ_VERSION: ${{ github.event.inputs.rabbitmq_version }}
           PLUGIN_SOURCE: ${{ github.event.inputs.plugin_source }}
           PLUGIN_VERSION: ${{ github.event.inputs.plugin_version }}
@@ -56,12 +72,42 @@ jobs:
               --arg rabbitmq_version "${RABBITMQ_VERSION}" \
               --arg plugin_source "${PLUGIN_SOURCE:-cloudamqp}" \
               --arg plugin_version "${PLUGIN_VERSION}" \
-              '[{name: "manual", rabbitmq_version: $rabbitmq_version, plugin_source: $plugin_source, plugin_version: $plugin_version}]')
+              '[{name: "manual", rabbitmq_version: $rabbitmq_version, plugin_source: $plugin_source, plugin_version: $plugin_version, tolerate_failure: false}]')
           else
-            config='[
-              {"name": "current-prod", "rabbitmq_version": "4.2.6-management", "plugin_source": "archived", "plugin_version": "4.2.0"},
-              {"name": "next-target", "rabbitmq_version": "4.3.3-management", "plugin_source": "cloudamqp", "plugin_version": "4.3.1"}
-            ]'
+            # Newest published image tag, not newest git tag: an announced release whose image is
+            # not on Docker Hub yet would only produce a pull failure here.
+            latest_version=""
+            if tags=$(curl -fsS --max-time 30 'https://hub.docker.com/v2/repositories/library/rabbitmq/tags?page_size=100&ordering=last_updated'); then
+              latest_version=$(printf '%s' "$tags" | jq -r '.results[].name' \
+                | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-management$' | sort -V | tail -n1)
+            fi
+
+            latest_plugin=""
+            if release=$(curl -fsS --max-time 30 https://api.github.com/repos/cloudamqp/rabbitmq-delayed-message-exchange/releases/latest); then
+              latest_plugin=$(printf '%s' "$release" | jq -r '.tag_name // ""' | sed 's/^v//')
+            fi
+
+            if [ -n "$latest_version" ] && [ -n "$latest_plugin" ] && [ "$latest_version" != "$CURRENT_VERSION" ]; then
+              echo "next-target resolved to ${latest_version} + cloudamqp plugin ${latest_plugin}"
+              second=$(jq -nc \
+                --arg rabbitmq_version "$latest_version" \
+                --arg plugin_version "$latest_plugin" \
+                '{name: "next-target", rabbitmq_version: $rabbitmq_version, plugin_source: "cloudamqp", plugin_version: $plugin_version, tolerate_failure: true}')
+            else
+              echo "nothing newer than ${CURRENT_VERSION} published (or the lookup failed) - second leg falls back to ${FALLBACK_VERSION}"
+              second=$(jq -nc \
+                --arg rabbitmq_version "$FALLBACK_VERSION" \
+                --arg plugin_source "$FALLBACK_PLUGIN_SOURCE" \
+                --arg plugin_version "$FALLBACK_PLUGIN_VERSION" \
+                '{name: "previous-prod", rabbitmq_version: $rabbitmq_version, plugin_source: $plugin_source, plugin_version: $plugin_version, tolerate_failure: false}')
+            fi
+
+            config=$(jq -nc \
+              --arg rabbitmq_version "$CURRENT_VERSION" \
+              --arg plugin_source "$CURRENT_PLUGIN_SOURCE" \
+              --arg plugin_version "$CURRENT_PLUGIN_VERSION" \
+              --argjson second "$second" \
+              '[{name: "current-prod", rabbitmq_version: $rabbitmq_version, plugin_source: $plugin_source, plugin_version: $plugin_version, tolerate_failure: false}, $second]')
           fi
           echo "broker-configs=$(echo "$config" | jq -c .)" >> "$GITHUB_OUTPUT"
 
@@ -69,6 +115,9 @@ jobs:
 
     needs: setup
     runs-on: ubuntu-24.04
+    # The floating next-target leg must not gate a push: a brand new RabbitMQ release whose
+    # plugin build does not exist yet is upstream news, not a regression in this library.
+    continue-on-error: ${{ matrix.broker.tolerate_failure }}
 
     strategy:
       fail-fast: false
@@ -199,6 +248,9 @@ jobs:
 
     needs: setup
     runs-on: ubuntu-24.04
+    # The floating next-target leg must not gate a push: a brand new RabbitMQ release whose
+    # plugin build does not exist yet is upstream news, not a regression in this library.
+    continue-on-error: ${{ matrix.broker.tolerate_failure }}
 
     strategy:
       fail-fast: false
