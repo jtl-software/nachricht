@@ -14,9 +14,23 @@ case "$source" in
       "https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v${version}/rabbitmq_delayed_message_exchange-${version}.ez"
     ;;
   cloudamqp)
-    # Maintained fork, tracks current RabbitMQ releases (Khepri/Leveled storage). Ships a .zip.
-    curl -fsSL -o /tmp/plugin.zip \
-      "https://github.com/cloudamqp/rabbitmq-delayed-message-exchange/releases/download/v${version}/rabbitmq_delayed_message_exchange-${version}-erlang-26.zip"
+    # Maintained fork, tracks current RabbitMQ releases (Khepri/Leveled storage). Ships a .zip
+    # whose name carries the Erlang version it was built against - and that moves with the
+    # broker (4.3.1 shipped erlang-26, 4.3.3 ships erlang-27). Newest first, take what exists,
+    # so a plugin release built against a newer Erlang does not need an edit here.
+    downloaded=""
+    for erlang in 29 28 27 26; do
+      if curl -fsSL -o /tmp/plugin.zip \
+        "https://github.com/cloudamqp/rabbitmq-delayed-message-exchange/releases/download/v${version}/rabbitmq_delayed_message_exchange-${version}-erlang-${erlang}.zip"; then
+        echo "using plugin ${version} built for erlang ${erlang}"
+        downloaded=1
+        break
+      fi
+    done
+    if [ -z "$downloaded" ]; then
+      echo "no cloudamqp plugin asset found for version ${version}" >&2
+      exit 1
+    fi
     unzip -o /tmp/plugin.zip -d "${plugins_dir}"
     rm /tmp/plugin.zip
     ;;
