@@ -44,9 +44,10 @@ jobs:
       # Single source of truth for the broker-version axis. Two legs always run:
       #
       #   current-prod - pinned to the version production actually runs. A failure here is real.
-      #   next-target  - resolved on the fly to the newest published RabbitMQ image plus the
-      #                  newest CloudAMQP plugin release, so a fresh upstream release is picked
-      #                  up without a commit here. Non-blocking: it is an early warning, and a
+      #   next-target  - resolved on the fly to the newest CloudAMQP plugin release plus the newest
+      #                  published RabbitMQ image of the same major.minor series (a plugin only
+      #                  loads into the broker series it was built for), so a fresh upstream
+      #                  release is picked up without a commit here. Non-blocking: it is an early warning, and a
       #                  brand new release without a matching plugin build must not redden a
       #                  push that has nothing to do with it.
       #
@@ -76,15 +77,29 @@ jobs:
           else
             # Newest published image tag, not newest git tag: an announced release whose image is
             # not on Docker Hub yet would only produce a pull failure here.
-            latest_version=""
+            published_versions=""
             if tags=$(curl -fsS --max-time 30 'https://hub.docker.com/v2/repositories/library/rabbitmq/tags?page_size=100&ordering=last_updated'); then
-              latest_version=$(printf '%s' "$tags" | jq -r '.results[].name' \
-                | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-management$' | sort -V | tail -n1)
+              published_versions=$(printf '%s' "$tags" | jq -r '.results[].name' \
+                | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-management$' | sort -V)
             fi
 
+            # Highest plugin version, not the "latest" release: that is the newest by date and can
+            # be a backport for an older broker series.
             latest_plugin=""
-            if release=$(curl -fsS --max-time 30 https://api.github.com/repos/cloudamqp/rabbitmq-delayed-message-exchange/releases/latest); then
-              latest_plugin=$(printf '%s' "$release" | jq -r '.tag_name // ""' | sed 's/^v//')
+            if releases=$(curl -fsS --max-time 30 'https://api.github.com/repos/cloudamqp/rabbitmq-delayed-message-exchange/releases?per_page=100'); then
+              latest_plugin=$(printf '%s' "$releases" | jq -r '.[] | select(.prerelease | not) | .tag_name' \
+                | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
+            fi
+
+            latest_version=""
+            if [ -n "$latest_plugin" ]; then
+              series="${latest_plugin%.*}"
+              latest_version=$(printf '%s\n' "$published_versions" | grep -E "^${series//./\\.}\.[0-9]+-management$" | tail -n1)
+              newest_published=$(printf '%s\n' "$published_versions" | tail -n1)
+              if [ -n "$newest_published" ] && [ "$newest_published" != "$latest_version" ] \
+                && [ "$(printf '%s\n' "$newest_published" "$latest_version" | sort -V | tail -n1)" = "$newest_published" ]; then
+                echo "::notice::RabbitMQ ${newest_published} has no CloudAMQP plugin release yet, newest plugin is ${latest_plugin}"
+              fi
             fi
 
             if [ -n "$latest_version" ] && [ -n "$latest_plugin" ] && [ "$latest_version" != "$CURRENT_VERSION" ]; then
