@@ -82,9 +82,13 @@ jobs:
                 | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-management$' | sort -V | tail -n1)
             fi
 
+            # The plugin has to match the broker's major.minor: releases/latest can be a backport
+            # for an older broker line (4.2.7 next to RabbitMQ 4.4) that does not enable.
             latest_plugin=""
-            if release=$(curl -fsS --max-time 30 https://api.github.com/repos/cloudamqp/rabbitmq-delayed-message-exchange/releases/latest); then
-              latest_plugin=$(printf '%s' "$release" | jq -r '.tag_name // ""' | sed 's/^v//')
+            broker_minor=$(printf '%s' "$latest_version" | cut -d. -f1,2)
+            if releases=$(curl -fsS --max-time 30 'https://api.github.com/repos/cloudamqp/rabbitmq-delayed-message-exchange/releases?per_page=100'); then
+              latest_plugin=$(printf '%s' "$releases" | jq -r '.[].tag_name' | sed 's/^v//' \
+                | grep -E "^${broker_minor//./\\.}\.[0-9]+$" | sort -V | tail -n1 || true)
             fi
 
             if [ -n "$latest_version" ] && [ -n "$latest_plugin" ] && [ "$latest_version" != "$CURRENT_VERSION" ]; then
@@ -94,7 +98,7 @@ jobs:
                 --arg plugin_version "$latest_plugin" \
                 '{name: "next-target", rabbitmq_version: $rabbitmq_version, plugin_source: "cloudamqp", plugin_version: $plugin_version, tolerate_failure: true}')
             else
-              echo "nothing newer than ${CURRENT_VERSION} published (or the lookup failed) - second leg falls back to ${FALLBACK_VERSION}"
+              echo "nothing newer than ${CURRENT_VERSION} published, no plugin for the newest broker line, or the lookup failed - second leg falls back to ${FALLBACK_VERSION}"
               second=$(jq -nc \
                 --arg rabbitmq_version "$FALLBACK_VERSION" \
                 --arg plugin_source "$FALLBACK_PLUGIN_SOURCE" \
